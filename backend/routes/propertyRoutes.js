@@ -1,53 +1,48 @@
 const express = require("express");
 const router = express.Router();
 
-
 const authMiddleware = require("../middleware/authMiddleware");
-
 const upload = require("../middleware/upload");
 
 const {
   createProperty,
   getAllProperties,
   getPropertyById,
+  getMyProperties,
   updateProperty,
   deleteProperty,
   uploadPropertyImage,
-  getPropertyImages
+  getPropertyImages,
 } = require("../controllers/propertyController");
-  
-  
-router.get(
-  "/",
-  getAllProperties           
-);    router.get(
-  "/:id",
-  getPropertyById
-);router.put(
-  "/:id",
-  authMiddleware,
-  updateProperty
-);router.delete(
-  "/:id",
-  authMiddleware,
-  deleteProperty
-); 
+
+// =========================
+// PRIVATE ROUTES
+// =========================
+router.get("/my-properties", authMiddleware, getMyProperties);
+
+// =========================
+// PUBLIC ROUTES
+// =========================
+router.get("/", getAllProperties);
+
+router.get("/:id/images", getPropertyImages);
+
+router.get("/:id", getPropertyById);
+
+// =========================
+// PROTECTED ACTIONS
+// =========================
+router.post("/", authMiddleware, createProperty);
+
+router.put("/:id", authMiddleware, updateProperty);
+
+router.delete("/:id", authMiddleware, deleteProperty);
+
 router.post(
   "/:id/images",
   authMiddleware,
   upload.single("image"),
   uploadPropertyImage
-);
-router.get(
-  "/:id/images",
-  getPropertyImages
-);
-
-
-router.post(
-  "/",
-  authMiddleware,
-  createProperty
 );
 
 module.exports = router;

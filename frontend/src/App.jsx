@@ -1,21 +1,23 @@
-import Navbar from "@/components/common/Navbar";
+import { Routes, Route } from "react-router-dom";
 
-function App() {
+import Navbar from "./components/common/Navbar";
+import Home from "./pages/Home";
+import Buy from "./pages/Buy";
+import PropertyDetails from "./pages/PropertyDetails";
+import Dashboard from "./pages/Dashboard";
+
+export default function App() {
   return (
-    <div className="min-h-screen bg-gray-100">
+    <>
       <Navbar />
 
-      <main className="py-24 text-center">
-        <h1 className="text-5xl font-bold text-gray-900">
-          Find Your Dream Home Anywhere in the World
-        </h1>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/buy" element={<Buy />} />
+  <Route path="/property/:id" element={<PropertyDetails />} />
+<Route path="/dashboard" element={<Dashboard />} />    
 
-        <p className="mt-6 text-xl text-gray-600">
-          Buy • Sell • Rent • Invest
-        </p>
-      </main>
-    </div>
+  </Routes>
+    </>
   );
 }
-
-export default App;

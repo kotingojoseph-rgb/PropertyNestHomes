@@ -65,10 +65,13 @@ RETURNING *`,
     });
 
   } catch (error) {
-    res.status(500).json({
-      error: error.message
-    });
-  }
+  console.error("getPropertyById error:", error);
+
+  res.status(500).json({
+    error: error.message
+  });
+}
+
 };
 
 const getAllProperties = async (req, res) => {
@@ -322,12 +325,37 @@ res.json(images);
   }
 };
 
+const getMyProperties = async (req, res) => {
+  try {
+    const owner_id = req.user.id;
+
+    const result = await pool.query(
+      `
+      SELECT *
+      FROM properties
+      WHERE owner_id = $1
+      ORDER BY created_at DESC
+      `,
+      [owner_id]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createProperty,
   getAllProperties,
   getPropertyById,
+  getMyProperties,
   updateProperty,
   deleteProperty,
   uploadPropertyImage,
-  getPropertyImages
+  getPropertyImages,
 };

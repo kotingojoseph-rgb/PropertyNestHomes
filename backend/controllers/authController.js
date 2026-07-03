@@ -12,6 +12,17 @@ const register = async (req, res) => {
       id_type,
       id_number
     } = req.body;
+const existingUser = await pool.query(
+  "SELECT id FROM users WHERE email = $1",
+  [email]
+);
+
+if (existingUser.rows.length > 0) {
+  return res.status(400).json({
+    message: "Email already exists"
+  });
+}
+
 const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
       `INSERT INTO users
@@ -74,7 +85,7 @@ const token = jwt.sign(
     id: user.id,
     email: user.email
   },
-  "mysecretkey",
+  process.env.JWT_SECRET,
   {
     expiresIn: "1d"
   }
