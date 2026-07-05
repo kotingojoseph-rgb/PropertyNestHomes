@@ -1,0 +1,26 @@
+# Dependencies
+**/node_modules/
+
+# Environment files
+**/.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build folders
+**/dist/
+**/build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Uploaded files (optional)
+backend/uploads/
+
+# Temporary files
+*.tmp
