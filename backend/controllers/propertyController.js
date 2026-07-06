@@ -261,26 +261,31 @@ const uploadPropertyImage = async (req, res) => {
   try {
     const { id } = req.params;
 
-console.log("Uploading image for property:", id);
-console.log("Filename:", req.file.filename);
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        message: "Please upload at least one image."
+      });
+    }
 
+    for (const file of req.files) {
+      await pool.query(
+        `INSERT INTO property_images
+        (property_id, image_url, is_cover)
+        VALUES ($1, $2, $3)`,
+        [
+          id,
+          file.filename,
+          false
+        ]
+      );
+    }
 
-    await pool.query(
-      `INSERT INTO property_images
-      (property_id, image_url, is_cover)
-      VALUES ($1, $2, $3)`,
-      [
-        id,
-        req.file.filename,
-        false
-      ]
-    );
-console.log("Database insert successful!");
-
-
-    res.json({
-      message: "Image uploaded successfully!",
-      filename: req.file.filename
+    res.status(201).json({
+      message: "Images uploaded successfully.",
+      uploadedImages: req.files.map(file => ({
+        filename: file.filename,
+        url: `http://localhost:5000/uploads/${file.filename}`
+      }))
     });
 
   } catch (error) {
@@ -288,6 +293,69 @@ console.log("Database insert successful!");
 
     res.status(500).json({
       message: "Image upload failed",
+      error: error.message
+    });
+  }
+};
+
+const setCoverImage = async (req, res) => {
+  try {
+    const { id, imageId } = req.params;
+
+    // Verify the property exists
+    const propertyResult = await pool.query(
+      `SELECT id, owner_id
+       FROM properties
+       WHERE id = $1`,
+      [id]
+    );
+
+    if (propertyResult.rows.length === 0) {
+      return res.status(404).json({
+        message: "Property not found"
+      });
+    }
+
+    // Verify the logged-in user owns the property
+    if (propertyResult.rows[0].owner_id !== req.user.id) {
+      return res.status(403).json({
+        message: "You are not authorized to modify this property."
+      });
+    }
+
+    // Remove the current cover image
+    await pool.query(
+      `UPDATE property_images
+       SET is_cover = false
+       WHERE property_id = $1`,
+      [id]
+    );
+
+    // Set the selected image as the cover
+    const result = await pool.query(
+      `UPDATE property_images
+       SET is_cover = true
+       WHERE id = $1
+       AND property_id = $2
+       RETURNING *`,
+      [imageId, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Image not found"
+      });
+    }
+
+    res.json({
+      message: "Cover image updated successfully.",
+      coverImage: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
       error: error.message
     });
   }
@@ -349,6 +417,8 @@ const getMyProperties = async (req, res) => {
   }
 };
 
+
+
 module.exports = {
   createProperty,
   getAllProperties,
@@ -358,4 +428,5 @@ module.exports = {
   deleteProperty,
   uploadPropertyImage,
   getPropertyImages,
+  setCoverImage
 };

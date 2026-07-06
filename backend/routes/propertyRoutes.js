@@ -13,6 +13,7 @@ const {
   deleteProperty,
   uploadPropertyImage,
   getPropertyImages,
+  setCoverImage,
 } = require("../controllers/propertyController");
 
 // =========================
@@ -41,8 +42,14 @@ router.delete("/:id", authMiddleware, deleteProperty);
 router.post(
   "/:id/images",
   authMiddleware,
-  upload.single("image"),
+  upload.array("images", 10),
   uploadPropertyImage
+);
+
+router.patch(
+  "/:id/images/:imageId/cover",
+  authMiddleware,
+  setCoverImage
 );
 
 module.exports = router;

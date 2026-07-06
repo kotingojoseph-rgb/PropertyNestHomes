@@ -34,6 +34,9 @@ app.use(limiter);
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
+
+app.use("/uploads", express.static("uploads"));
+
 app.use("/api/locations", locationRoutes);
 
 app.get("/", (req, res) => {
