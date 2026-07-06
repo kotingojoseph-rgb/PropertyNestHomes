@@ -22,7 +22,7 @@ function AddProperty() {
   });
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/locations/countries")
+    fetch(`${import.meta.env.VITE_API_URL}/api/locations/countries`)
       .then((res) => res.json())
       .then((data) => setCountries(data))
       .catch((err) => console.error(err));
@@ -44,7 +44,7 @@ function AddProperty() {
     });
 
     const response = await fetch(
-      `http://localhost:5000/api/locations/states/${countryCode}`
+      `${import.meta.env.VITE_API_URL}/api/locations/states/${countryCode}`
     );
 
     const data = await response.json();
@@ -71,7 +71,7 @@ function AddProperty() {
     );
 
     const response = await fetch(
-      `http://localhost:5000/api/locations/cities/${country.code}/${stateCode}`
+      `${import.meta.env.VITE_API_URL}/api/locations/cities/${country.code}/${stateCode}`
     );
 
     const data = await response.json();

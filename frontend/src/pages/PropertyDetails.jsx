@@ -9,7 +9,7 @@ export default function PropertyDetails() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/properties/${id}`)
+    fetch(`${import.meta.env.VITE_API_URL}/api/properties/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Property not found");
         return res.json();
