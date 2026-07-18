@@ -24,3 +24,13 @@ backend/uploads/
 
 # Temporary files
 *.tmp
+
+*.zip
+.idea/
+*.keystore
+
+*.jks
+keystore.properties
+*.bak
+*.backup
+backup_mobile_fix/

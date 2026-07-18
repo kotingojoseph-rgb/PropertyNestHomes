@@ -3,6 +3,7 @@ const router = express.Router();
 
 const authMiddleware = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
+const propertyValidation = require("../middleware/propertyValidation");
 
 const {
   createProperty,
@@ -33,9 +34,19 @@ router.get("/:id", getPropertyById);
 // =========================
 // PROTECTED ACTIONS
 // =========================
-router.post("/", authMiddleware, createProperty);
+router.post(
+  "/",
+  authMiddleware,
+  propertyValidation,
+  createProperty
+);
 
-router.put("/:id", authMiddleware, updateProperty);
+router.put(
+  "/:id",
+  authMiddleware,
+  propertyValidation,
+  updateProperty
+);
 
 router.delete("/:id", authMiddleware, deleteProperty);
 

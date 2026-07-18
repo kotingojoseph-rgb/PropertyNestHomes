@@ -1,52 +1,93 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+
 import PropertyCard from "./PropertyCard";
-import heroHouse from "@/assets/images/hero-house.jpg";
+import { getProperties } from "@/api/propertyApi";
 
 export default function FeaturedProperties() {
-  return (
-    <section className="bg-gray-100 py-20">
-      <div className="mx-auto max-w-7xl px-6">
-        <h2 className="mb-12 text-center text-5xl font-bold">
-          Featured Properties
-        </h2>
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-        <div className="grid gap-8 md:grid-cols-3">
-          <PropertyCard
-  id={3}
-  image={heroHouse}
-  title="Luxury Waterfront Villa"
-  location="Miami, USA"
-  price="$2,850,000"
-  bedrooms={6}
-  bathrooms={5}
-  size="920 sqm"
-  status="FOR SALE"
-/>
+  useEffect(() => {
+    async function loadProperties() {
+      try {
+        const data = await getProperties();
+        setProperties(data.slice(0, 6));
+      } catch (err) {
+        console.error(err);
+        setError("Unable to load featured properties.");
+      } finally {
+        setLoading(false);
+      }
+    }
 
-<PropertyCard
-  id={4}
-  image={heroHouse}
-  title="Skyline Penthouse"
-  location="Dubai, UAE"
-  price="$4,200,000"
-  bedrooms={5}
-  bathrooms={6}
-  size="780 sqm"
-  status="FEATURED"
-/>
+    loadProperties();
+  }, []);
 
-<PropertyCard
-  id={5}
-  image={heroHouse}
-  title="Beachfront Estate"
-  location="Marbella, Spain"
-  price="€3,900,000"
-  bedrooms={7}
-  bathrooms={6}
-  size="1150 sqm"
-  status="NEW LISTING"
-/>
- 
+  if (loading) {
+    return (
+      <section className="bg-gray-100 py-14 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center">
+          <h2 className="text-3xl font-bold">Featured Properties</h2>
+          <p className="mt-6 text-gray-500">Loading properties...</p>
         </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="bg-gray-100 py-14 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center">
+          <h2 className="text-3xl font-bold">Featured Properties</h2>
+          <p className="mt-6 text-red-600">{error}</p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="bg-gray-100 py-14 sm:py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+
+        <div className="mb-10 text-center">
+          <h2 className="text-3xl sm:text-5xl font-bold text-gray-900">
+            Featured Properties
+          </h2>
+
+          <p className="mx-auto mt-4 max-w-2xl text-sm sm:text-lg text-gray-600">
+            Explore hand-picked luxury homes, premium apartments,
+            and investment opportunities.
+          </p>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {properties.map((property) => (
+            <PropertyCard
+              key={property.id}
+              id={property.id}
+              image={property.cover_image}
+              title={property.title}
+              location={`${property.city}, ${property.country}`}
+              price={`${property.currency} ${Number(property.price).toLocaleString()}`}
+              bedrooms={property.bedrooms}
+              bathrooms={property.bathrooms}
+              size={property.size}
+              status={property.status}
+            />
+          ))}
+        </div>
+
+        <div className="mt-10 text-center">
+          <Link
+            to="/buy"
+            className="inline-block rounded-xl bg-green-600 px-6 py-3 font-bold text-white hover:bg-green-700 transition"
+          >
+            View All Properties →
+          </Link>
+        </div>
+
       </div>
     </section>
   );

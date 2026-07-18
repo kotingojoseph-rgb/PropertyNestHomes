@@ -267,26 +267,47 @@ const uploadPropertyImage = async (req, res) => {
       });
     }
 
-    for (const file of req.files) {
-      await pool.query(
-        `INSERT INTO property_images
-        (property_id, image_url, is_cover)
-        VALUES ($1, $2, $3)`,
-        [
-          id,
-          file.filename,
-          false
-        ]
-      );
-    }
+// Verify the property exists
+const propertyResult = await pool.query(
+  `SELECT owner_id
+   FROM properties
+   WHERE id = $1`,
+  [id]
+);
 
-    res.status(201).json({
-      message: "Images uploaded successfully.",
-      uploadedImages: req.files.map(file => ({
-        filename: file.filename,
-        url: `http://localhost:5000/uploads/${file.filename}`
-      }))
-    });
+if (propertyResult.rows.length === 0) {
+  return res.status(404).json({
+    message: "Property not found"
+  });
+}
+
+// Verify the logged-in user owns the property
+if (propertyResult.rows[0].owner_id !== req.user.id) {
+  return res.status(403).json({
+    message: "You are not authorized to upload images to this property."
+  });
+}
+
+ for (const file of req.files) {
+  await pool.query(
+    `INSERT INTO property_images
+    (property_id, image_url, is_cover)
+    VALUES ($1, $2, $3)`,
+    [
+      id,
+      file.path,
+      false
+    ]
+  );
+}
+
+res.status(201).json({
+  message: "Images uploaded successfully.",
+  uploadedImages: req.files.map(file => ({
+    filename: file.filename,
+    url: file.path
+  }))
+});
 
   } catch (error) {
     console.error(error);
@@ -379,7 +400,7 @@ const getPropertyImages = async (req, res) => {
 
     const images = result.rows.map(image => ({
   ...image,
-  image_url: `http://localhost:5000/uploads/${image.image_url}`
+  image_url: image.image_url,
 }));
 
 res.json(images);
@@ -399,10 +420,15 @@ const getMyProperties = async (req, res) => {
 
     const result = await pool.query(
       `
-      SELECT *
-      FROM properties
-      WHERE owner_id = $1
-      ORDER BY created_at DESC
+      SELECT
+  p.*,
+  pi.image_url
+FROM properties p
+LEFT JOIN property_images pi
+  ON pi.property_id = p.id
+  AND pi.is_cover = true
+WHERE p.owner_id = $1
+ORDER BY p.created_at DESC
       `,
       [owner_id]
     );

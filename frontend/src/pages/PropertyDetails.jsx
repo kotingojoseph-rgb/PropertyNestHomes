@@ -1,32 +1,36 @@
-import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 export default function PropertyDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/properties/${id}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Property not found");
-        return res.json();
-      })
-      .then((data) => {
-        setProperty(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setLoading(false);
-      });
-  }, [id]);
+    fetchProperty();
+  }, []);
+
+  async function fetchProperty() {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/properties/${id}`
+      );
+
+      const data = await res.json();
+
+      setProperty(data.property || data);
+    } catch (err) {
+      console.error(err);
+    }
+
+    setLoading(false);
+  }
 
   if (loading) {
     return (
-      <div className="p-10 text-center text-2xl font-bold">
+      <div className="flex min-h-screen items-center justify-center text-xl font-bold">
         Loading property...
       </div>
     );
@@ -34,119 +38,158 @@ export default function PropertyDetails() {
 
   if (!property) {
     return (
-      <div className="p-10 text-center text-2xl font-bold">
+      <div className="flex min-h-screen items-center justify-center text-xl font-bold">
         Property not found.
       </div>
     );
   }
 
-  return (
-    <section className="bg-gray-100 py-12">
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="grid gap-10 lg:grid-cols-2">
+  function contactSeller() {
+    if (property.owner_phone) {
+      window.location.href = `tel:${property.owner_phone}`;
+      return;
+    }
 
-          {/* Left */}
-          <div>
-            <img
-              src={
-                property.image_url ||
-                "https://images.unsplash.com/photo-1600585154340-be6161a56a0c"
-              }
-              alt={property.title}
-              className="h-[500px] w-full rounded-3xl object-cover shadow-xl"
-            />
+    if (property.owner_email) {
+      window.location.href = `mailto:${property.owner_email}`;
+      return;
+    }
+
+    alert("Seller contact information is unavailable.");
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+
+      <button
+        onClick={() => navigate(-1)}
+        className="mb-6 rounded-lg bg-green-600 px-4 py-2 font-semibold text-white"
+      >
+        ← Back
+      </button>
+
+      <div className="overflow-hidden rounded-3xl bg-white shadow-xl">
+
+        <img
+          src="/src/assets/images/property.jpg"
+          alt={property.title}
+          className="h-64 w-full object-cover sm:h-80 lg:h-96"
+        />
+
+        <div className="p-5 sm:p-8">
+
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+
+            <div className="min-w-0">
+              <h1 className="break-words text-3xl font-bold sm:text-4xl">
+                {property.title}
+              </h1>
+
+              <p className="mt-3 text-gray-500">
+                📍 {property.city}, {property.country}
+              </p>
+            </div>
+
+            <div className="rounded-xl bg-green-600 p-6 text-center text-white">
+              <p>Price</p>
+
+              <h2 className="text-3xl font-bold">
+                {property.currency} {property.price}
+              </h2>
+            </div>
+
           </div>
 
-          {/* Right */}
-          <div>
-            <span className="rounded-full bg-green-600 px-4 py-2 font-bold text-white">
-              {property.status}
-            </span>
+          <div className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4">
 
-            <h1 className="mt-6 text-5xl font-bold">
-              {property.title}
-            </h1>
+            <div className="rounded-xl border p-4 text-center">
+              <h3 className="text-2xl font-bold">
+                {property.bedrooms || 0}
+              </h3>
+              Bedrooms
+            </div>
 
-            <p className="mt-3 text-xl text-gray-500">
-              📍 {property.city}, {property.country}
-            </p>
+            <div className="rounded-xl border p-4 text-center">
+              <h3 className="text-2xl font-bold">
+                {property.bathrooms || 0}
+              </h3>
+              Bathrooms
+            </div>
 
-            <h2 className="mt-8 text-5xl font-bold text-green-600">
-              {property.currency} {Number(property.price).toLocaleString()}
+            <div className="rounded-xl border p-4 text-center">
+              <h3 className="text-lg font-bold">
+                {property.property_type}
+              </h3>
+              Type
+            </div>
+
+            <div className="rounded-xl border p-4 text-center">
+              <h3 className="text-lg font-bold">
+                {property.status}
+              </h3>
+              Status
+            </div>
+
+          </div>
+
+          <div className="mt-10">
+            <h2 className="mb-3 text-2xl font-bold">
+              Description
             </h2>
 
-            <div className="mt-10 grid grid-cols-2 gap-6 rounded-2xl bg-white p-6 shadow">
+            <p className="leading-8 text-gray-600">
+              {property.description}
+            </p>
+          </div>
 
-              <div>
-                <p className="text-sm text-gray-500">Bedrooms</p>
-                <p className="text-2xl font-bold">{property.bedrooms}</p>
-              </div>
+          <div className="mt-10 grid gap-6 lg:grid-cols-2">
 
-              <div>
-                <p className="text-sm text-gray-500">Bathrooms</p>
-                <p className="text-2xl font-bold">{property.bathrooms}</p>
-              </div>
+            <div className="rounded-xl border p-6">
+              <h2 className="mb-3 text-xl font-bold">
+                Location
+              </h2>
 
-              <div>
-                <p className="text-sm text-gray-500">Area</p>
-                <p className="text-2xl font-bold">
-                  {property.area || property.size || "N/A"}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-500">Garage</p>
-                <p className="text-2xl font-bold">
-                  {property.garage || "N/A"}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-500">Year Built</p>
-                <p className="text-2xl font-bold">
-                  {property.year_built || "N/A"}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-500">Property Type</p>
-                <p className="text-2xl font-bold">
-                  {property.property_type}
-                </p>
-              </div>
-
+              <p>{property.address}</p>
+              <p>{property.city}</p>
+              <p>{property.country}</p>
             </div>
 
-            <div className="mt-8 flex gap-4">
-              <Button size="lg">Contact Agent</Button>
-              <Button size="lg" variant="outline">
-                Save Property
-              </Button>
+            <div className="rounded-xl border p-6">
+
+              <h2 className="mb-4 text-xl font-bold">
+                Seller Information
+              </h2>
+
+              <p>
+                <strong>Name:</strong>{" "}
+                {property.owner_name || "Not Available"}
+              </p>
+
+              <p>
+                <strong>Phone:</strong>{" "}
+                {property.owner_phone || "Not Available"}
+              </p>
+
+              <p>
+                <strong>Email:</strong>{" "}
+                {property.owner_email || "Not Available"}
+              </p>
+
+              <button
+                onClick={contactSeller}
+                className="mt-6 w-full rounded-xl bg-green-600 p-4 font-bold text-white hover:bg-green-700"
+              >
+                Contact Seller
+              </button>
+
             </div>
 
           </div>
+
         </div>
 
-        <div className="mt-12 rounded-3xl bg-white p-10 shadow">
-          <h2 className="text-3xl font-bold">
-            Property Description
-          </h2>
-
-          <p className="mt-6 text-lg leading-8 text-gray-600">
-            {property.description || "No description available."}
-          </p>
-        </div>
-
-        <div className="mt-10 rounded-3xl bg-white p-10 shadow">
-          <h2 className="text-3xl font-bold">
-            Property Location
-          </h2>
-
-          <p className="mt-4 text-gray-600">
-            {property.address}, {property.city}, {property.country}
-          </p>
-        </div>
       </div>
-    </section>
+
+    </div>
   );
 }

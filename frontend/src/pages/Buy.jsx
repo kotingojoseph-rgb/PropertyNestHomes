@@ -1,174 +1,192 @@
+import { useEffect, useState } from "react";
 import PropertyCard from "@/components/home/PropertyCard";
 import heroHouse from "@/assets/images/hero-house.jpg";
+import { getProperties } from "@/api/propertyApi";
 
 export default function Buy() {
+  const [properties, setProperties] = useState([]);
+  const [filteredProperties, setFilteredProperties] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
+
+
+  useEffect(() => {
+    async function loadProperties() {
+      try {
+        const data = await getProperties();
+
+        setProperties(data);
+        setFilteredProperties(data);
+
+      } catch (error) {
+        console.error("Error loading properties:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadProperties();
+
+  }, []);
+
+
+
+  useEffect(() => {
+
+    let results = properties;
+
+
+    if (search) {
+      results = results.filter((property) =>
+        `${property.title} ${property.city} ${property.country}`
+          .toLowerCase()
+          .includes(search.toLowerCase())
+      );
+    }
+
+
+    if (status) {
+      results = results.filter(
+        (property) => property.status === status
+      );
+    }
+
+
+    setFilteredProperties(results);
+
+
+  }, [search, status, properties]);
+
+
+
   return (
     <div className="bg-gray-100 min-h-screen">
 
-      {/* Header */}
-      <section className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-6 py-14">
 
-          <h1 className="text-5xl font-bold">
-            Buy Properties
+      <section className="bg-white border-b">
+
+        <div className="max-w-7xl mx-auto px-6 py-16">
+
+
+          <h1 className="text-5xl font-bold text-gray-900">
+            Find Your Dream Property
           </h1>
 
-          <p className="mt-4 max-w-3xl text-lg text-gray-600">
-            Browse premium homes, luxury villas, apartments, penthouses,
-            beachfront estates, and investment opportunities from trusted
-            real estate professionals around the world.
+
+          <p className="mt-5 max-w-3xl text-lg text-gray-600">
+            Explore premium homes, apartments, villas, duplexes,
+            and investment properties worldwide.
           </p>
 
-        </div>
-      </section>
 
-      {/* Search Filters */}
-      <section className="max-w-7xl mx-auto px-6 py-8">
 
-        <div className="grid gap-4 md:grid-cols-5">
+          <div className="mt-10 grid md:grid-cols-3 gap-5">
 
-          <input
-            type="text"
-            placeholder="Location"
-            className="rounded-xl border p-4"
-          />
 
-          <select className="rounded-xl border p-4">
-            <option>Property Type</option>
-            <option>House</option>
-            <option>Apartment</option>
-            <option>Villa</option>
-            <option>Penthouse</option>
-          </select>
+            <input
+              placeholder="Search by city, country, or property..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="rounded-xl border p-4"
+            />
 
-          <select className="rounded-xl border p-4">
-            <option>Bedrooms</option>
-            <option>1+</option>
-            <option>2+</option>
-            <option>3+</option>
-            <option>4+</option>
-            <option>5+</option>
-          </select>
 
-          <select className="rounded-xl border p-4">
-            <option>Price Range</option>
-            <option>$100k+</option>
-            <option>$500k+</option>
-            <option>$1M+</option>
-            <option>$5M+</option>
-          </select>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="rounded-xl border p-4"
+            >
 
-          <button className="rounded-xl bg-green-600 p-4 font-semibold text-white hover:bg-green-700">
-            Search
-          </button>
+              <option value="">
+                All Properties
+              </option>
 
-        </div>
+              <option value="For Sale">
+                For Sale
+              </option>
 
-      </section>
+              <option value="For Rent">
+                For Rent
+              </option>
 
-      {/* Property Grid */}
-      <section className="max-w-7xl mx-auto px-6 pb-16">
+            </select>
 
-        <div className="grid gap-8 md:grid-cols-3">
 
-          <PropertyCard
-            image={heroHouse}
-            title="Luxury Waterfront Villa"
-            location="Miami, USA"
-            price="$2,850,000"
-            bedrooms={6}
-            bathrooms={5}
-            size="920 sqm"
-            status="FOR SALE"
-          />
+            <div className="rounded-xl bg-green-600 p-4 text-center text-white font-bold">
 
-          <PropertyCard
-            image={heroHouse}
-            title="Skyline Penthouse"
-            location="Dubai, UAE"
-            price="$4,200,000"
-            bedrooms={5}
-            bathrooms={6}
-            size="780 sqm"
-            status="FEATURED"
-          />
+              {filteredProperties.length} Properties Available
 
-          <PropertyCard
-            image={heroHouse}
-            title="Beachfront Estate"
-            location="Marbella, Spain"
-            price="€3,900,000"
-            bedrooms={7}
-            bathrooms={6}
-            size="1150 sqm"
-            status="NEW LISTING"
-          />
+            </div>
 
-          <PropertyCard
-            image={heroHouse}
-            title="Luxury Apartment"
-            location="London, UK"
-            price="£1,750,000"
-            bedrooms={3}
-            bathrooms={2}
-            size="350 sqm"
-            status="FOR SALE"
-          />
 
-          <PropertyCard
-            image={heroHouse}
-            title="Modern Smart Home"
-            location="Toronto, Canada"
-            price="$1,950,000"
-            bedrooms={5}
-            bathrooms={4}
-            size="640 sqm"
-            status="FEATURED"
-          />
+          </div>
 
-          <PropertyCard
-            image={heroHouse}
-            title="Ocean View Mansion"
-            location="California, USA"
-            price="$7,800,000"
-            bedrooms={8}
-            bathrooms={9}
-            size="1800 sqm"
-            status="LUXURY"
-          />
-
-               </div>
-
-        {/* Pagination */}
-        <div className="mt-16 flex items-center justify-center gap-3">
-
-          <button className="rounded-lg border px-4 py-2 hover:bg-gray-100">
-            ← Previous
-          </button>
-
-          <button className="rounded-lg bg-green-600 px-4 py-2 text-white">
-            1
-          </button>
-
-          <button className="rounded-lg border px-4 py-2 hover:bg-gray-100">
-            2
-          </button>
-
-          <button className="rounded-lg border px-4 py-2 hover:bg-gray-100">
-            3
-          </button>
-
-          <button className="rounded-lg border px-4 py-2 hover:bg-gray-100">
-            4
-          </button>
-
-          <button className="rounded-lg border px-4 py-2 hover:bg-gray-100">
-            Next →
-          </button>
 
         </div>
 
       </section>
+
+
+
+
+      <section className="max-w-7xl mx-auto px-6 py-12">
+
+
+        {loading ? (
+
+          <div className="text-center text-xl">
+            Loading properties...
+          </div>
+
+
+        ) : filteredProperties.length === 0 ? (
+
+          <div className="rounded-2xl bg-white p-10 text-center shadow">
+
+            <h2 className="text-2xl font-bold">
+              No properties found
+            </h2>
+
+            <p className="mt-3 text-gray-500">
+              Try changing your search filters.
+            </p>
+
+          </div>
+
+
+        ) : (
+
+          <div className="grid gap-8 md:grid-cols-3">
+
+
+            {filteredProperties.map((property) => (
+
+              <PropertyCard
+                key={property.id}
+                id={property.id}
+                image={property.image || heroHouse}
+                title={property.title}
+                location={`${property.city}, ${property.country}`}
+                price={`${property.currency} ${Number(property.price).toLocaleString()}`}
+                bedrooms={property.bedrooms}
+                bathrooms={property.bathrooms}
+                size={property.area || "N/A"}
+                status={property.status}
+              />
+
+            ))}
+
+
+          </div>
+
+        )}
+
+
+      </section>
+
 
     </div>
   );
