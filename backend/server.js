@@ -2,8 +2,7 @@ require("dotenv").config();
 
 const requiredEnv = [
   "DATABASE_URL",
-  "JWT_SECRET",
-  "BACKEND_URL"
+  "JWT_SECRET"
 ];
 
 for (const variable of requiredEnv) {
