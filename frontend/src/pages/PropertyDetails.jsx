@@ -15,7 +15,8 @@ export default function PropertyDetails() {
   async function fetchProperty() {
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/properties/${id}`
+  `https://propertynesthomes.onrender.com/api/properties/${id}`
+
       );
 
       const data = await res.json();
