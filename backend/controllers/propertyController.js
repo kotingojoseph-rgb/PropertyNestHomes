@@ -114,11 +114,20 @@ const getPropertyById = async (req, res) => {
     const { id } = req.params;
 
     const result = await pool.query(
-      `SELECT * FROM properties
- WHERE id = $1
- AND verification_status = 'verified'`,
+  `
+  SELECT 
+    properties.*,
+    users.full_name AS owner_name,
+    users.email AS owner_email,
+    users.phone AS owner_phone
+  FROM properties
+  JOIN users
+    ON properties.owner_id = users.id
+  WHERE properties.id = $1
+  AND properties.verification_status = 'verified'
+  `,
   [id]
-    );
+);
 
     if (result.rows.length === 0) {
       return res.status(404).json({
