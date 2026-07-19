@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
+import heroHouse from "@/assets/images/hero-house.jpg";
+
 export default function PropertyDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -71,10 +73,14 @@ export default function PropertyDetails() {
 
       <div className="overflow-hidden rounded-3xl bg-white shadow-xl">
 
-  <img
-  src={property.image || "/src/assets/images/property.jpg"}
+
+<img
+  src={property.image || heroHouse}
   alt={property.title}
   className="h-64 w-full object-cover sm:h-80 lg:h-96"
+  onError={(e) => {
+    e.currentTarget.src = heroHouse;
+  }}
 />
 
         <div className="p-5 sm:p-8">
