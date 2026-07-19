@@ -71,11 +71,11 @@ export default function PropertyDetails() {
 
       <div className="overflow-hidden rounded-3xl bg-white shadow-xl">
 
-        <img
-          src={property.image || "/src/assets/images/property.jpg"}
-          alt={property.title}
-          className="h-64 w-full object-cover sm:h-80 lg:h-96"
-        />
+  <img
+  src={property.image || "/src/assets/images/property.jpg"}
+  alt={property.title}
+  className="h-64 w-full object-cover sm:h-80 lg:h-96"
+/>
 
         <div className="p-5 sm:p-8">
 
