@@ -6,7 +6,10 @@ const adminMiddleware = require("../middleware/adminMiddleware");
 const {
   getWallet,
   createWithdrawal,
-  getWithdrawals
+  getWithdrawals,
+  getPendingProperties,
+  approveProperty,
+  rejectProperty
 } = require("../controllers/adminController");
 
 
@@ -20,5 +23,11 @@ router.post("/withdraw", createWithdrawal);
 
 router.get("/withdrawals", getWithdrawals);
 
+
+router.get("/properties/pending", getPendingProperties);
+
+router.patch("/properties/:id/approve", approveProperty);
+
+router.patch("/properties/:id/reject", rejectProperty);
 
 module.exports = router;

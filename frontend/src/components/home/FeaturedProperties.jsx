@@ -67,7 +67,7 @@ export default function FeaturedProperties() {
             <PropertyCard
               key={property.id}
               id={property.id}
-              image={property.cover_image}
+              image={property.image}
               title={property.title}
               location={`${property.city}, ${property.country}`}
               price={`${property.currency} ${Number(property.price).toLocaleString()}`}

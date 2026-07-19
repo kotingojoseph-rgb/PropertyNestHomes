@@ -126,3 +126,96 @@ exports.getWithdrawals = async (req,res)=>{
 
   }
 };
+
+
+// Get pending properties for verification
+exports.getPendingProperties = async (req, res) => {
+  try {
+
+    const result = await pool.query(
+      `SELECT *
+       FROM properties
+       WHERE verification_status = 'pending'
+       ORDER BY created_at DESC`
+    );
+
+    res.json(result.rows);
+
+  } catch (error) {
+
+    res.status(500).json({
+      error: error.message
+    });
+
+  }
+};
+
+
+// Approve property
+exports.approveProperty = async (req, res) => {
+  try {
+
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `UPDATE properties
+       SET verification_status = 'verified'
+       WHERE id = $1
+       RETURNING *`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Property not found"
+      });
+    }
+
+    res.json({
+      message: "Property approved successfully",
+      property: result.rows[0]
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      error: error.message
+    });
+
+  }
+};
+
+
+// Reject property
+exports.rejectProperty = async (req, res) => {
+  try {
+
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `UPDATE properties
+       SET verification_status = 'rejected'
+       WHERE id = $1
+       RETURNING *`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Property not found"
+      });
+    }
+
+    res.json({
+      message: "Property rejected",
+      property: result.rows[0]
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      error: error.message
+    });
+
+  }
+};

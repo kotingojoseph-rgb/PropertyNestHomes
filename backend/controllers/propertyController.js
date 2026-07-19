@@ -34,12 +34,13 @@ const createProperty = async (req, res) => {
   currency,
   bedrooms,
   bathrooms,
-  property_type,
+    property_type,
   status,
-  owner_id
+  owner_id,
+  verification_status
 )
 VALUES
-($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
 RETURNING *`,
       [
   title,
@@ -53,9 +54,10 @@ RETURNING *`,
   currency,
   bedrooms,
   bathrooms,
-  property_type,
+    property_type,
   status,
-  owner_id
+  owner_id,
+  "pending"
 ]
     );
 
@@ -78,13 +80,18 @@ const getAllProperties = async (req, res) => {
   try {
     const { country } = req.query;
 
-    let query = `SELECT * FROM properties`;
-    let values = [];
+    let query = `
+  SELECT *
+  FROM properties
+  WHERE verification_status = 'verified'
+`;
 
-    if (country) {
-      query += ` WHERE country = $1`;
-      values.push(country);
-    }
+let values = [];
+
+if (country) {
+  query += ` AND country = $1`;
+  values.push(country);
+}
 
     query += ` ORDER BY created_at DESC`;
 
@@ -108,8 +115,9 @@ const getPropertyById = async (req, res) => {
 
     const result = await pool.query(
       `SELECT * FROM properties
-       WHERE id = $1`,
-      [id]
+ WHERE id = $1
+ AND verification_status = 'verified'`,
+  [id]
     );
 
     if (result.rows.length === 0) {

@@ -9,5 +9,16 @@ export async function getProperties() {
     throw new Error("Failed to fetch properties");
   }
 
-  return response.json();
+  const data = await response.json();
+
+  // Make sure frontend always receives an array
+  if (Array.isArray(data)) {
+    return data;
+  }
+
+  if (Array.isArray(data.properties)) {
+    return data.properties;
+  }
+
+  return [];
 }
