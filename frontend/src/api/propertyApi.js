@@ -11,11 +11,12 @@ export async function getProperties() {
 
   const data = await response.json();
 
-  // Make sure frontend always receives an array
+  // Backend returns an array
   if (Array.isArray(data)) {
     return data;
   }
 
+  // Safety if backend returns { properties: [] }
   if (Array.isArray(data.properties)) {
     return data.properties;
   }
