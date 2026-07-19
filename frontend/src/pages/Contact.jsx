@@ -15,9 +15,29 @@ export default function Contact() {
         <div className="rounded-xl border p-8 shadow-sm">
           <h2 className="mb-4 text-2xl font-bold">Contact Information</h2>
 
-          <p><strong>Email:</strong> info@propertynesthomes.com</p>
-          <p><strong>Phone:</strong> +234 800 000 0000</p>
-          <p><strong>Office:</strong> Lagos, Nigeria</p>
+          <p>
+  <strong>Email:</strong>{" "}
+  <a
+    href="mailto:info@propertynesthomes.com"
+    className="text-blue-700 hover:underline"
+  >
+    info@propertynesthomes.com
+  </a>
+</p>
+
+<p>
+  <strong>Phone:</strong>{" "}
+  <a
+    href="tel:+2349068936306"
+    className="text-blue-700 hover:underline"
+  >
+    +234 906 893 6306
+  </a>
+</p>
+
+<p>
+  <strong>Office:</strong> Lagos, Nigeria
+</p>
         </div>
 
         <div className="rounded-xl border p-8 shadow-sm">

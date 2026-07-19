@@ -47,30 +47,43 @@ export default function Footer() {
         </div>
 
 
-        {/* Contact */}
+                {/* Contact */}
         <div>
           <h3 className="mb-4 text-xl font-semibold">
             Contact
           </h3>
 
           <p className="text-gray-300">
-            📧 info@propertynesthomes.com
+            📧{" "}
+            <a
+              href="mailto:Propertynesthomes.app@gmail.com"
+              className="text-blue-400 hover:underline"
+            >
+              Propertynesthomes.app@gmail.com
+            </a>
           </p>
 
           <p className="mt-2 text-gray-300">
-            📞 +234 800 000 0000
+            📞{" "}
+            <a
+              href="tel:+2349068936306"
+              className="text-blue-400 hover:underline"
+            >
+              +234 906 893 6306
+            </a>
           </p>
 
           <p className="mt-2 text-gray-300">
             📍 Lagos, Nigeria
           </p>
-
-        </div>
+                </div>
 
       </div>
 
-
       <div className="border-t border-gray-700 py-5 text-center text-gray-400">
+
+
+     
 
         © 2026 PropertyNestHomes. All Rights Reserved.
 
