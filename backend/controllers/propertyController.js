@@ -518,6 +518,122 @@ const setCoverImage = async(req,res)=>{
   }
 
 };
+const uploadPropertyDocument = async (req, res) => {
+  try {
+
+    const { id } = req.params;
+
+    const { document_type } = req.body;
+
+
+    // Check property ownership
+    const property = await pool.query(
+      `
+      SELECT owner_id
+      FROM properties
+      WHERE id = $1
+      `,
+      [id]
+    );
+
+
+    if (property.rows.length === 0) {
+      return res.status(404).json({
+        message: "Property not found"
+      });
+    }
+
+
+    if (property.rows[0].owner_id !== req.user.id) {
+      return res.status(403).json({
+        message: "You are not authorized to upload documents for this property"
+      });
+    }
+
+
+    if (!req.file) {
+      return res.status(400).json({
+        message: "Please upload a document"
+      });
+    }
+
+
+    const result = await pool.query(
+      `
+      INSERT INTO property_documents
+      (
+        property_id,
+        document_type,
+        document_name,
+        document_url
+      )
+
+      VALUES
+      ($1,$2,$3,$4)
+
+      RETURNING *
+      `,
+      [
+        id,
+        document_type,
+        req.file.originalname,
+        req.file.path
+      ]
+    );
+
+
+    res.status(201).json({
+      message: "Document uploaded successfully",
+      document: result.rows[0]
+    });
+
+
+  } catch(error) {
+
+    console.error("uploadPropertyDocument error:", error);
+
+    res.status(500).json({
+      error:error.message
+    });
+
+  }
+};
+
+
+
+const getPropertyDocuments = async (req,res)=>{
+
+  try{
+
+    const {id}=req.params;
+
+
+    const result = await pool.query(
+      `
+      SELECT *
+      FROM property_documents
+      WHERE property_id=$1
+      ORDER BY uploaded_at DESC
+      `,
+      [id]
+    );
+
+
+    res.json(result.rows);
+
+
+  }catch(error){
+
+    console.error("getPropertyDocuments error:",error);
+
+
+    res.status(500).json({
+      error:error.message
+    });
+
+  }
+
+};
 
 
 module.exports = {
@@ -529,5 +645,7 @@ module.exports = {
   deleteProperty,
   uploadPropertyImage,
   getPropertyImages,
-  setCoverImage
+  setCoverImage,
+  uploadPropertyDocument,
+  getPropertyDocuments
 };

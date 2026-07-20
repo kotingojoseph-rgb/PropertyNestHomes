@@ -15,31 +15,61 @@ const {
   uploadPropertyImage,
   getPropertyImages,
   setCoverImage,
+  uploadPropertyDocument,
+  getPropertyDocuments
 } = require("../controllers/propertyController");
+
 
 // =========================
 // PRIVATE ROUTES
 // =========================
-router.get("/my-properties", authMiddleware, getMyProperties);
+
+router.get(
+  "/my-properties",
+  authMiddleware,
+  getMyProperties
+);
+
 
 // =========================
 // PUBLIC ROUTES
 // =========================
-router.get("/", getAllProperties);
 
-router.get("/:id/images", getPropertyImages);
+router.get(
+  "/",
+  getAllProperties
+);
 
-router.get("/:id", getPropertyById);
+
+router.get(
+  "/:id/images",
+  getPropertyImages
+);
+
+
+router.get(
+  "/:id/documents",
+  getPropertyDocuments
+);
+
+
+router.get(
+  "/:id",
+  getPropertyById
+);
+
 
 // =========================
-// PROTECTED ACTIONS
+// PROTECTED PROPERTY ACTIONS
 // =========================
+
 router.post(
   "/",
   authMiddleware,
   propertyValidation,
   createProperty
 );
+
 
 router.put(
   "/:id",
@@ -48,7 +78,17 @@ router.put(
   updateProperty
 );
 
-router.delete("/:id", authMiddleware, deleteProperty);
+
+router.delete(
+  "/:id",
+  authMiddleware,
+  deleteProperty
+);
+
+
+// =========================
+// PROPERTY IMAGES
+// =========================
 
 router.post(
   "/:id/images",
@@ -57,10 +97,24 @@ router.post(
   uploadPropertyImage
 );
 
+
 router.patch(
   "/:id/images/:imageId/cover",
   authMiddleware,
   setCoverImage
 );
+
+
+// =========================
+// PROPERTY DOCUMENTS
+// =========================
+
+router.post(
+  "/:id/documents",
+  authMiddleware,
+  upload.single("document"),
+  uploadPropertyDocument
+);
+
 
 module.exports = router;

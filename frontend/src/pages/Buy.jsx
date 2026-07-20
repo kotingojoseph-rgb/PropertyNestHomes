@@ -167,7 +167,7 @@ export default function Buy() {
               <PropertyCard
                 key={property.id}
                 id={property.id}
-                image={property.image || heroHouse}
+               image={property.cover_image || heroHouse}
                 title={property.title}
                 location={`${property.city}, ${property.country}`}
                 price={`${property.currency} ${Number(property.price).toLocaleString()}`}
