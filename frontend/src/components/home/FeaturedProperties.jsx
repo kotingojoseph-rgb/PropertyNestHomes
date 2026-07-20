@@ -13,7 +13,16 @@ export default function FeaturedProperties() {
     async function loadProperties() {
       try {
         const data = await getProperties();
-        setProperties(data.slice(0, 6));
+
+        const featured = data
+          .filter(
+            (property) =>
+              property.verification_status === "verified"
+          )
+          .slice(0, 6);
+
+        setProperties(featured);
+
       } catch (err) {
         console.error(err);
         setError("Unable to load featured properties.");
@@ -25,70 +34,115 @@ export default function FeaturedProperties() {
     loadProperties();
   }, []);
 
+
   if (loading) {
     return (
-      <section className="bg-gray-100 py-14 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center">
-          <h2 className="text-3xl font-bold">Featured Properties</h2>
-          <p className="mt-6 text-gray-500">Loading properties...</p>
+      <section className="bg-gray-100 py-14">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold">
+            Featured Properties
+          </h2>
+          <p className="mt-4 text-gray-500">
+            Loading properties...
+          </p>
         </div>
       </section>
     );
   }
+
 
   if (error) {
     return (
-      <section className="bg-gray-100 py-14 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center">
-          <h2 className="text-3xl font-bold">Featured Properties</h2>
-          <p className="mt-6 text-red-600">{error}</p>
+      <section className="bg-gray-100 py-14">
+        <div className="text-center text-red-600">
+          {error}
         </div>
       </section>
     );
   }
 
+
   return (
     <section className="bg-gray-100 py-14 sm:py-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+
+      <div className="mx-auto max-w-7xl px-4">
 
         <div className="mb-10 text-center">
-          <h2 className="text-3xl sm:text-5xl font-bold text-gray-900">
+
+          <h2 className="text-3xl sm:text-5xl font-bold">
             Featured Properties
           </h2>
 
-          <p className="mx-auto mt-4 max-w-2xl text-sm sm:text-lg text-gray-600">
-            Explore hand-picked luxury homes, premium apartments,
-            and investment opportunities.
+          <p className="mt-4 text-gray-600">
+            Explore verified homes and investment opportunities.
           </p>
+
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {properties.map((property) => (
-            <PropertyCard
-              key={property.id}
-              id={property.id}
-              image={property.image}
-              title={property.title}
-              location={`${property.city}, ${property.country}`}
-              price={`${property.currency} ${Number(property.price).toLocaleString()}`}
-              bedrooms={property.bedrooms}
-              bathrooms={property.bathrooms}
-              size={property.size}
-              status={property.status}
-            />
-          ))}
-        </div>
+
+        {properties.length === 0 ? (
+
+          <p className="text-center text-gray-500">
+            No featured properties available.
+          </p>
+
+        ) : (
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+
+            {properties.map((property)=> (
+
+              <PropertyCard
+                key={property.id}
+
+                id={property.id}
+
+                image={
+                  property.cover_image ||
+                  property.image ||
+                  "/hero-house.jpg"
+                }
+
+                title={property.title}
+
+                location={
+                  `${property.city || property.location}, ${property.country}`
+                }
+
+                price={
+                  `${property.currency} ${Number(property.price).toLocaleString()}`
+                }
+
+                bedrooms={property.bedrooms}
+
+                bathrooms={property.bathrooms}
+
+                size={property.area}
+
+                status={property.status}
+
+              />
+
+            ))}
+
+          </div>
+
+        )}
+
 
         <div className="mt-10 text-center">
+
           <Link
             to="/buy"
-            className="inline-block rounded-xl bg-green-600 px-6 py-3 font-bold text-white hover:bg-green-700 transition"
+            className="inline-block rounded-xl bg-green-600 px-6 py-3 font-bold text-white hover:bg-green-700"
           >
             View All Properties →
           </Link>
+
         </div>
 
       </div>
+
     </section>
   );
 }

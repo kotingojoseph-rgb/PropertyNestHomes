@@ -385,26 +385,29 @@ const uploadPropertyImage = async (req, res) => {
     }
 
 
-    for (const file of req.files) {
+for (let i = 0; i < req.files.length; i++) {
 
-      await pool.query(
-        `
-        INSERT INTO property_images
-        (
-          property_id,
-          image_url,
-          is_cover
-        )
-        VALUES
-        ($1,$2,false)
-        `,
-        [
-          id,
-          file.path
-        ]
-      );
+  const file = req.files[i];
 
-    }
+  await pool.query(
+    `
+    INSERT INTO property_images
+    (
+      property_id,
+      image_url,
+      is_cover
+    )
+    VALUES
+    ($1,$2,$3)
+    `,
+    [
+      id,
+      file.path,
+      i === 0
+    ]
+  );
+
+}
 
 
     res.json({
