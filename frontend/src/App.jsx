@@ -10,6 +10,8 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
+import Chat from "./pages/Chat";
+
 export default function App() {
   return (
     <MainLayout>
@@ -21,7 +23,13 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Protected Routes */}
+   <Route
+  path="/chat/:conversationId"
+  element={<Chat />}
+/>
+
+
+ {/* Protected Routes */}
         <Route
           path="/dashboard"
           element={
