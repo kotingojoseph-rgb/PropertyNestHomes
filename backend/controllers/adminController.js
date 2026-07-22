@@ -157,19 +157,62 @@ exports.approveProperty = async (req, res) => {
 
     const { id } = req.params;
 
-    const result = await pool.query(
-      `UPDATE properties
-       SET verification_status = 'verified'
-       WHERE id = $1
-       RETURNING *`,
+    const property = await pool.query(
+      `SELECT *
+       FROM properties
+       WHERE id = $1`,
       [id]
     );
 
-    if (result.rows.length === 0) {
+    if (property.rows.length === 0) {
       return res.status(404).json({
         message: "Property not found"
       });
     }
+
+    const existingProperty = property.rows[0];
+
+    if (!existingProperty.property_registration_id) {
+      return res.status(400).json({
+        message: "Property registration document required before approval"
+      });
+    }
+
+    if (existingProperty.verification_status === "verified") {
+      return res.status(400).json({
+        message: "Property already approved"
+      });
+    }
+
+    const year = new Date().getFullYear();
+
+    const countResult = await pool.query(
+      `SELECT COUNT(*) 
+       FROM properties
+       WHERE propertynest_id IS NOT NULL`
+    );
+
+    const nextNumber =
+      Number(countResult.rows[0].count) + 1;
+
+    const propertyNestId =
+      `PNH-${year}-${String(nextNumber).padStart(6, "0")}`;
+
+    const result = await pool.query(
+      `UPDATE properties
+       SET
+       verification_status = 'verified',
+       propertynest_id = $1,
+       verified_at = CURRENT_TIMESTAMP,
+       verified_by = $2
+       WHERE id = $3
+       RETURNING *`,
+      [
+        propertyNestId,
+        req.user.id,
+        id
+      ]
+    );
 
     res.json({
       message: "Property approved successfully",
@@ -185,6 +228,8 @@ exports.approveProperty = async (req, res) => {
   }
 };
 
+    
+
 
 // Reject property
 exports.rejectProperty = async (req, res) => {
@@ -192,13 +237,22 @@ exports.rejectProperty = async (req, res) => {
 
     const { id } = req.params;
 
+    const { reason } = req.body;
+
+
     const result = await pool.query(
       `UPDATE properties
-       SET verification_status = 'rejected'
-       WHERE id = $1
+       SET
+       verification_status = 'rejected',
+       verification_notes = $1
+       WHERE id = $2
        RETURNING *`,
-      [id]
+      [
+        reason || "Property rejected during verification",
+        id
+      ]
     );
+
 
     if (result.rows.length === 0) {
       return res.status(404).json({
@@ -206,10 +260,12 @@ exports.rejectProperty = async (req, res) => {
       });
     }
 
+
     res.json({
       message: "Property rejected",
       property: result.rows[0]
     });
+
 
   } catch (error) {
 
@@ -219,3 +275,5 @@ exports.rejectProperty = async (req, res) => {
 
   }
 };
+
+    
