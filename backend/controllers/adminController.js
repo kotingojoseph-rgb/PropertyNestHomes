@@ -212,7 +212,19 @@ exports.approveProperty = async (req, res) => {
       ]
     );
 
-    res.json({
+    await pool.query(
+  `INSERT INTO property_verification_logs
+   (property_id, admin_id, action, notes)
+   VALUES($1,$2,$3,$4)`,
+  [
+    id,
+    req.user.id,
+    "APPROVED",
+    "Property approved after verification"
+  ]
+);
+
+res.json({
       message: "Property approved successfully",
       property: result.rows[0]
     });
