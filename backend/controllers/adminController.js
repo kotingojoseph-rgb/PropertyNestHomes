@@ -186,14 +186,12 @@ exports.approveProperty = async (req, res) => {
 
     const year = new Date().getFullYear();
 
-    const countResult = await pool.query(
-      `SELECT COUNT(*) 
-       FROM properties
-       WHERE propertynest_id IS NOT NULL`
+    const sequenceResult = await pool.query(
+      `SELECT nextval('propertynest_id_sequence')`
     );
 
     const nextNumber =
-      Number(countResult.rows[0].count) + 1;
+      sequenceResult.rows[0].nextval;
 
     const propertyNestId =
       `PNH-${year}-${String(nextNumber).padStart(6, "0")}`;
