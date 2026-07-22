@@ -26,22 +26,25 @@ export default function Dashboard() {
         }
       );
 
-      const data = await res.json();
+           const data = await res.json();
 
       if (Array.isArray(data)) {
         setProperties(data);
       } else {
         setProperties([]);
       }
+
     } catch (error) {
       console.error(error);
       setProperties([]);
     }
 
-    setLoading(false);
+        setLoading(false);
   }
 
   async function handleDelete(id) {
+
+  
     if (!window.confirm("Delete this property?")) return;
 
     try {

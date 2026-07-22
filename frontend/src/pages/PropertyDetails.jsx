@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
+import Lightbox from "yet-another-react-lightbox";
+import "yet-another-react-lightbox/styles.css";
+
 import heroHouse from "@/assets/images/hero-house.jpg";
 
 export default function PropertyDetails() {
@@ -8,7 +11,10 @@ export default function PropertyDetails() {
   const navigate = useNavigate();
 
   const [property, setProperty] = useState(null);
-  const [loading, setLoading] = useState(true);
+const [images, setImages] = useState([]);
+const [loading, setLoading] = useState(true);
+const [lightboxOpen, setLightboxOpen] = useState(false);
+const [photoIndex, setPhotoIndex] = useState(0);
 
   useEffect(() => {
     fetchProperty();
@@ -24,7 +30,17 @@ export default function PropertyDetails() {
       const data = await res.json();
 
       setProperty(data.property || data);
-    } catch (err) {
+
+const imageRes = await fetch(
+  `${import.meta.env.VITE_API_URL}/api/properties/${id}/images`
+);
+
+const imageData = await imageRes.json();
+
+setImages(imageData);
+   
+
+ } catch (err) {
       console.error(err);
     }
 
