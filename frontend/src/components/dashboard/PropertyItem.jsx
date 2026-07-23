@@ -10,7 +10,7 @@ export default function PropertyItem({ property, onDelete }) {
 
 
       <img
-        src={property.image_url || propertyImage}
+        src={property.cover_image || propertyImage}
         alt={property.title}
         className="h-60 w-full object-cover"
       />

@@ -98,10 +98,10 @@ export default function FeaturedProperties() {
                 id={property.id}
 
                 image={
-                  property.cover_image ||
-                  property.image ||
-                  "/hero-house.jpg"
-                }
+  property.cover_image ||
+  "/hero-house.jpg"
+}
+                  
 
                 title={property.title}
 

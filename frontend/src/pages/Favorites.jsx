@@ -114,8 +114,11 @@ export default function Favorites() {
                 key={property.id}
                 id={property.id}
                 image={
-                  property.image || heroHouse
-                }
+  property.cover_image ||
+  heroHouse
+}
+                  
+                
                 title={property.title}
                 location={
                   `${property.city}, ${property.country}`

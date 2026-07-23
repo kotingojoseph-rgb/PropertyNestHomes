@@ -91,8 +91,9 @@ setImages(imageData);
 
 
 <img
-  src={property.image || heroHouse}
+  src={property.cover_image || heroHouse}
   alt={property.title}
+
   className="h-64 w-full object-cover sm:h-80 lg:h-96"
   onError={(e) => {
     e.currentTarget.src = heroHouse;
