@@ -94,41 +94,45 @@ const createProperty = async (req, res) => {
 };
 const getAllProperties = async (req, res) => {
   try {
-
     const { country } = req.query;
 
-    let query = `
-      SELECT 
+    const values = [];
+    let whereClause = `WHERE p.verification_status = 'verified'`;
+
+    if (country) {
+      values.push(country);
+      whereClause += ` AND p.country = $${values.length}`;
+    }
+
+    const query = `
+      SELECT
         p.*,
-        pi.image_url AS cover_image
+        CASE
+          WHEN pi.image_url IS NOT NULL THEN
+            CONCAT(
+              '${process.env.BACKEND_URL}/uploads/',
+              regexp_replace(pi.image_url, '^.*[\\\\/]', '')
+            )
+          ELSE NULL
+        END AS cover_image
       FROM properties p
       LEFT JOIN property_images pi
         ON pi.property_id = p.id
-        AND pi.is_cover = true
-      WHERE p.verification_status = 'verified'
+       AND pi.is_cover = true
+      ${whereClause}
+      ORDER BY p.created_at DESC
     `;
-
-    let values = [];
-
-    if (country) {
-      query += ` AND country = $1`;
-      values.push(country);
-    }
-
-    query += ` ORDER BY created_at DESC`;
 
     const result = await pool.query(query, values);
 
     res.json(result.rows);
 
   } catch (error) {
-
     console.error("getAllProperties error:", error);
 
     res.status(500).json({
       error: error.message
     });
-
   }
 };
 

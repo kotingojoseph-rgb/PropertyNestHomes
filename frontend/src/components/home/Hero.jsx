@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
-import heroHouse from "@/assets/images/hero-house.jpg";
 import SearchBar from "./SearchBar";
-
+import HeroSlider from "./HeroSlider";
 
 export default function Hero() {
 
@@ -11,14 +10,10 @@ export default function Hero() {
 className="
 relative
 min-h-[90vh]
-bg-cover
-bg-center
+overflow-hidden
 "
-style={{
-backgroundImage:`url(${heroHouse})`
-}}
 >
-
+<HeroSlider />
 
 <div className="absolute inset-0 bg-black/60" />
 

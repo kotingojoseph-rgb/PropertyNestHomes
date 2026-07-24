@@ -17,6 +17,8 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
+const http = require("http");
+
 
 const authRoutes = require("./routes/authRoutes");
 const protectedRoutes = require("./routes/protectedRoutes");
@@ -28,6 +30,9 @@ const adRoutes = require("./routes/adRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const promotionRoutes = require("./routes/promotionRoutes");
 const webhookRoutes = require("./routes/webhookRoutes");
+
+const messageRoutes = require("./routes/messageRoutes");
+const passwordRoutes = require("./routes/passwordRoutes");
 
 const app = express();
 
@@ -108,6 +113,9 @@ app.use("/api/ads", adRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/promotions", promotionRoutes);
 
+app.use("/api/chat", messageRoutes);
+app.use("/api/password", passwordRoutes);
+
 // Health check
 app.get("/", (req, res) => {
   res.json({
@@ -138,6 +146,12 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+const server = http.createServer(app);
+
+const { initSocket } = require("./socket");
+
+initSocket(server);
+
+server.listen(PORT, () => {
   console.log(`🚀 PropertyNestHomes API running on port ${PORT}`);
 });

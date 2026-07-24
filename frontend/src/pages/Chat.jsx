@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import socket from "../socket";
+import socket, { connectSocket } from "../socket";
 import MessageList from "../components/chat/MessageList";
 import MessageInput from "../components/chat/MessageInput";
 
@@ -32,10 +32,12 @@ export default function Chat() {
 
     loadMessages();
 
-    socket.emit(
-      "joinConversation",
-      conversationId
-    );
+connectSocket();
+
+socket.emit(
+  "joinConversation",
+  conversationId
+);
 
     socket.on("newMessage", (message) => {
       setMessages((previous) => [

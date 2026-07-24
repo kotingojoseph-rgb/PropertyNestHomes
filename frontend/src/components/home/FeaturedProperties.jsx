@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import PropertyCard from "./PropertyCard";
 import { getProperties } from "@/api/propertyApi";
+import heroHouse from "@/assets/images/hero-house.jpg";
 
 export default function FeaturedProperties() {
   const [properties, setProperties] = useState([]);
@@ -97,10 +98,7 @@ export default function FeaturedProperties() {
 
                 id={property.id}
 
-                image={
-  property.cover_image ||
-  "/hero-house.jpg"
-}
+                image={property.cover_image || heroHouse}
                   
 
                 title={property.title}
