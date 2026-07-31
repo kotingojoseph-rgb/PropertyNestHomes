@@ -46,6 +46,8 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://propertynesthomes-frontend.onrender.com",
   "https://propertynesthomes.onrender.com",
+  "https://propertynesthomes.com",
+  "https://www.propertynesthomes.com",
 ];
 
 app.use(
