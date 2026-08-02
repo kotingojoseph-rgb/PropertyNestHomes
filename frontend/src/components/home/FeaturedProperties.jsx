@@ -15,6 +15,9 @@ export default function FeaturedProperties() {
       try {
         const data = await getProperties();
 
+console.log("Featured properties API:", data);
+console.log("Featured count:", data.length);
+
         const featured = data
           .filter(
             (property) =>
