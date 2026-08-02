@@ -18,8 +18,14 @@ export default function Buy() {
       try {
         const data = await getProperties();
 
-        setProperties(data);
-        setFilteredProperties(data);
+console.log("Properties received:", data);
+console.log("Is array?", Array.isArray(data));
+console.log("Count:", data.length);
+
+setProperties(data);
+setFilteredProperties(data);
+
+       
 
       } catch (error) {
         console.error("Error loading properties:", error);
