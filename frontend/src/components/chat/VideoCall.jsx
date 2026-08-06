@@ -27,8 +27,10 @@ export default function VideoCall({ conversationId }) {
     };
 
     connection.ontrack = (event) => {
-      remoteVideo.current.srcObject = event.streams[0];
-    };
+  if (remoteVideo.current) {
+    remoteVideo.current.srcObject = event.streams[0];
+  }
+};
 
     peer.current = connection;
 
@@ -46,7 +48,9 @@ export default function VideoCall({ conversationId }) {
         audio: true,
       });
 
-    localVideo.current.srcObject = stream;
+    if (localVideo.current) {
+  localVideo.current.srcObject = stream;
+}
 
 
     const connection = createPeer();
@@ -87,8 +91,9 @@ export default function VideoCall({ conversationId }) {
             audio:true,
           });
 
-        localVideo.current.srcObject =
-          stream;
+      if (localVideo.current) {
+  localVideo.current.srcObject = stream;
+}
 
 
         const connection =
@@ -178,19 +183,21 @@ export default function VideoCall({ conversationId }) {
       {calling && (
         <div className="mt-4 grid grid-cols-2 gap-2">
 
-          <video
-            ref={localVideo}
-            autoPlay
-            muted
-            className="rounded border"
-          />
+        <video
+  ref={localVideo}
+  autoPlay
+  muted
+  playsInline
+  className="rounded border"
+/>
 
 
-          <video
-            ref={remoteVideo}
-            autoPlay
-            className="rounded border"
-          />
+       <video
+  ref={remoteVideo}
+  autoPlay
+  playsInline
+  className="rounded border"
+/>
 
         </div>
       )}
