@@ -91,25 +91,7 @@ function initSocket(server) {
      * Typing indicator
      */
 
-    socket.on(
-  "callUser",
-  ({
-    offer,
-    conversationId,
-  }) => {
-
-    socket
-      .to(`conversation_${conversationId}`)
-      .emit(
-        "incomingCall",
-        {
-          from: socket.user.id,
-          offer,
-        }
-      );
-
-  }
-);
+    
 
 
     socket.on(

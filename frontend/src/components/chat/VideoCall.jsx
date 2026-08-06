@@ -39,48 +39,46 @@ export default function VideoCall({ conversationId }) {
 
 
   async function startCall() {
+  console.log("📹 Start Video Call clicked");
 
+  try {
     setCalling(true);
 
-    const stream =
-      await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
+
+    console.log("✅ Camera and microphone access granted");
 
     if (localVideo.current) {
-  localVideo.current.srcObject = stream;
-}
-
+      localVideo.current.srcObject = stream;
+    }
 
     const connection = createPeer();
 
+    stream.getTracks().forEach((track) => {
+      connection.addTrack(track, stream);
+    });
 
-    stream
-      .getTracks()
-      .forEach(track =>
-        connection.addTrack(track, stream)
-      );
+    const offer = await connection.createOffer();
 
-
-    const offer =
-      await connection.createOffer();
-
-    await connection.setLocalDescription(
-      offer
-    );
-
+    await connection.setLocalDescription(offer);
 
     socket.emit("callUser", {
-  offer,
-  conversationId,
-  userToCall: true,
-});
+      conversationId,
+      offer,
+    });
 
+    console.log("✅ Offer sent");
+  } catch (error) {
+    console.error("❌ Video call error:", error);
   }
+}
 
+useEffect(() => {
 
-  useEffect(() => {
+    
 
     socket.on(
       "incomingCall",
