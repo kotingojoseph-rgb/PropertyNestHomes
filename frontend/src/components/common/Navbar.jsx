@@ -21,9 +21,10 @@ export default function Navbar() {
   const links = [
     {name:"Home",path:"/"},
     {name:"Buy",path:"/buy"},
+    {name:"Chat",path:"/chat"},
     {name:"About",path:"/about"},
     {name:"Contact",path:"/contact"}
-  ];
+];
 
 
   return (

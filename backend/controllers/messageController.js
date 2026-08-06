@@ -122,6 +122,8 @@ exports.getMessages = async (req, res) => {
     const { conversation_id } = req.params;
 
 
+const user_id = req.user.id;
+
     const result = await pool.query(
       `
       SELECT
@@ -130,16 +132,25 @@ exports.getMessages = async (req, res) => {
 
       FROM messages
 
-      JOIN users
-      ON users.id = messages.sender_id
+JOIN users
+ON users.id = messages.sender_id
 
-      WHERE conversation_id=$1
+JOIN conversations
+ON conversations.id = messages.conversation_id
 
-      ORDER BY created_at ASC
+      WHERE messages.conversation_id=$1
+
+AND (
+  conversations.buyer_id=$2
+  OR conversations.seller_id=$2
+)
+
+ORDER BY created_at ASC
       `,
-      [
-        conversation_id
-      ]
+     [
+  conversation_id,
+  user_id
+]
     );
 
 
@@ -152,6 +163,72 @@ exports.getMessages = async (req, res) => {
 
     res.status(500).json({
       error: error.message
+    });
+
+  }
+
+};
+
+// Get user conversations
+exports.getConversations = async (req,res)=>{
+
+  try {
+
+    const user_id = req.user.id;
+
+    const result = await pool.query(
+`
+SELECT
+conversations.id,
+conversations.property_id,
+properties.title,
+properties.image,
+
+buyer.full_name AS buyer_name,
+seller.full_name AS seller_name,
+
+messages.message AS last_message,
+messages.created_at AS last_message_time
+
+FROM conversations
+
+JOIN properties
+ON properties.id = conversations.property_id
+
+JOIN users buyer
+ON buyer.id = conversations.buyer_id
+
+JOIN users seller
+ON seller.id = conversations.seller_id
+
+LEFT JOIN messages
+ON messages.id =
+(
+SELECT id
+FROM messages
+WHERE conversation_id = conversations.id
+ORDER BY created_at DESC
+LIMIT 1
+)
+
+WHERE conversations.buyer_id=$1
+OR conversations.seller_id=$1
+
+ORDER BY conversations.created_at DESC
+`,
+[user_id]
+);
+
+
+res.json(result.rows);
+
+
+  } catch(error){
+
+    console.error(error);
+
+    res.status(500).json({
+      error:error.message
     });
 
   }

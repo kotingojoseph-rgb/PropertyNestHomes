@@ -63,6 +63,39 @@ setImages(imageData);
     );
   }
 
+async function startChat() {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    navigate("/login");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/api/chat/conversations`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          property_id: property.id,
+          seller_id: property.owner_id,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    navigate(`/chat/${data.id}`);
+
+  } catch (error) {
+    console.error(error);
+  }
+}
+
   function contactSeller() {
     if (property.owner_phone) {
       window.location.href = `tel:${property.owner_phone}`;
@@ -79,6 +112,8 @@ setImages(imageData);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+
+
 
       <button
         onClick={() => navigate(-1)}
@@ -198,6 +233,13 @@ setImages(imageData);
                 <strong>Email:</strong>{" "}
                 {property.owner_email || "Not Available"}
               </p>
+<button
+  onClick={startChat}
+  className="mt-6 w-full rounded-xl bg-blue-600 p-4 font-bold text-white hover:bg-blue-700"
+>
+  Chat Seller
+</button>
+
 
               <button
                 onClick={contactSeller}

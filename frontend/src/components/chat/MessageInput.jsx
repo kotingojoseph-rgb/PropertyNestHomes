@@ -1,14 +1,44 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import socket from "../../socket";
 
-export default function MessageInput({ onSend }) {
+export default function MessageInput({ onSend, conversationId }) {
   const [message, setMessage] = useState("");
+  const typingTimer = useRef(null);
+
+  function handleTyping(e) {
+    const value = e.target.value;
+
+    setMessage(value);
+
+    if (!conversationId) return;
+
+    socket.emit(
+      "typing",
+      conversationId
+    );
+
+    clearTimeout(typingTimer.current);
+
+    typingTimer.current = setTimeout(() => {
+      socket.emit(
+        "stopTyping",
+        conversationId
+      );
+    }, 1000);
+  }
 
   function handleSubmit(e) {
     e.preventDefault();
 
     if (!message.trim()) return;
 
+    socket.emit(
+      "stopTyping",
+      conversationId
+    );
+
     onSend(message);
+
     setMessage("");
   }
 
@@ -20,7 +50,7 @@ export default function MessageInput({ onSend }) {
       <input
         type="text"
         value={message}
-        onChange={(e) => setMessage(e.target.value)}
+        onChange={handleTyping}
         placeholder="Type a message..."
         className="flex-1 rounded-lg border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
       />

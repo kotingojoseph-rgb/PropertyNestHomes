@@ -12,6 +12,8 @@ import Register from "./pages/Register";
 
 import Chat from "./pages/Chat";
 
+import ChatCenter from "./pages/ChatCenter";
+
 export default function App() {
   return (
     <MainLayout>
@@ -22,6 +24,8 @@ export default function App() {
         <Route path="/property/:id" element={<PropertyDetails />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
+<Route path="/chat" element={<ChatCenter />} />
 
    <Route
   path="/chat/:conversationId"

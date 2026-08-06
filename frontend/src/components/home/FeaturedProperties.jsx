@@ -19,11 +19,7 @@ console.log("Featured properties API:", data);
 console.log("Featured count:", data.length);
 
         const featured = data
-          .filter(
-            (property) =>
-              property.verification_status === "verified"
-          )
-          .slice(0, 6);
+  .slice(0, 6);
 
         setProperties(featured);
 

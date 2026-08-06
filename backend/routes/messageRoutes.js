@@ -7,9 +7,16 @@ const authMiddleware = require("../middleware/authMiddleware");
 const {
   createConversation,
   sendMessage,
-  getMessages
+  getMessages,
+  getConversations
 } = require("../controllers/messageController");
 
+// Get user conversations
+router.get(
+  "/conversations",
+  authMiddleware,
+  getConversations
+);
 
 // Create or get conversation
 router.post(

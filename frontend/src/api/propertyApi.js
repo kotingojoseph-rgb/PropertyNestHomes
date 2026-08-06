@@ -1,25 +1,21 @@
-const API_URL =
+const API_BASE =
   import.meta.env.VITE_API_URL ||
-  "https://propertynesthomes.onrender.com/api/properties";
+  "https://propertynesthomes.onrender.com";
+
+const API_URL = `${API_BASE}/api/properties`;
+
+console.log("Using API:", API_URL);
 
 export async function getProperties() {
   const response = await fetch(API_URL);
 
   if (!response.ok) {
-    throw new Error("Failed to fetch properties");
+    throw new Error(`HTTP ${response.status}`);
   }
 
   const data = await response.json();
 
-  // Backend returns an array
-  if (Array.isArray(data)) {
-    return data;
-  }
+  console.log("Properties:", data);
 
-  // Safety if backend returns { properties: [] }
-  if (Array.isArray(data.properties)) {
-    return data.properties;
-  }
-
-  return [];
+  return Array.isArray(data) ? data : [];
 }

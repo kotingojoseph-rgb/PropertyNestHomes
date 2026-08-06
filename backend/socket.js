@@ -88,6 +88,45 @@ function initSocket(server) {
     });
 
     /*
+     * Typing indicator
+     */
+
+    socket.on(
+      "typing",
+      (conversationId) => {
+
+        socket
+          .to(`conversation_${conversationId}`)
+          .emit(
+            "userTyping",
+            {
+              userId: socket.user.id,
+              conversationId,
+            }
+          );
+
+      }
+    );
+
+
+    socket.on(
+      "stopTyping",
+      (conversationId) => {
+
+        socket
+          .to(`conversation_${conversationId}`)
+          .emit(
+            "userStoppedTyping",
+            {
+              userId: socket.user.id,
+              conversationId,
+            }
+          );
+
+      }
+    );
+
+    /*
      * Secure Conversation Join
      */
 
@@ -142,6 +181,84 @@ function initSocket(server) {
           console.error(error);
 
         }
+
+      }
+    );
+    /*
+     * WebRTC Video Call Signaling
+     */
+
+    socket.on(
+      "callUser",
+      ({
+        userToCall,
+        offer,
+        conversationId,
+      }) => {
+
+        socket
+          .to(`conversation_${conversationId}`)
+          .emit(
+            "incomingCall",
+            {
+              from: socket.user.id,
+              offer,
+            }
+          );
+
+      }
+    );
+
+
+    socket.on(
+      "answerCall",
+      ({
+        conversationId,
+        answer,
+      }) => {
+
+        socket
+          .to(`conversation_${conversationId}`)
+          .emit(
+            "callAccepted",
+            {
+              answer,
+            }
+          );
+
+      }
+    );
+
+
+    socket.on(
+      "iceCandidate",
+      ({
+        conversationId,
+        candidate,
+      }) => {
+
+        socket
+          .to(`conversation_${conversationId}`)
+          .emit(
+            "iceCandidate",
+            {
+              candidate,
+            }
+          );
+
+      }
+    );
+
+
+    socket.on(
+      "endCall",
+      (conversationId) => {
+
+        socket
+          .to(`conversation_${conversationId}`)
+          .emit(
+            "callEnded"
+          );
 
       }
     );

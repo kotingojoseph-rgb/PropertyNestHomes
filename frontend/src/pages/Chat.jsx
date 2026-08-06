@@ -4,12 +4,14 @@ import { useParams } from "react-router-dom";
 import socket, { connectSocket } from "../socket";
 import MessageList from "../components/chat/MessageList";
 import MessageInput from "../components/chat/MessageInput";
+import VideoCall from "../components/chat/VideoCall";
 
 export default function Chat() {
   const { conversationId } = useParams();
 
   const [messages, setMessages] = useState([]);
   const [currentUserId, setCurrentUserId] = useState(null);
+const [typingUser, setTypingUser] = useState(false);
 
   const token = localStorage.getItem("token");
 
@@ -40,15 +42,39 @@ socket.emit(
 );
 
     socket.on("newMessage", (message) => {
-      setMessages((previous) => [
-        ...previous,
-        message,
-      ]);
-    });
 
-    return () => {
-      socket.off("newMessage");
-    };
+  setMessages((previous) => [
+    ...previous,
+    message,
+  ]);
+
+  socket.emit(
+    "messageDelivered",
+    message.id
+  );
+
+});
+    
+socket.on(
+  "userTyping",
+  () => {
+    setTypingUser(true);
+  }
+);
+
+socket.on(
+  "userStoppedTyping",
+  () => {
+    setTypingUser(false);
+  }
+);
+
+ return () => {
+  socket.off("newMessage");
+  socket.off("userTyping");
+  socket.off("userStoppedTyping");
+};
+     
 
   }, [conversationId, token]);
 
@@ -107,14 +133,23 @@ socket.emit(
         Property Chat
       </div>
 
+<VideoCall conversationId={conversationId} />
+
       <MessageList
         messages={messages}
         currentUserId={currentUserId}
       />
 
+{typingUser && (
+  <div className="px-4 py-2 text-sm text-gray-500">
+    Someone is typing...
+  </div>
+)}
+
       <MessageInput
-        onSend={sendMessage}
-      />
+  onSend={sendMessage}
+  conversationId={conversationId}
+/>
 
     </div>
   );

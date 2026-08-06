@@ -8,7 +8,9 @@ const {
   createWithdrawal,
   getWithdrawals,
   getPendingProperties,
-  approveProperty,
+
+
+ approveProperty,
   rejectProperty
 } = require("../controllers/adminController");
 
