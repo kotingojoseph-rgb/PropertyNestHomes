@@ -234,3 +234,46 @@ res.json(result.rows);
   }
 
 };
+
+// Get conversation participants
+exports.getConversationDetails = async (req,res)=>{
+
+  try {
+
+    const { conversation_id } = req.params;
+
+    const result = await pool.query(
+      `
+      SELECT
+        buyer_id,
+        seller_id
+      FROM conversations
+      WHERE id = $1
+      `,
+      [
+        conversation_id
+      ]
+    );
+
+
+    if(result.rows.length === 0){
+      return res.status(404).json({
+        error:"Conversation not found"
+      });
+    }
+
+
+    res.json(result.rows[0]);
+
+
+  } catch(error){
+
+    console.error(error);
+
+    res.status(500).json({
+      error:error.message
+    });
+
+  }
+
+};

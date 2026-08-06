@@ -92,21 +92,24 @@ function initSocket(server) {
      */
 
     socket.on(
-      "typing",
-      (conversationId) => {
+  "callUser",
+  ({
+    offer,
+    conversationId,
+  }) => {
 
-        socket
-          .to(`conversation_${conversationId}`)
-          .emit(
-            "userTyping",
-            {
-              userId: socket.user.id,
-              conversationId,
-            }
-          );
+    socket
+      .to(`conversation_${conversationId}`)
+      .emit(
+        "incomingCall",
+        {
+          from: socket.user.id,
+          offer,
+        }
+      );
 
-      }
-    );
+  }
+);
 
 
     socket.on(

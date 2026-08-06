@@ -72,9 +72,10 @@ export default function VideoCall({ conversationId }) {
 
 
     socket.emit("callUser", {
-      offer,
-      conversationId,
-    });
+  offer,
+  conversationId,
+  userToCall: true,
+});
 
   }
 

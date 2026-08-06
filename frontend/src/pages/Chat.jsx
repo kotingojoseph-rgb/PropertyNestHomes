@@ -133,7 +133,9 @@ socket.on(
         Property Chat
       </div>
 
-<VideoCall conversationId={conversationId} />
+<VideoCall
+  conversationId={conversationId}
+/>
 
       <MessageList
         messages={messages}

@@ -8,7 +8,8 @@ const {
   createConversation,
   sendMessage,
   getMessages,
-  getConversations
+  getConversations,
+  getConversationDetails
 } = require("../controllers/messageController");
 
 // Get user conversations
@@ -16,6 +17,11 @@ router.get(
   "/conversations",
   authMiddleware,
   getConversations
+);
+router.get(
+  "/conversations/:conversation_id",
+  authMiddleware,
+  getConversationDetails
 );
 
 // Create or get conversation
