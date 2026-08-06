@@ -76,9 +76,9 @@ export default function ChatCenter() {
 
               <div>
 
-                <h2 className="font-bold">
-                  {chat.title}
-                </h2>
+              <h2 className="font-bold">
+  {chat.buyer_name || chat.seller_name || "Conversation"}
+</h2>
 
 
                 <p className="text-sm text-gray-600">
