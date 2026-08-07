@@ -29,6 +29,9 @@ export default function ChatCenter() {
 
       const data = await response.json();
 
+console.log("Chat response status:", response.status);
+console.log("Chat response data:", data);
+
 if (!response.ok) {
   console.error("Chat conversations error:", data);
   setConversations([]);
@@ -36,6 +39,8 @@ if (!response.ok) {
 }
 
 setConversations(data);
+
+console.log("Conversations saved to state:", data);
 
 
     } catch(error){

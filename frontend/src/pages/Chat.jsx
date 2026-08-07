@@ -151,26 +151,27 @@ socket.on(
 
 
 
-<VideoCall
-  conversationId={conversationId}
-/>
+<VideoCall conversationId={conversationId} />
 
-      <MessageList
-        messages={messages}
-        currentUserId={currentUserId}
-      />
+<div className="flex flex-1 flex-col overflow-hidden">
 
-{typingUser && (
-  <div className="px-4 py-2 text-sm text-gray-500">
-    Someone is typing...
-  </div>
-)}
+  <MessageList
+    messages={messages}
+    currentUserId={currentUserId}
+  />
+
+  {typingUser && (
+    <div className="px-4 py-2 text-sm text-gray-500">
+      Someone is typing...
+    </div>
+  )}
 
       <MessageInput
-  onSend={sendMessage}
-  conversationId={conversationId}
-/>
+      onSend={sendMessage}
+      conversationId={conversationId}
+    />
 
     </div>
+  </div>
   );
 }
