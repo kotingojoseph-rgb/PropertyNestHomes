@@ -29,7 +29,13 @@ export default function ChatCenter() {
 
       const data = await response.json();
 
-      setConversations(data);
+if (!response.ok) {
+  console.error("Chat conversations error:", data);
+  setConversations([]);
+  return;
+}
+
+setConversations(data);
 
 
     } catch(error){

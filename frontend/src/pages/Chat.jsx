@@ -36,10 +36,26 @@ const [typingUser, setTypingUser] = useState(false);
 
 connectSocket();
 
-socket.emit(
-  "joinConversation",
-  conversationId
-);
+const joinConversation = () => {
+  console.log(
+    "[Chat] Socket connected, joining conversation:",
+    conversationId
+  );
+
+  socket.emit(
+    "joinConversation",
+    conversationId
+  );
+};
+
+if (socket.connected) {
+  joinConversation();
+} else {
+  socket.once(
+    "connect",
+    joinConversation
+  );
+}
 
     socket.on("newMessage", (message) => {
 
@@ -132,9 +148,7 @@ socket.on(
       <div className="border-b p-4 text-xl font-bold">
         Property Chat
       </div>
-<h2 className="bg-red-600 text-white p-2">
-  VIDEO TEST
-</h2>
+
 
 
 <VideoCall
