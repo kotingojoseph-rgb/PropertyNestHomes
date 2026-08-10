@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 
 const authMiddleware = (req, res, next) => {
   try {
-    // Ensure the JWT secret is configured
     if (!process.env.JWT_SECRET) {
       console.error("JWT_SECRET is not configured.");
       return res.status(500).json({
@@ -14,14 +13,12 @@ const authMiddleware = (req, res, next) => {
 
     const authHeader = req.headers.authorization;
 
-    // Authorization header must exist
     if (!authHeader) {
       return res.status(401).json({
         error: "Authorization header is required",
       });
     }
 
-    // Must be in the format: Bearer <token>
     const parts = authHeader.split(" ");
 
     if (parts.length !== 2 || parts[0] !== "Bearer") {
@@ -33,6 +30,13 @@ const authMiddleware = (req, res, next) => {
     const token = parts[1];
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // A 2FA challenge is NOT an authenticated access token.
+    if (decoded.type === "2fa_pending") {
+      return res.status(401).json({
+        error: "Two-factor authentication is required",
+      });
+    }
 
     req.user = decoded;
 

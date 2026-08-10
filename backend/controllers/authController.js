@@ -126,6 +126,39 @@ const login = async (req, res) => {
       });
     }
 
+    // ----------------------------------------------------------
+    // 2FA GATE
+    // Do NOT issue the normal access token until the authenticator
+    // code has been verified.
+    // ----------------------------------------------------------
+    if (user.two_factor_enabled && user.two_factor_secret) {
+      const challengeToken = jwt.sign(
+        {
+          id: user.id,
+          type: "2fa_pending",
+        },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "5m",
+        }
+      );
+
+      return res.json({
+        message: "Two-factor authentication required.",
+        requiresTwoFactor: true,
+        challengeToken,
+        user: {
+          id: user.id,
+          full_name: user.full_name,
+          email: user.email,
+          role: user.role,
+        },
+      });
+    }
+
+    // ----------------------------------------------------------
+    // NORMAL LOGIN — 2FA is not enabled
+    // ----------------------------------------------------------
     const token = jwt.sign(
       {
         id: user.id,
@@ -140,6 +173,7 @@ const login = async (req, res) => {
 
     return res.json({
       message: "Login successful.",
+      requiresTwoFactor: false,
       token,
       user: {
         id: user.id,
