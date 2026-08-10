@@ -1,6 +1,7 @@
 const pool = require("../config/db");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
+const { sendEmail } = require("../services/emailService");
 
 
 // Request password reset
@@ -66,11 +67,52 @@ await pool.query(
     );
 
 
-    res.json({
-      message:
-      "Password reset request created",
-      token
-    });
+    const frontendUrl =
+  process.env.FRONTEND_URL ||
+  "https://propertynesthomes-frontend.onrender.com";
+
+const resetUrl =
+  `${frontendUrl}/reset-password/${token}`;
+
+await sendEmail(
+  user.email,
+  "Reset your PropertyNestHomes password",
+  `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;">
+      <h2>Password Reset</h2>
+
+      <p>We received a request to reset your PropertyNestHomes password.</p>
+
+      <p>
+        Click the button below to choose a new password.
+        This link expires in 15 minutes.
+      </p>
+
+      <p>
+        <a
+          href="${resetUrl}"
+          style="
+            display:inline-block;
+            padding:12px 20px;
+            background:#16a34a;
+            color:white;
+            text-decoration:none;
+            border-radius:6px;
+          "
+        >
+          Reset Password
+        </a>
+      </p>
+
+      <p>If you did not request this, you can safely ignore this email.</p>
+    </div>
+  `
+);
+
+res.json({
+  message:
+  "If this email exists, a password reset link has been sent"
+});
 
 
   } catch(error){
