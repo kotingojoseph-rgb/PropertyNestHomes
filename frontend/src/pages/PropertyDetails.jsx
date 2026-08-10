@@ -23,7 +23,7 @@ const [photoIndex, setPhotoIndex] = useState(0);
   async function fetchProperty() {
     try {
       const res = await fetch(
-  `https://propertynesthomes.onrender.com/api/properties/${id}`
+  `https://api.propertynesthomes.com/api/properties/${id}`
 
       );
 
