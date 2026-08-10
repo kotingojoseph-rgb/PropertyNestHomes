@@ -43,16 +43,16 @@ async function handleChargeSuccess(client, data) {
   const reference = data.reference;
 
   if (!reference) {
-    throw new Error(
-      "Payment reference missing"
-    );
+    throw new Error("Payment reference missing");
   }
 
   const existing = await client.query(
-    `SELECT id
-     FROM payments
-     WHERE reference = $1
-     FOR UPDATE`,
+    `
+    SELECT id
+    FROM payments
+    WHERE reference = $1
+    FOR UPDATE
+    `,
     [reference]
   );
 
@@ -62,85 +62,203 @@ async function handleChargeSuccess(client, data) {
     };
   }
 
-  const amount =
-    Number(data.amount) / 100;
+  const amount = Number(data.amount) / 100;
 
-  if (
-    !Number.isFinite(amount) ||
-    amount <= 0
-  ) {
-    throw new Error(
-      "Invalid payment amount"
-    );
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new Error("Invalid payment amount");
   }
 
-  const metadata =
-    data.metadata || {};
+  const metadata = data.metadata || {};
 
-  const userId =
-    metadata.user_id || null;
-
-  const propertyId =
-    metadata.property_id || null;
+  const userId = metadata.user_id || null;
+  const propertyId = metadata.property_id || null;
 
   const paymentType =
-    metadata.payment_type ||
-    "customer_payment";
+    metadata.payment_type || "customer_payment";
 
-  const paymentResult =
-    await client.query(
-      `INSERT INTO payments
-       (
-         user_id,
-         property_id,
-         amount,
-         payment_type,
-         status,
-         reference,
-         currency,
-         gateway,
-         wallet_posted
-       )
-       VALUES
-       ($1,$2,$3,$4,'completed',
-        $5,'NGN','paystack',FALSE)
-       RETURNING *`,
-      [
-        userId,
-        propertyId,
-        amount,
-        paymentType,
-        reference,
-      ]
+  const plan = metadata.plan
+    ? String(metadata.plan).toLowerCase()
+    : null;
+
+  const promotionPrices = {
+    featured: 2000,
+    premium: 5000,
+    business: 10000,
+  };
+
+  /*
+   * Promotion payments must have:
+   * - a valid plan
+   * - a property
+   * - the exact server-defined price
+   */
+  if (paymentType === "promotion") {
+    if (!userId || !propertyId || !plan) {
+      throw new Error(
+        "Invalid promotion payment metadata"
+      );
+    }
+
+    const expectedAmount = promotionPrices[plan];
+
+    if (!expectedAmount) {
+      throw new Error(
+        `Invalid promotion plan: ${plan}`
+      );
+    }
+
+    if (amount !== expectedAmount) {
+      throw new Error(
+        `Invalid promotion amount for ${plan}: expected ${expectedAmount}, received ${amount}`
+      );
+    }
+
+    /*
+     * Verify that the property belongs to the
+     * user who paid and has been verified.
+     */
+    const propertyResult = await client.query(
+      `
+      SELECT id, owner_id, verification_status
+      FROM properties
+      WHERE id = $1
+      FOR UPDATE
+      `,
+      [propertyId]
     );
 
-  const walletResult =
-    await creditWallet(client, {
-      amount,
-      transactionType:
-        "payment",
-      reference,
-      sourceType:
-        "payment",
-      sourceId:
-        String(
-          paymentResult.rows[0].id
-        ),
-      description:
-        `Paystack payment ${reference}`,
-    });
+    if (propertyResult.rows.length === 0) {
+      throw new Error("Promotion property not found");
+    }
 
+    const property = propertyResult.rows[0];
+
+    if (Number(property.owner_id) !== Number(userId)) {
+      throw new Error(
+        "User does not own promotion property"
+      );
+    }
+
+    if (property.verification_status !== "verified") {
+      throw new Error(
+        "Property must be verified before promotion"
+      );
+    }
+  }
+
+  /*
+   * Record the successful Paystack payment.
+   */
+  const paymentResult = await client.query(
+    `
+    INSERT INTO payments
+    (
+      user_id,
+      property_id,
+      amount,
+      payment_type,
+      status,
+      reference,
+      currency,
+      gateway,
+      wallet_posted
+    )
+    VALUES
+    ($1,$2,$3,$4,'completed',
+     $5,'NGN','paystack',FALSE)
+    RETURNING *
+    `,
+    [
+      userId,
+      propertyId,
+      amount,
+      paymentType,
+      reference,
+    ]
+  );
+
+  /*
+   * Credit the platform wallet.
+   */
+  const walletResult = await creditWallet(client, {
+    amount,
+    transactionType: "payment",
+    reference,
+    sourceType: "payment",
+    sourceId: String(
+      paymentResult.rows[0].id
+    ),
+    description:
+      `Paystack payment ${reference}`,
+  });
+
+  /*
+   * Mark payment as posted to wallet.
+   */
   await client.query(
-    `UPDATE payments
-     SET
-       wallet_transaction_id = $1,
-       wallet_posted = TRUE
-     WHERE id = $2`,
+    `
+    UPDATE payments
+    SET
+      wallet_transaction_id = $1,
+      wallet_posted = TRUE
+    WHERE id = $2
+    `,
     [
       walletResult.transaction.id,
       paymentResult.rows[0].id,
     ]
   );
+
+  /*
+   * If this is a promotion payment,
+   * activate the promotion for 30 days.
+   */
+  if (paymentType === "promotion") {
+    const promotionResult = await client.query(
+      `
+      INSERT INTO property_promotions
+      (
+        property_id,
+        user_id,
+        plan,
+        amount,
+        start_date,
+        end_date,
+        status,
+        currency
+      )
+      VALUES
+      (
+        $1,
+        $2,
+        $3,
+        $4,
+        CURRENT_DATE,
+        CURRENT_DATE + INTERVAL '30 days',
+        'active',
+        'NGN'
+      )
+      RETURNING *
+      `,
+      [
+        propertyId,
+        userId,
+        plan,
+        amount,
+      ]
+    );
+
+    return {
+      duplicate: false,
+      paymentId:
+        paymentResult.rows[0].id,
+      promotionId:
+        promotionResult.rows[0].id,
+      promotion:
+        promotionResult.rows[0],
+      amount,
+    };
+  }
 
   return {
     duplicate: false,

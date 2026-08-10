@@ -2,6 +2,12 @@ const axios = require("axios");
 const pool = require("../config/db");
 const { creditWallet } = require("../services/walletService");
 
+const PROMOTION_PLANS = {
+  featured: 2000,
+  premium: 5000,
+  business: 10000,
+};
+
 function paystackHeaders() {
   return {
     Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
@@ -12,31 +18,67 @@ function paystackHeaders() {
 // Initialize Paystack payment
 exports.initializePayment = async (req, res) => {
   try {
-    const {
-      email,
-      amount,
-      user_id,
-      property_id,
-      payment_type,
-    } = req.body;
+    const { email, property_id, plan } = req.body;
 
-    const numericAmount = Number(amount);
+    const userId = req.user.id;
 
-    if (!email || !Number.isFinite(numericAmount) || numericAmount <= 0) {
+    if (!email || !property_id || !plan) {
       return res.status(400).json({
-        error: "Valid email and amount are required",
+        error: "Email, property and plan are required",
       });
     }
+
+    const normalizedPlan = String(plan).toLowerCase();
+
+    if (!PROMOTION_PLANS[normalizedPlan]) {
+      return res.status(400).json({
+        error: "Invalid promotion plan",
+      });
+    }
+
+    const propertyResult = await pool.query(
+      `
+      SELECT id, owner_id, verification_status
+      FROM properties
+      WHERE id = $1
+      `,
+      [property_id]
+    );
+
+    if (propertyResult.rows.length === 0) {
+      return res.status(404).json({
+        error: "Property not found",
+      });
+    }
+
+    const property = propertyResult.rows[0];
+
+    if (property.owner_id !== userId) {
+      return res.status(403).json({
+        error: "You can only promote your own property",
+      });
+    }
+
+    if (property.verification_status !== "verified") {
+      return res.status(400).json({
+        error: "Property must be verified before promotion",
+      });
+    }
+
+    const amount = PROMOTION_PLANS[normalizedPlan];
 
     const response = await axios.post(
       "https://api.paystack.co/transaction/initialize",
       {
         email,
-        amount: Math.round(numericAmount * 100),
+        amount: amount * 100,
+
         metadata: {
-          user_id: user_id || null,
-          property_id: property_id || null,
-          payment_type: payment_type || "customer_payment",
+          user_id: userId,
+          property_id: property_id,
+          payment_type: "promotion",
+          plan: normalizedPlan,
+          promotion_amount: amount,
         },
       },
       {
@@ -58,6 +100,7 @@ exports.initializePayment = async (req, res) => {
     });
   }
 };
+
 
 // Verify Paystack payment
 exports.verifyPayment = async (req, res) => {
@@ -101,11 +144,13 @@ exports.verifyPayment = async (req, res) => {
 
     await client.query("BEGIN");
 
-    // Payment already processed?
     const existing = await client.query(
-      `SELECT id, wallet_posted
-       FROM payments
-       WHERE reference = $1`,
+      `
+      SELECT id
+      FROM payments
+      WHERE reference = $1
+      FOR UPDATE
+      `,
       [reference]
     );
 
@@ -118,23 +163,24 @@ exports.verifyPayment = async (req, res) => {
       });
     }
 
-    // Record payment
     const payment = await client.query(
-      `INSERT INTO payments
-       (
-         user_id,
-         property_id,
-         amount,
-         payment_type,
-         status,
-         reference,
-         currency,
-         gateway,
-         wallet_posted
-       )
-       VALUES
-       ($1,$2,$3,$4,'completed',$5,'NGN','paystack',FALSE)
-       RETURNING *`,
+      `
+      INSERT INTO payments
+      (
+        user_id,
+        property_id,
+        amount,
+        payment_type,
+        status,
+        reference,
+        currency,
+        gateway,
+        wallet_posted
+      )
+      VALUES
+      ($1,$2,$3,$4,'completed',$5,'NGN','paystack',FALSE)
+      RETURNING *
+      `,
       [
         metadata.user_id || null,
         metadata.property_id || null,
@@ -144,7 +190,6 @@ exports.verifyPayment = async (req, res) => {
       ]
     );
 
-    // Credit the NEW platform wallet.
     const walletResult = await creditWallet(client, {
       amount,
       transactionType: "payment",
@@ -154,12 +199,14 @@ exports.verifyPayment = async (req, res) => {
       description: `Paystack payment ${reference}`,
     });
 
-    // Link payment to wallet ledger entry.
     await client.query(
-      `UPDATE payments
-       SET wallet_posted = TRUE,
-           wallet_transaction_id = $1
-       WHERE id = $2`,
+      `
+      UPDATE payments
+      SET
+        wallet_posted = TRUE,
+        wallet_transaction_id = $1
+      WHERE id = $2
+      `,
       [
         walletResult.transaction.id,
         payment.rows[0].id,
@@ -170,12 +217,7 @@ exports.verifyPayment = async (req, res) => {
 
     return res.json({
       message: "Payment verified and wallet credited",
-      payment: {
-        ...payment.rows[0],
-        wallet_posted: true,
-        wallet_transaction_id:
-          walletResult.transaction.id,
-      },
+      payment: payment.rows[0],
       wallet: walletResult.wallet,
     });
   } catch (error) {
@@ -199,13 +241,16 @@ exports.verifyPayment = async (req, res) => {
   }
 };
 
+
 // Get payment history
 exports.getPayments = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT *
-       FROM payments
-       ORDER BY created_at DESC`
+      `
+      SELECT *
+      FROM payments
+      ORDER BY created_at DESC
+      `
     );
 
     return res.json(result.rows);
@@ -218,15 +263,18 @@ exports.getPayments = async (req, res) => {
   }
 };
 
+
 // Revenue summary
 exports.getRevenue = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT
-         COALESCE(SUM(amount), 0) AS total_revenue,
-         COUNT(*) AS total_payments
-       FROM payments
-       WHERE status = 'completed'`
+      `
+      SELECT
+        COALESCE(SUM(amount), 0) AS total_revenue,
+        COUNT(*) AS total_payments
+      FROM payments
+      WHERE status = 'completed'
+      `
     );
 
     return res.json(result.rows[0]);

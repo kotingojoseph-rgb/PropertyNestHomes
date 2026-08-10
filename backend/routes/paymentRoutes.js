@@ -1,28 +1,37 @@
 const express = require("express");
 const router = express.Router();
 
+const authMiddleware = require("../middleware/authMiddleware");
+
 const {
   initializePayment,
   verifyPayment,
   getPayments,
-  getRevenue
+  getRevenue,
 } = require("../controllers/paymentController");
 
+router.post(
+  "/initialize",
+  authMiddleware,
+  initializePayment
+);
 
-// Start Paystack payment
-router.post("/initialize", initializePayment);
+router.get(
+  "/verify/:reference",
+  authMiddleware,
+  verifyPayment
+);
 
+router.get(
+  "/",
+  authMiddleware,
+  getPayments
+);
 
-// Verify Paystack payment
-router.get("/verify/:reference", verifyPayment);
-
-
-// Payment history
-router.get("/", getPayments);
-
-
-// Revenue summary
-router.get("/revenue", getRevenue);
-
+router.get(
+  "/revenue",
+  authMiddleware,
+  getRevenue
+);
 
 module.exports = router;
