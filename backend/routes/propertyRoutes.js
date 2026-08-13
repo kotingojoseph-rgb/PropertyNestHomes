@@ -24,17 +24,16 @@ const {
 // PRIVATE ROUTES
 // =========================
 
-
 router.get(
   "/:id/documents",
   authMiddleware,
   getPropertyDocuments
 );
 
+
 // =========================
 // PUBLIC ROUTES
 // =========================
-
 
 router.get(
   "/",
@@ -45,6 +44,18 @@ router.get(
   "/:id/images",
   getPropertyImages
 );
+
+
+// =========================
+// MY PROPERTIES
+// =========================
+
+router.get(
+  "/my-properties",
+  authMiddleware,
+  getMyProperties
+);
+
 
 router.get(
   "/:id",
@@ -63,14 +74,12 @@ router.post(
   createProperty
 );
 
-
 router.put(
   "/:id",
   authMiddleware,
   propertyValidation,
   updateProperty
 );
-
 
 router.delete(
   "/:id",
@@ -89,7 +98,6 @@ router.post(
   upload.array("images", 10),
   uploadPropertyImage
 );
-
 
 router.patch(
   "/:id/images/:imageId/cover",
