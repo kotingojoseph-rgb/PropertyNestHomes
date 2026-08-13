@@ -616,18 +616,27 @@ exports.getPendingProperties = async (req, res) => {
 exports.approveProperty = async (req, res) => {
   try {
     const { id } = req.params;
+    const { document_id } = req.body;
+
+    if (!document_id) {
+      return res.status(400).json({
+        message: "document_id is required when approving a property",
+      });
+    }
 
     // Get the property
     const propertyResult = await pool.query(
-      `SELECT *
-       FROM properties
-       WHERE id = $1`,
+      `
+      SELECT *
+      FROM properties
+      WHERE id = $1
+      `,
       [id]
     );
 
     if (propertyResult.rows.length === 0) {
       return res.status(404).json({
-        message: "Property not found"
+        message: "Property not found",
       });
     }
 
@@ -637,26 +646,28 @@ exports.approveProperty = async (req, res) => {
     if (existingProperty.verification_status === "verified") {
       return res.status(400).json({
         message: "Property already approved",
-        property: existingProperty
+        property: existingProperty,
       });
     }
 
-    // A property registration certificate must actually be uploaded.
-    // Do NOT require property_registration_id here because that column
-    // is not the uploaded document itself.
+    // Require the administrator to specify the exact registration
+    // certificate that was reviewed.
     const documentResult = await pool.query(
-      `SELECT *
-       FROM property_documents
-       WHERE property_id = $1
-         AND document_type = 'Property Registration Certificate'
-       ORDER BY uploaded_at DESC
-       LIMIT 1`,
-      [id]
+      `
+      SELECT *
+      FROM property_documents
+      WHERE id = $1
+        AND property_id = $2
+        AND document_type = 'Property Registration Certificate'
+      LIMIT 1
+      `,
+      [document_id, id]
     );
 
     if (documentResult.rows.length === 0) {
       return res.status(400).json({
-        message: "Property Registration Certificate must be uploaded before approval"
+        message:
+          "The selected Property Registration Certificate was not found for this property",
       });
     }
 
@@ -676,41 +687,47 @@ exports.approveProperty = async (req, res) => {
 
     // Approve the property
     const result = await pool.query(
-      `UPDATE properties
-       SET
-         verification_status = 'verified',
-         status = 'Available',
-         propertynest_id = $1,
-         verified_at = CURRENT_TIMESTAMP,
-         verified_by = $2,
-         verification_notes = NULL
-       WHERE id = $3
-       RETURNING *`,
+      `
+      UPDATE properties
+      SET
+        verification_status = 'verified',
+        status = 'Available',
+        propertynest_id = $1,
+        verified_at = CURRENT_TIMESTAMP,
+        verified_by = $2,
+        verification_notes = NULL
+      WHERE id = $3
+      RETURNING *
+      `,
       [
         propertyNestId,
         req.user.id,
-        id
+        id,
       ]
     );
 
-    // Mark the registration certificate as verified
+    // Mark ONLY the reviewed registration certificate as verified
     await pool.query(
-      `UPDATE property_documents
-       SET verification_status = 'verified'
-       WHERE id = $1`,
+      `
+      UPDATE property_documents
+      SET verification_status = 'verified'
+      WHERE id = $1
+      `,
       [registrationDocument.id]
     );
 
     // Record the approval action
     await pool.query(
-      `INSERT INTO property_verification_logs
-       (property_id, admin_id, action, notes)
-       VALUES ($1, $2, $3, $4)`,
+      `
+      INSERT INTO property_verification_logs
+      (property_id, admin_id, action, notes)
+      VALUES ($1, $2, $3, $4)
+      `,
       [
         id,
         req.user.id,
         "APPROVED",
-        "Property registration certificate reviewed and property approved"
+        `Property registration certificate ${registrationDocument.id} reviewed and property approved`,
       ]
     );
 
@@ -720,19 +737,18 @@ exports.approveProperty = async (req, res) => {
       registration_document: {
         id: registrationDocument.id,
         document_type: registrationDocument.document_type,
-        document_name: registrationDocument.document_name
-      }
+        document_name: registrationDocument.document_name,
+        document_url: registrationDocument.document_url,
+      },
     });
-
   } catch (error) {
     console.error("approveProperty error:", error);
 
     res.status(500).json({
-      error: error.message
+      error: error.message,
     });
   }
 };
-
 
 // Reject property
 exports.rejectProperty = async (req, res) => {
