@@ -107,14 +107,7 @@ const getAllProperties = async (req, res) => {
     const query = `
       SELECT
         p.*,
-        CASE
-          WHEN pi.image_url IS NOT NULL THEN
-            CONCAT(
-              '${process.env.BACKEND_URL}/uploads/',
-              regexp_replace(pi.image_url, '^.*[\\\\/]', '')
-            )
-          ELSE NULL
-        END AS cover_image
+        pi.image_url AS cover_image
       FROM properties p
       LEFT JOIN property_images pi
         ON pi.property_id = p.id
@@ -286,7 +279,11 @@ const updateProperty = async (req, res) => {
         bathrooms=$11,
         property_type=$12,
         status='Pending Review',
-        verification_status='pending'
+        verification_status='pending',
+        verification_notes=NULL,
+        verified_at=NULL,
+        verified_by=NULL,
+        propertynest_id=NULL
       WHERE id=$13
       RETURNING *
       `,
@@ -606,41 +603,63 @@ const uploadPropertyDocument = async (req, res) => {
   }
 };
 
+const getPropertyDocuments = async (req, res) => {
+  try {
+    const { id } = req.params;
 
+    const property = await pool.query(
+      `
+      SELECT owner_id
+      FROM properties
+      WHERE id = $1
+      `,
+      [id]
+    );
 
-const getPropertyDocuments = async (req,res)=>{
+    if (property.rows.length === 0) {
+      return res.status(404).json({
+        message: "Property not found",
+      });
+    }
 
-  try{
+    const isOwner =
+      Number(property.rows[0].owner_id) === Number(req.user.id);
 
-    const {id}=req.params;
+    const isAdmin = req.user.role === "admin";
 
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        error: "You are not authorized to view these documents",
+      });
+    }
 
     const result = await pool.query(
       `
-      SELECT *
+      SELECT
+        id,
+        property_id,
+        document_type,
+        document_name,
+        document_url,
+        uploaded_at
       FROM property_documents
-      WHERE property_id=$1
+      WHERE property_id = $1
       ORDER BY uploaded_at DESC
       `,
       [id]
     );
 
-
     res.json(result.rows);
-
-
-  }catch(error){
-
-    console.error("getPropertyDocuments error:",error);
-
+  } catch (error) {
+    console.error("getPropertyDocuments error:", error);
 
     res.status(500).json({
-      error:error.message
+      error: error.message,
     });
-
   }
-
 };
+
+
 
 
 module.exports = {

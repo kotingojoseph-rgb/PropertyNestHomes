@@ -615,55 +615,75 @@ exports.getPendingProperties = async (req, res) => {
 // Approve property
 exports.approveProperty = async (req, res) => {
   try {
-
     const { id } = req.params;
 
-    const property = await pool.query(
+    // Get the property
+    const propertyResult = await pool.query(
       `SELECT *
        FROM properties
        WHERE id = $1`,
       [id]
     );
 
-    if (property.rows.length === 0) {
+    if (propertyResult.rows.length === 0) {
       return res.status(404).json({
         message: "Property not found"
       });
     }
 
-    const existingProperty = property.rows[0];
+    const existingProperty = propertyResult.rows[0];
 
-    if (!existingProperty.property_registration_id) {
-      return res.status(400).json({
-        message: "Property registration document required before approval"
-      });
-    }
-
+    // Prevent duplicate approval
     if (existingProperty.verification_status === "verified") {
       return res.status(400).json({
-        message: "Property already approved"
+        message: "Property already approved",
+        property: existingProperty
       });
     }
 
+    // A property registration certificate must actually be uploaded.
+    // Do NOT require property_registration_id here because that column
+    // is not the uploaded document itself.
+    const documentResult = await pool.query(
+      `SELECT *
+       FROM property_documents
+       WHERE property_id = $1
+         AND document_type = 'Property Registration Certificate'
+       ORDER BY uploaded_at DESC
+       LIMIT 1`,
+      [id]
+    );
+
+    if (documentResult.rows.length === 0) {
+      return res.status(400).json({
+        message: "Property Registration Certificate must be uploaded before approval"
+      });
+    }
+
+    const registrationDocument = documentResult.rows[0];
+
+    // Generate the official PropertyNestHomes listing ID
     const year = new Date().getFullYear();
 
     const sequenceResult = await pool.query(
       `SELECT nextval('propertynest_id_sequence')`
     );
 
-    const nextNumber =
-      sequenceResult.rows[0].nextval;
+    const nextNumber = sequenceResult.rows[0].nextval;
 
     const propertyNestId =
       `PNH-${year}-${String(nextNumber).padStart(6, "0")}`;
 
+    // Approve the property
     const result = await pool.query(
       `UPDATE properties
        SET
-       verification_status = 'verified',
-       propertynest_id = $1,
-       verified_at = CURRENT_TIMESTAMP,
-       verified_by = $2
+         verification_status = 'verified',
+         status = 'Available',
+         propertynest_id = $1,
+         verified_at = CURRENT_TIMESTAMP,
+         verified_by = $2,
+         verification_notes = NULL
        WHERE id = $3
        RETURNING *`,
       [
@@ -673,33 +693,45 @@ exports.approveProperty = async (req, res) => {
       ]
     );
 
+    // Mark the registration certificate as verified
     await pool.query(
-  `INSERT INTO property_verification_logs
-   (property_id, admin_id, action, notes)
-   VALUES($1,$2,$3,$4)`,
-  [
-    id,
-    req.user.id,
-    "APPROVED",
-    "Property approved after verification"
-  ]
-);
+      `UPDATE property_documents
+       SET verification_status = 'verified'
+       WHERE id = $1`,
+      [registrationDocument.id]
+    );
 
-res.json({
+    // Record the approval action
+    await pool.query(
+      `INSERT INTO property_verification_logs
+       (property_id, admin_id, action, notes)
+       VALUES ($1, $2, $3, $4)`,
+      [
+        id,
+        req.user.id,
+        "APPROVED",
+        "Property registration certificate reviewed and property approved"
+      ]
+    );
+
+    res.json({
       message: "Property approved successfully",
-      property: result.rows[0]
+      property: result.rows[0],
+      registration_document: {
+        id: registrationDocument.id,
+        document_type: registrationDocument.document_type,
+        document_name: registrationDocument.document_name
+      }
     });
 
   } catch (error) {
+    console.error("approveProperty error:", error);
 
     res.status(500).json({
       error: error.message
     });
-
   }
 };
-
-    
 
 
 // Reject property

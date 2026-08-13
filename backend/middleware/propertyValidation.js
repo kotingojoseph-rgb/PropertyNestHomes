@@ -9,7 +9,6 @@ module.exports = (req, res, next) => {
     bedrooms,
     bathrooms,
     property_type,
-    status,
   } = req.body;
 
   // Title
@@ -36,6 +35,7 @@ module.exports = (req, res, next) => {
   // Bedrooms
   if (
     bedrooms !== undefined &&
+    bedrooms !== "" &&
     (!Number.isInteger(Number(bedrooms)) || Number(bedrooms) < 0)
   ) {
     return res.status(400).json({
@@ -46,6 +46,7 @@ module.exports = (req, res, next) => {
   // Bathrooms
   if (
     bathrooms !== undefined &&
+    bathrooms !== "" &&
     (!Number.isInteger(Number(bathrooms)) || Number(bathrooms) < 0)
   ) {
     return res.status(400).json({
@@ -53,7 +54,7 @@ module.exports = (req, res, next) => {
     });
   }
 
-  // Required text fields
+  // Required location/currency fields
   if (!country || !city || !currency) {
     return res.status(400).json({
       error: "Country, city and currency are required.",
@@ -68,6 +69,9 @@ module.exports = (req, res, next) => {
     "Commercial",
     "Villa",
     "Office",
+    "Duplex",
+    "Condo",
+    "Penthouse",
   ];
 
   if (!allowedTypes.includes(property_type)) {
@@ -76,18 +80,17 @@ module.exports = (req, res, next) => {
     });
   }
 
-  // Allowed status values
-  const allowedStatus = [
-    "Sale",
-    "Rent",
-    "Sold",
-  ];
-
-  if (!allowedStatus.includes(status)) {
-    return res.status(400).json({
-      error: "Invalid property status.",
-    });
-  }
+  /*
+   * Do not validate `status` here.
+   *
+   * New properties are automatically created by the controller
+   * with:
+   *
+   * status = 'Pending Review'
+   * verification_status = 'pending'
+   *
+   * The administrator controls verification.
+   */
 
   next();
 };

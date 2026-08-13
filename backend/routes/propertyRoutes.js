@@ -24,34 +24,27 @@ const {
 // PRIVATE ROUTES
 // =========================
 
-router.get(
-  "/my-properties",
-  authMiddleware,
-  getMyProperties
-);
 
+router.get(
+  "/:id/documents",
+  authMiddleware,
+  getPropertyDocuments
+);
 
 // =========================
 // PUBLIC ROUTES
 // =========================
+
 
 router.get(
   "/",
   getAllProperties
 );
 
-
 router.get(
   "/:id/images",
   getPropertyImages
 );
-
-
-router.get(
-  "/:id/documents",
-  getPropertyDocuments
-);
-
 
 router.get(
   "/:id",
