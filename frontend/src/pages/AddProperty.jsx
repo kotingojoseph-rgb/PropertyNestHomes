@@ -1,170 +1,787 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+const initialForm = {
+  title: "",
+  description: "",
+  price: "",
+  country: "",
+  state_province: "",
+  city: "",
+  address: "",
+  postal_code: "",
+  currency: "",
+  bedrooms: "",
+  bathrooms: "",
+  property_type: "House",
+};
 
 function AddProperty() {
+  const navigate = useNavigate();
+
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
 
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    price: "",
-    country: "",
-    state_province: "",
-    city: "",
-    address: "",
-    postal_code: "",
-    currency: "",
-    bedrooms: "",
-    bathrooms: "",
-    property_type: "",
-    status: "Available"
-  });
+  const [formData, setFormData] = useState(initialForm);
+  const [document, setDocument] = useState(null);
+  const [images, setImages] = useState([]);
+
+  const [loadingLocations, setLoadingLocations] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/locations/countries`)
-      .then((res) => res.json())
-      .then((data) => setCountries(data))
-      .catch((err) => console.error(err));
+    const loadCountries = async () => {
+      try {
+        const response = await fetch(
+          `${API_URL}/api/locations/countries`
+        );
+
+        if (!response.ok) {
+          throw new Error("Unable to load countries");
+        }
+
+        const data = await response.json();
+        setCountries(data);
+      } catch (err) {
+        console.error(err);
+        setError("Unable to load location information.");
+      }
+    };
+
+    loadCountries();
   }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+  };
 
   const handleCountryChange = async (e) => {
     const countryCode = e.target.value;
+
+    if (!countryCode) {
+      setFormData((previous) => ({
+        ...previous,
+        country: "",
+        currency: "",
+        state_province: "",
+        city: "",
+      }));
+
+      setStates([]);
+      setCities([]);
+      return;
+    }
 
     const selectedCountry = countries.find(
       (country) => country.code === countryCode
     );
 
-    setFormData({
-      ...formData,
+    if (!selectedCountry) return;
+
+    setFormData((previous) => ({
+      ...previous,
       country: selectedCountry.name,
-      currency: selectedCountry.currency,
+      currency: selectedCountry.currency || "",
       state_province: "",
-      city: ""
-    });
+      city: "",
+    }));
 
-    const response = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/locations/states/${countryCode}`
-    );
-
-    const data = await response.json();
-
-    setStates(data);
     setCities([]);
+    setLoadingLocations(true);
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/locations/states/${countryCode}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Unable to load states");
+      }
+
+      const data = await response.json();
+      setStates(data);
+    } catch (err) {
+      console.error(err);
+      setStates([]);
+      setError("Unable to load states for this country.");
+    } finally {
+      setLoadingLocations(false);
+    }
   };
 
   const handleStateChange = async (e) => {
     const stateCode = e.target.value;
 
+    if (!stateCode) {
+      setFormData((previous) => ({
+        ...previous,
+        state_province: "",
+        city: "",
+      }));
+
+      setCities([]);
+      return;
+    }
+
     const selectedState = states.find(
       (state) => state.isoCode === stateCode
     );
 
-    setFormData({
-      ...formData,
+    const selectedCountry = countries.find(
+      (country) => country.name === formData.country
+    );
+
+    if (!selectedState || !selectedCountry) return;
+
+    setFormData((previous) => ({
+      ...previous,
       state_province: selectedState.name,
-      city: ""
-    });
+      city: "",
+    }));
 
-    const country = countries.find(
-      (c) => c.name === formData.country
+    setLoadingLocations(true);
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/locations/cities/${selectedCountry.code}/${stateCode}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Unable to load cities");
+      }
+
+      const data = await response.json();
+      setCities(data);
+    } catch (err) {
+      console.error(err);
+      setCities([]);
+      setError("Unable to load cities for this state.");
+    } finally {
+      setLoadingLocations(false);
+    }
+  };
+
+  const handleDocumentChange = (e) => {
+    const file = e.target.files?.[0];
+
+    if (!file) {
+      setDocument(null);
+      return;
+    }
+
+    const allowedTypes = [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      setError(
+        "Registration certificate must be PDF, JPG, PNG, or WEBP."
+      );
+      e.target.value = "";
+      setDocument(null);
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Registration certificate must be smaller than 10MB.");
+      e.target.value = "";
+      setDocument(null);
+      return;
+    }
+
+    setError("");
+    setDocument(file);
+  };
+
+
+  const handleImagesChange = (e) => {
+    const files = Array.from(e.target.files || []);
+
+    if (files.length > 10) {
+      setError("You can upload a maximum of 10 property images.");
+      e.target.value = "";
+      setImages([]);
+      return;
+    }
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    const invalidFile = files.find(
+      (file) => !allowedTypes.includes(file.type)
     );
 
-    const response = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/locations/cities/${country.code}/${stateCode}`
+    if (invalidFile) {
+      setError("Property images must be JPG, PNG, or WEBP.");
+      e.target.value = "";
+      setImages([]);
+      return;
+    }
+
+    const oversizedFile = files.find(
+      (file) => file.size > 10 * 1024 * 1024
     );
 
-    const data = await response.json();
+    if (oversizedFile) {
+      setError("Each property image must be 10MB or smaller.");
+      e.target.value = "";
+      setImages([]);
+      return;
+    }
 
-    setCities(data);
+    setError("");
+    setImages(files);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    setError("");
+    setSuccess("");
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    if (!document) {
+      setError(
+        "Please upload the Property Registration Certificate."
+      );
+      return;
+    }
+
+    if (!formData.country || !formData.city) {
+      setError("Please select the property country and city.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      /*
+       * STEP 1:
+       * Create the property.
+       *
+       * Do not send status from the frontend.
+       * The backend controls verification status.
+       */
+      const propertyResponse = await fetch(
+        `${API_URL}/api/properties`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+
+      const propertyData = await propertyResponse.json();
+
+      if (!propertyResponse.ok) {
+        throw new Error(
+          propertyData.message ||
+            propertyData.error ||
+            "Unable to create property."
+        );
+      }
+
+      const property = propertyData.property;
+
+      if (!property?.id) {
+        throw new Error(
+          "Property was created but no property ID was returned."
+        );
+      }
+
+
+      /*
+       * STEP 2:
+       * Upload property images.
+       */
+      if (images.length > 0) {
+        const imageForm = new FormData();
+
+        images.forEach((image) => {
+          imageForm.append("images", image);
+        });
+
+        const imageResponse = await fetch(
+          `${API_URL}/api/properties/${property.id}/images`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: imageForm,
+          }
+        );
+
+        const imageData = await imageResponse.json();
+
+        if (!imageResponse.ok) {
+          throw new Error(
+            imageData.message ||
+              imageData.error ||
+              "Property was created, but the property images could not be uploaded."
+          );
+        }
+      }
+
+      /*
+       * STEP 3:
+       * Upload the Property Registration Certificate.
+       */
+      const documentForm = new FormData();
+
+      documentForm.append(
+        "document_type",
+        "Property Registration Certificate"
+      );
+
+      documentForm.append("document", document);
+
+      const documentResponse = await fetch(
+        `${API_URL}/api/properties/${property.id}/documents`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: documentForm,
+        }
+      );
+
+      const documentData = await documentResponse.json();
+
+      if (!documentResponse.ok) {
+        throw new Error(
+          documentData.message ||
+            documentData.error ||
+            "Property was created, but the registration certificate could not be uploaded."
+        );
+      }
+
+      setSuccess(
+        "Property submitted successfully. Your listing is now pending verification."
+      );
+
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1800);
+    } catch (err) {
+      console.error("Add property error:", err);
+      setError(err.message || "Something went wrong.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div style={{ padding: "30px" }}>
-      <h1>Add Property</h1>
+    <div className="min-h-screen bg-gray-50 px-4 py-8 md:px-8">
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-8">
+          <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-green-600">
+            PropertyNestHomes
+          </p>
 
-      <div>
-        <label>Country</label>
-        <br />
+          <h1 className="text-3xl font-bold text-gray-900 md:text-4xl">
+            Add New Property
+          </h1>
 
-        <select onChange={handleCountryChange}>
-          <option>Select Country</option>
+          <p className="mt-2 text-gray-600">
+            Submit your property for verification and listing.
+          </p>
+        </div>
 
-          {countries.map((country) => (
-            <option
-              key={country.code}
-              value={country.code}
-            >
-              {country.name}
-            </option>
-          ))}
-        </select>
-      </div>
+        {error && (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
-      <br />
+        {success && (
+          <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+            {success}
+          </div>
+        )}
 
-      <div>
-        <label>State</label>
-        <br />
-
-        <select onChange={handleStateChange}>
-          <option>Select State</option>
-
-          {states.map((state) => (
-            <option
-              key={state.isoCode}
-              value={state.isoCode}
-            >
-              {state.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <br />
-
-      <div>
-        <label>City</label>
-        <br />
-
-        <select
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              city: e.target.value
-            })
-          }
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-8 rounded-2xl bg-white p-6 shadow-sm md:p-8"
         >
-          <option>Select City</option>
+          {/* Basic information */}
+          <section>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Property Information
+            </h2>
 
-          {cities.map((city) => (
-            <option
-              key={city.name}
-              value={city.name}
+            <p className="mt-1 text-sm text-gray-500">
+              Provide accurate information about the property.
+            </p>
+
+            <div className="mt-6 grid gap-5 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Property Title
+                </label>
+
+                <input
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  placeholder="e.g. Luxury 5 Bedroom Duplex"
+                  className="w-full rounded-xl border border-gray-300 p-3 outline-none focus:border-green-500"
+                  required
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Description
+                </label>
+
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  rows="5"
+                  placeholder="Describe the property..."
+                  className="w-full rounded-xl border border-gray-300 p-3 outline-none focus:border-green-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Price
+                </label>
+
+                <input
+                  type="number"
+                  min="0"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  placeholder="Property price"
+                  className="w-full rounded-xl border border-gray-300 p-3 outline-none focus:border-green-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Property Type
+                </label>
+
+                <select
+                  name="property_type"
+                  value={formData.property_type}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-gray-300 bg-white p-3 outline-none focus:border-green-500"
+                  required
+                >
+                  <option value="House">House</option>
+                  <option value="Apartment">Apartment</option>
+                  <option value="Villa">Villa</option>
+                  <option value="Duplex">Duplex</option>
+                  <option value="Condo">Condo</option>
+                  <option value="Penthouse">Penthouse</option>
+                  <option value="Land">Land</option>
+                  <option value="Commercial">Commercial</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Bedrooms
+                </label>
+
+                <input
+                  type="number"
+                  min="0"
+                  name="bedrooms"
+                  value={formData.bedrooms}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-gray-300 p-3 outline-none focus:border-green-500"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Bathrooms
+                </label>
+
+                <input
+                  type="number"
+                  min="0"
+                  name="bathrooms"
+                  value={formData.bathrooms}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-gray-300 p-3 outline-none focus:border-green-500"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Location */}
+          <section className="border-t pt-8">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Property Location
+            </h2>
+
+            <div className="mt-6 grid gap-5 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Country
+                </label>
+
+                <select
+                  value={
+                    countries.find(
+                      (country) => country.name === formData.country
+                    )?.code || ""
+                  }
+                  onChange={handleCountryChange}
+                  className="w-full rounded-xl border border-gray-300 bg-white p-3"
+                  required
+                >
+                  <option value="">Select country</option>
+
+                  {countries.map((country) => (
+                    <option key={country.code} value={country.code}>
+                      {country.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  State / Province
+                </label>
+
+                <select
+                  value={
+                    states.find(
+                      (state) =>
+                        state.name === formData.state_province
+                    )?.isoCode || ""
+                  }
+                  onChange={handleStateChange}
+                  disabled={!states.length || loadingLocations}
+                  className="w-full rounded-xl border border-gray-300 bg-white p-3 disabled:bg-gray-100"
+                  required
+                >
+                  <option value="">Select state / province</option>
+
+                  {states.map((state) => (
+                    <option
+                      key={state.isoCode}
+                      value={state.isoCode}
+                    >
+                      {state.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  City
+                </label>
+
+                <select
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  disabled={!cities.length || loadingLocations}
+                  className="w-full rounded-xl border border-gray-300 bg-white p-3 disabled:bg-gray-100"
+                  required
+                >
+                  <option value="">Select city</option>
+
+                  {cities.map((city) => (
+                    <option key={city.name} value={city.name}>
+                      {city.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Currency
+                </label>
+
+                <input
+                  value={formData.currency}
+                  readOnly
+                  className="w-full rounded-xl border border-gray-200 bg-gray-100 p-3 text-gray-600"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Street Address
+                </label>
+
+                <input
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="Street address"
+                  className="w-full rounded-xl border border-gray-300 p-3"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  Postal Code
+                </label>
+
+                <input
+                  name="postal_code"
+                  value={formData.postal_code}
+                  onChange={handleChange}
+                  placeholder="Postal code"
+                  className="w-full rounded-xl border border-gray-300 p-3"
+                />
+              </div>
+            </div>
+          </section>
+
+
+          {/* Property Images */}
+          <section className="border-t pt-8">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Property Images
+            </h2>
+
+            <p className="mt-1 text-sm text-gray-500">
+              Upload clear photos of the property. The first photo will
+              automatically become the cover image.
+            </p>
+
+            <div className="mt-5">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Property Photos
+              </label>
+
+              <input
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp"
+                multiple
+                onChange={handleImagesChange}
+                className="w-full rounded-xl border border-gray-300 bg-white p-3"
+              />
+
+              <p className="mt-2 text-xs text-gray-500">
+                JPG, JPEG, PNG or WEBP. Maximum 10 images, 10MB each.
+              </p>
+
+              {images.length > 0 && (
+                <div className="mt-3 rounded-xl bg-green-50 p-3">
+                  <p className="text-sm font-medium text-green-700">
+                    {images.length} image{images.length !== 1 ? "s" : ""} selected.
+                  </p>
+
+                  <ul className="mt-2 space-y-1 text-xs text-green-700">
+                    {images.map((file) => (
+                      <li key={`${file.name}-${file.lastModified}`}>
+                        {file.name}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Verification document */}
+          <section className="border-t pt-8">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Property Verification
+            </h2>
+
+            <div className="mt-4 rounded-xl border border-yellow-200 bg-yellow-50 p-4">
+              <p className="font-medium text-yellow-900">
+                Property Registration Certificate required
+              </p>
+
+              <p className="mt-1 text-sm text-yellow-800">
+                Upload the official registration certificate. An
+                administrator must review this document before your
+                property can become publicly available.
+              </p>
+            </div>
+
+            <div className="mt-5">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Registration Certificate
+              </label>
+
+              <input
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png,.webp"
+                onChange={handleDocumentChange}
+                className="w-full rounded-xl border border-gray-300 bg-white p-3"
+                required
+              />
+
+              <p className="mt-2 text-xs text-gray-500">
+                Accepted: PDF, JPG, JPEG, PNG, WEBP. Maximum size: 10MB.
+              </p>
+
+              {document && (
+                <p className="mt-3 text-sm font-medium text-green-700">
+                  Selected: {document.name}
+                </p>
+              )}
+            </div>
+          </section>
+
+          {/* Submit */}
+          <div className="border-t pt-8">
+            <div className="mb-5 rounded-xl bg-gray-50 p-4 text-sm text-gray-600">
+              <strong>Important:</strong> After submission, your property
+              will remain under review until an administrator verifies
+              the registration certificate.
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting || loadingLocations}
+              className="w-full rounded-xl bg-green-600 px-6 py-4 text-lg font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {city.name}
-            </option>
-          ))}
-        </select>
+              {submitting
+                ? "Submitting Property..."
+                : "Submit Property for Verification"}
+            </button>
+          </div>
+        </form>
       </div>
-
-      <br />
-
-      <p>
-        Selected Country: {formData.country}
-      </p>
-
-      <p>
-        Selected State: {formData.state_province}
-      </p>
-
-      <p>
-        Selected City: {formData.city}
-      </p>
-
-      <p>
-        Currency: {formData.currency}
-      </p>
     </div>
   );
 }

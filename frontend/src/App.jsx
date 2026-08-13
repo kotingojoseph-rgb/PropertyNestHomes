@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import AddProperty from "./pages/AddProperty";
 
 import Chat from "./pages/Chat";
 
@@ -38,6 +39,16 @@ export default function App() {
 
 
  {/* Protected Routes */}
+
+        <Route
+          path="/add-property"
+          element={
+            <ProtectedRoute>
+              <AddProperty />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/dashboard"
           element={
