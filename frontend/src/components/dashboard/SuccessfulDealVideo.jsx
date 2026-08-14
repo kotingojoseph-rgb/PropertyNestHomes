@@ -24,12 +24,12 @@ export default function SuccessfulDealVideo() {
         <video
           className="block aspect-video w-full object-cover"
           src={successfulDealVideo}
-          controls
+          autoPlay
           muted
           loop
           playsInline
-          preload="metadata"
-          aria-label="Two business professionals completing a successful property deal"
+          preload="auto"
+          aria-label="Successful PropertyNestHomes property transaction"
         >
           Your browser does not support the video element.
         </video>

@@ -9,7 +9,12 @@ import {
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 
-import propertyImage from "@/assets/images/hero-house.jpg";
+import apartmentImage from "@/assets/images/properties/apartment.jpg";
+import interiorImage from "@/assets/images/properties/interior.jpg";
+import luxuryHomeImage from "@/assets/images/properties/luxury-home.jpg";
+import modernHouseImage from "@/assets/images/properties/modern-house.jpg";
+import modernVillaImage from "@/assets/images/properties/modern-villa.jpg";
+import penthouseImage from "@/assets/images/properties/penthouse.jpg";
 
 export default function PropertyCard({
   id,
@@ -22,7 +27,19 @@ export default function PropertyCard({
   size,
   status,
 }) {
-  const displayImage = image || propertyImage;
+  const fallbackImages = [
+  apartmentImage,
+  interiorImage,
+  luxuryHomeImage,
+  modernHouseImage,
+  modernVillaImage,
+  penthouseImage,
+];
+
+const fallbackImage =
+  fallbackImages[(Number(id) || 0) % fallbackImages.length];
+
+const displayImage = image || fallbackImage;
 
   const [liked, setLiked] = useState(false);
 

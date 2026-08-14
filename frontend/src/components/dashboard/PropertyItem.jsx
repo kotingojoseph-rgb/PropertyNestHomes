@@ -1,85 +1,77 @@
-import { Link } from "react-router-dom";
-import propertyImage from "@/assets/images/hero-house.jpg";
+import { useMemo } from "react";
 
+import apartmentImage from "@/assets/images/properties/apartment.jpg";
+import interiorImage from "@/assets/images/properties/interior.jpg";
+import luxuryHomeImage from "@/assets/images/properties/luxury-home.jpg";
+import modernHouseImage from "@/assets/images/properties/modern-house.jpg";
+import modernVillaImage from "@/assets/images/properties/modern-villa.jpg";
+import penthouseImage from "@/assets/images/properties/penthouse.jpg";
 
-export default function PropertyItem({ property, onDelete }) {
+const fallbackImages = [
+  apartmentImage,
+  interiorImage,
+  luxuryHomeImage,
+  modernHouseImage,
+  modernVillaImage,
+  penthouseImage,
+];
+
+export default function PropertyItem({
+  property,
+  onDelete,
+  onEdit,
+  onView,
+}) {
+  const fallbackImage = useMemo(() => {
+    const propertyId = Number(property?.id) || 0;
+    return fallbackImages[propertyId % fallbackImages.length];
+  }, [property?.id]);
+
+  const imageUrl = property?.cover_image || fallbackImage;
 
   return (
-
-    <div className="group overflow-hidden rounded-3xl bg-white shadow-md border">
-
-
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
       <img
-        src={property.cover_image || propertyImage}
-        alt={property.title}
-        className="h-60 w-full object-cover"
+        src={imageUrl}
+        alt={property?.title || "Property"}
+        className="h-40 w-full object-cover"
       />
 
+      <div className="p-4">
+        <h3 className="truncate text-base font-semibold text-gray-900">
+          {property?.title || "Untitled Property"}
+        </h3>
 
-      <div className="p-6">
-
-
-        <h2 className="text-2xl font-bold">
-          {property.title}
-        </h2>
-
-
-        <p className="text-gray-500 mt-2">
-          📍 {property.city}, {property.country}
+        <p className="mt-1 text-sm text-gray-500">
+          {property?.city || "Location unavailable"}
         </p>
 
-
-        <p className="text-3xl text-green-600 font-bold mt-4">
-          {property.currency} {property.price}
-        </p>
-
-
-        <div className="mt-4 flex gap-3">
-
-          <span className="bg-gray-100 px-3 py-1 rounded-full">
-            🛏 {property.bedrooms || 0}
-          </span>
-
-          <span className="bg-gray-100 px-3 py-1 rounded-full">
-            🚿 {property.bathrooms || 0}
-          </span>
-
-        </div>
-
-
-        <div className="mt-6 flex gap-3">
-
-
-          <Link
-            to={`/property/${property.id}`}
-            className="bg-black text-white px-5 py-2 rounded-xl"
+        <div className="mt-4 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onView?.(property)}
+            className="rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-gray-800"
           >
             View
-          </Link>
-
-
-          <Link
-            to={`/edit-property/${property.id}`}
-            className="bg-blue-600 text-white px-5 py-2 rounded-xl"
-          >
-            Edit
-          </Link>
-
+          </button>
 
           <button
-            onClick={()=>onDelete(property.id)}
-            className="bg-red-600 text-white px-5 py-2 rounded-xl"
+            type="button"
+            onClick={() => onEdit?.(property)}
+            className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-blue-700"
+          >
+            Edit
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onDelete?.(property)}
+            className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-red-700"
           >
             Delete
           </button>
-
-
         </div>
-
-
       </div>
-
     </div>
-
   );
 }
