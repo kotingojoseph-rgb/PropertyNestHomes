@@ -4,6 +4,7 @@ import DashboardHeader from "../components/dashboard/DashboardHeader";
 import DashboardStats from "../components/dashboard/DashboardStats";
 import PropertyGrid from "../components/dashboard/PropertyGrid";
 import EmptyDashboard from "../components/dashboard/EmptyDashboard";
+import SuccessfulDealVideo from "../components/dashboard/SuccessfulDealVideo";
 
 export default function Dashboard() {
   const [properties, setProperties] = useState([]);
@@ -84,6 +85,8 @@ export default function Dashboard() {
       <DashboardStats
         totalProperties={properties.length}
       />
+
+<SuccessfulDealVideo />
 
       {properties.length === 0 ? (
         <EmptyDashboard />

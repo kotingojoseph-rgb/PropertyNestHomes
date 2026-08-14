@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
-import heroHouse from "@/assets/images/hero-house.jpg";
+
+import luxuryHome from "@/assets/images/properties/luxury-home.jpg";
+import modernVilla from "@/assets/images/properties/modern-villa.jpg";
+import modernHouse from "@/assets/images/properties/modern-house.jpg";
 
 const slides = [
-  heroHouse,
-  heroHouse,
-  heroHouse,
+  luxuryHome,
+  modernVilla,
+  modernHouse,
 ];
 
 export default function HeroSlider() {
@@ -13,7 +16,7 @@ export default function HeroSlider() {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrent((prev) => (prev + 1) % slides.length);
-    }, 5000);
+    }, 6000);
 
     return () => clearInterval(timer);
   }, []);
@@ -22,11 +25,13 @@ export default function HeroSlider() {
     <div className="absolute inset-0 z-0 overflow-hidden">
       {slides.map((image, index) => (
         <img
-          key={index}
+          key={image}
           src={image}
-          alt={`Hero slide ${index + 1}`}
-          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
-            current === index ? "opacity-100" : "opacity-0"
+          alt={`Luxury property ${index + 1}`}
+          className={`absolute inset-0 h-full w-full object-cover transition-all duration-1000 ${
+            current === index
+              ? "scale-100 opacity-100"
+              : "scale-105 opacity-0"
           }`}
         />
       ))}
