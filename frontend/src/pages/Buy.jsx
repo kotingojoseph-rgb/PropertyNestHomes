@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import PropertyCard from "@/components/home/PropertyCard";
-import heroHouse from "@/assets/images/hero-house.jpg";
+
 import { getProperties } from "@/api/propertyApi";
 
 export default function Buy() {
@@ -171,17 +171,19 @@ setFilteredProperties(data);
             {filteredProperties.map((property) => (
 
               <PropertyCard
-                key={property.id}
-                id={property.id}
-               image={property.cover_image || heroHouse}
-                title={property.title}
-                location={`${property.city}, ${property.country}`}
-                price={`${property.currency} ${Number(property.price).toLocaleString()}`}
-                bedrooms={property.bedrooms}
-                bathrooms={property.bathrooms}
-                size={property.area || "N/A"}
-                status={property.status}
-              />
+  key={property.id}
+  id={property.id}
+  image={property.cover_image}
+  title={property.title}
+  location={`${property.city || "Nigeria"}, ${property.country || ""}`}
+  price={`${property.currency || "NGN"} ${Number(
+    property.price || 0
+  ).toLocaleString()}`}
+  bedrooms={property.bedrooms}
+  bathrooms={property.bathrooms}
+  size={property.area || "N/A"}
+  status={property.status}
+/>
 
             ))}
 

@@ -16,6 +16,15 @@ import modernHouseImage from "@/assets/images/properties/modern-house.jpg";
 import modernVillaImage from "@/assets/images/properties/modern-villa.jpg";
 import penthouseImage from "@/assets/images/properties/penthouse.jpg";
 
+const fallbackImages = [
+  apartmentImage,
+  interiorImage,
+  luxuryHomeImage,
+  modernHouseImage,
+  modernVillaImage,
+  penthouseImage,
+];
+
 export default function PropertyCard({
   id,
   image,
@@ -27,22 +36,18 @@ export default function PropertyCard({
   size,
   status,
 }) {
-  const fallbackImages = [
-  apartmentImage,
-  interiorImage,
-  luxuryHomeImage,
-  modernHouseImage,
-  modernVillaImage,
-  penthouseImage,
-];
+  const fallbackImage =
+    fallbackImages[(Number(id) || 0) % fallbackImages.length];
 
-const fallbackImage =
-  fallbackImages[(Number(id) || 0) % fallbackImages.length];
-
-const displayImage = image || fallbackImage;
+  const [displayImage, setDisplayImage] = useState(
+    image || fallbackImage
+  );
 
   const [liked, setLiked] = useState(false);
 
+  useEffect(() => {
+    setDisplayImage(image || fallbackImage);
+  }, [image, fallbackImage]);
 
   useEffect(() => {
     const favorites = JSON.parse(
@@ -50,43 +55,30 @@ const displayImage = image || fallbackImage;
     );
 
     setLiked(favorites.includes(id));
-
   }, [id]);
-
 
   function toggleFavorite() {
     let favorites = JSON.parse(
       localStorage.getItem("favorites") || "[]"
     );
 
-
     if (favorites.includes(id)) {
-
-      favorites = favorites.filter(
-        (item) => item !== id
-      );
-
+      favorites = favorites.filter((item) => item !== id);
       setLiked(false);
-
     } else {
-
       favorites.push(id);
-
       setLiked(true);
     }
-
 
     localStorage.setItem(
       "favorites",
       JSON.stringify(favorites)
     );
 
-
     window.dispatchEvent(
       new Event("favoritesUpdated")
     );
   }
-
 
   return (
     <div
@@ -102,12 +94,13 @@ const displayImage = image || fallbackImage;
         hover:shadow-xl
       "
     >
-
       <div className="relative">
-
         <img
           src={displayImage}
-          alt={title}
+          alt={title || "Property"}
+          onError={() => {
+            setDisplayImage(fallbackImage);
+          }}
           className="
             h-56
             sm:h-64
@@ -119,15 +112,15 @@ const displayImage = image || fallbackImage;
           "
         />
 
-
-        <div className="
-          absolute
-          inset-0
-          bg-gradient-to-t
-          from-black/40
-          to-transparent
-        " />
-
+        <div
+          className="
+            absolute
+            inset-0
+            bg-gradient-to-t
+            from-black/40
+            to-transparent
+          "
+        />
 
         <span
           className="
@@ -145,8 +138,6 @@ const displayImage = image || fallbackImage;
         >
           {status || "Available"}
         </span>
-
-
 
         <button
           type="button"
@@ -168,119 +159,111 @@ const displayImage = image || fallbackImage;
             hover:scale-110
           "
         >
-
           <Heart
             className={`
               h-5
               w-5
               ${
                 liked
-                ? "fill-red-500 text-red-500"
-                : "text-gray-500"
+                  ? "fill-red-500 text-red-500"
+                  : "text-gray-500"
               }
             `}
           />
-
         </button>
-
       </div>
 
-
-
       <div className="p-5">
-
         <h3 className="text-xl font-bold line-clamp-2">
-          {title}
+          {title || "Untitled Property"}
         </h3>
 
-
-        <p className="
-          mt-2
-          flex
-          items-center
-          gap-2
-          text-sm
-          text-gray-500
-        ">
+        <p
+          className="
+            mt-2
+            flex
+            items-center
+            gap-2
+            text-sm
+            text-gray-500
+          "
+        >
           <MapPin size={18} />
-          {location}
+          {location || "Location unavailable"}
         </p>
 
-
-
-        <div className="
-          mt-5
-          grid
-          grid-cols-3
-          gap-2
-        ">
-
-          <div className="
-            rounded-xl
-            bg-gray-100
-            p-2
-            text-center
-            text-sm
-          ">
+        <div
+          className="
+            mt-5
+            grid
+            grid-cols-3
+            gap-2
+          "
+        >
+          <div
+            className="
+              rounded-xl
+              bg-gray-100
+              p-2
+              text-center
+              text-sm
+            "
+          >
             <BedDouble className="mx-auto h-5" />
             {bedrooms || 0}
           </div>
 
-
-          <div className="
-            rounded-xl
-            bg-gray-100
-            p-2
-            text-center
-            text-sm
-          ">
+          <div
+            className="
+              rounded-xl
+              bg-gray-100
+              p-2
+              text-center
+              text-sm
+            "
+          >
             <Bath className="mx-auto h-5" />
             {bathrooms || 0}
           </div>
 
-
-          <div className="
-            rounded-xl
-            bg-gray-100
-            p-2
-            text-center
-            text-sm
-          ">
+          <div
+            className="
+              rounded-xl
+              bg-gray-100
+              p-2
+              text-center
+              text-sm
+            "
+          >
             <Ruler className="mx-auto h-5" />
             {size || "N/A"}
           </div>
-
         </div>
 
-
-
-        <p className="
-          mt-5
-          text-2xl
-          font-bold
-          text-green-600
-        ">
+        <p
+          className="
+            mt-5
+            text-2xl
+            font-bold
+            text-green-600
+          "
+        >
           {price}
         </p>
 
-
-
         <Link to={`/property/${id}`}>
-
-          <Button className="
-            mt-5
-            w-full
-            rounded-xl
-            py-5
-          ">
+          <Button
+            className="
+              mt-5
+              w-full
+              rounded-xl
+              py-5
+            "
+          >
             View Details →
           </Button>
-
         </Link>
-
-
       </div>
-
     </div>
   );
 }
