@@ -1,45 +1,46 @@
 const dns = require("dns");
 const nodemailer = require("nodemailer");
 
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASSWORD =
+  process.env.EMAIL_PASSWORD || process.env.EMAIL_APP_PASSWORD;
+
+if (!EMAIL_USER || !EMAIL_PASSWORD) {
+  console.warn("⚠️ Gmail SMTP credentials are not configured.");
+}
+
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
+  port: 465,
+  secure: true,
 
-  // Force Nodemailer DNS lookup to IPv4
   dnsLookup: (hostname, options, callback) => {
     dns.lookup(hostname, { family: 4 }, callback);
   },
 
-  connectionTimeout: 15000,
-  greetingTimeout: 15000,
-  socketTimeout: 15000,
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 30000,
 
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD || process.env.EMAIL_APP_PASSWORD,
+    user: EMAIL_USER,
+    pass: EMAIL_PASSWORD,
   },
 });
 
 async function sendEmail(to, subject, html) {
   console.log("EMAIL: starting SMTP connection");
   console.log("EMAIL: recipient:", to);
-  console.log("EMAIL: sender configured:", !!process.env.EMAIL_USER);
-  console.log(
-    "EMAIL: password configured:",
-    !!(process.env.EMAIL_PASSWORD || process.env.EMAIL_APP_PASSWORD)
-  );
+  console.log("EMAIL: sender configured:", !!EMAIL_USER);
+  console.log("EMAIL: password configured:", !!EMAIL_PASSWORD);
 
   try {
-    console.log("EMAIL: verifying SMTP connection...");
-
     await transporter.verify();
 
     console.log("EMAIL: SMTP connection verified");
-    console.log("EMAIL: sending message...");
 
     const result = await transporter.sendMail({
-      from: `"PropertyNestHomes" <${process.env.EMAIL_USER}>`,
+      from: `"PropertyNestHomes" <${EMAIL_USER}>`,
       to,
       subject,
       html,
@@ -51,8 +52,6 @@ async function sendEmail(to, subject, html) {
   } catch (error) {
     console.error("EMAIL ERROR CODE:", error.code);
     console.error("EMAIL ERROR MESSAGE:", error.message);
-    console.error("EMAIL ERROR:", error);
-
     throw error;
   }
 }
