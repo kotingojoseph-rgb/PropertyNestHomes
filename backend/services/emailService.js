@@ -1,15 +1,20 @@
 const dns = require("dns");
 const nodemailer = require("nodemailer");
 
-dns.setDefaultResultOrder("ipv4first");
-
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
   secure: false,
+
+  // Force Nodemailer DNS lookup to IPv4
+  dnsLookup: (hostname, options, callback) => {
+    dns.lookup(hostname, { family: 4 }, callback);
+  },
+
   connectionTimeout: 15000,
   greetingTimeout: 15000,
   socketTimeout: 15000,
+
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD || process.env.EMAIL_APP_PASSWORD,
@@ -27,9 +32,10 @@ async function sendEmail(to, subject, html) {
 
   try {
     console.log("EMAIL: verifying SMTP connection...");
-    await transporter.verify();
-    console.log("EMAIL: SMTP connection verified");
 
+    await transporter.verify();
+
+    console.log("EMAIL: SMTP connection verified");
     console.log("EMAIL: sending message...");
 
     const result = await transporter.sendMail({
@@ -43,8 +49,10 @@ async function sendEmail(to, subject, html) {
 
     return result;
   } catch (error) {
-    console.error("EMAIL ERROR:", error.code);
+    console.error("EMAIL ERROR CODE:", error.code);
     console.error("EMAIL ERROR MESSAGE:", error.message);
+    console.error("EMAIL ERROR:", error);
+
     throw error;
   }
 }
