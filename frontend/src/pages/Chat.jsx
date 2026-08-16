@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import socket, { connectSocket } from "../socket";
 import MessageList from "../components/chat/MessageList";
@@ -8,9 +8,14 @@ import VideoCall from "../components/chat/VideoCall";
 
 export default function Chat() {
   const { conversationId } = useParams();
+  const navigate = useNavigate();
 
   const [messages, setMessages] = useState([]);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [chatUser, setChatUser] = useState({
+    id: null,
+    name: "PropertyNestHomes User",
+  });
   const [typingUser, setTypingUser] = useState(false);
 
   const token = localStorage.getItem("token");
@@ -19,100 +24,63 @@ export default function Chat() {
     if (!token) return;
 
     try {
-      const payload = JSON.parse(
-        atob(token.split(".")[1])
-      );
-
+      const payload = JSON.parse(atob(token.split(".")[1]));
       setCurrentUserId(payload.id);
     } catch (error) {
-      console.error(error);
+      console.error("Token decode error:", error);
     }
   }, [token]);
 
   useEffect(() => {
     if (!conversationId || !token) return;
 
+    loadConversation();
     loadMessages();
 
     connectSocket();
 
     const joinConversation = () => {
-      socket.emit(
-        "joinConversation",
-        conversationId
-      );
-
-      socket.emit(
-        "markMessagesRead",
-        conversationId
-      );
+      socket.emit("joinConversation", conversationId);
+      socket.emit("markMessagesRead", Number(conversationId));
     };
 
     if (socket.connected) {
       joinConversation();
     } else {
-      socket.once(
-        "connect",
-        joinConversation
-      );
+      socket.once("connect", joinConversation);
     }
 
-    function handleNewMessage(message) {
+    const handleNewMessage = (message) => {
       setMessages((previous) => {
-        if (
-          previous.some(
-            (item) => item.id === message.id
-          )
-        ) {
+        if (previous.some((item) => item.id === message.id)) {
           return previous;
         }
 
-        return [
-          ...previous,
-          message,
-        ];
+        return [...previous, message];
       });
 
-      if (
-        Number(message.sender_id) !==
-        Number(currentUserId)
-      ) {
-        socket.emit(
-          "messageDelivered",
-          {
-            messageId: message.id,
-            conversationId: Number(
-              conversationId
-            ),
-          }
-        );
+      if (Number(message.sender_id) !== Number(currentUserId)) {
+        socket.emit("messageDelivered", {
+          messageId: message.id,
+          conversationId: Number(conversationId),
+        });
 
-        socket.emit(
-          "markMessagesRead",
-          conversationId
-        );
+        socket.emit("markMessagesRead", Number(conversationId));
       }
-    }
+    };
 
-    function handleMessageStatusUpdate({
-      messageId,
-      status,
-    }) {
+    const handleStatusUpdate = ({ messageId, status }) => {
       setMessages((previous) =>
         previous.map((message) => {
-          if (message.id !== messageId) {
-            return message;
-          }
+          if (message.id !== messageId) return message;
 
           if (status === "read") {
             return {
               ...message,
               delivered_at:
-                message.delivered_at ||
-                new Date().toISOString(),
+                message.delivered_at || new Date().toISOString(),
               read_at:
-                message.read_at ||
-                new Date().toISOString(),
+                message.read_at || new Date().toISOString(),
             };
           }
 
@@ -120,75 +88,58 @@ export default function Chat() {
             return {
               ...message,
               delivered_at:
-                message.delivered_at ||
-                new Date().toISOString(),
+                message.delivered_at || new Date().toISOString(),
             };
           }
 
           return message;
         })
       );
-    }
+    };
 
-    function handleTyping() {
-      setTypingUser(true);
-    }
+    const handleTyping = () => setTypingUser(true);
+    const handleStoppedTyping = () => setTypingUser(false);
 
-    function handleStoppedTyping() {
-      setTypingUser(false);
-    }
-
-    socket.on(
-      "newMessage",
-      handleNewMessage
-    );
-
-    socket.on(
-      "messageStatusUpdate",
-      handleMessageStatusUpdate
-    );
-
-    socket.on(
-      "userTyping",
-      handleTyping
-    );
-
-    socket.on(
-      "userStoppedTyping",
-      handleStoppedTyping
-    );
+    socket.on("newMessage", handleNewMessage);
+    socket.on("messageStatusUpdate", handleStatusUpdate);
+    socket.on("userTyping", handleTyping);
+    socket.on("userStoppedTyping", handleStoppedTyping);
 
     return () => {
-      socket.off(
-        "newMessage",
-        handleNewMessage
-      );
-
-      socket.off(
-        "messageStatusUpdate",
-        handleMessageStatusUpdate
-      );
-
-      socket.off(
-        "userTyping",
-        handleTyping
-      );
-
-      socket.off(
-        "userStoppedTyping",
-        handleStoppedTyping
-      );
-
-      socket.off(
-        "connect",
-        joinConversation
-      );
+      socket.off("newMessage", handleNewMessage);
+      socket.off("messageStatusUpdate", handleStatusUpdate);
+      socket.off("userTyping", handleTyping);
+      socket.off("userStoppedTyping", handleStoppedTyping);
+      socket.off("connect", joinConversation);
     };
-  }, [
-    conversationId,
-    token,
-    currentUserId,
-  ]);
+  }, [conversationId, token, currentUserId]);
+
+  async function loadConversation() {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/chat/conversations/${conversationId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Conversation error:", data);
+        return;
+      }
+
+      setChatUser({
+        id: data.other_user_id,
+        name: data.other_user_name || "PropertyNestHomes User",
+      });
+    } catch (error) {
+      console.error("Load conversation error:", error);
+    }
+  }
 
   async function loadMessages() {
     try {
@@ -203,16 +154,9 @@ export default function Chat() {
 
       const data = await response.json();
 
-      setMessages(
-        Array.isArray(data)
-          ? data
-          : []
-      );
+      setMessages(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error(
-        "Load messages error:",
-        error
-      );
+      console.error("Load messages error:", error);
     }
   }
 
@@ -223,62 +167,78 @@ export default function Chat() {
         {
           method: "POST",
           headers: {
-            "Content-Type":
-              "application/json",
-            Authorization:
-              `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            conversation_id:
-              Number(conversationId),
+            conversation_id: Number(conversationId),
             message,
           }),
         }
       );
 
       if (!response.ok) {
-        console.error(
-          "Failed to send message"
-        );
+        const data = await response.json().catch(() => ({}));
+        console.error("Send message error:", data);
       }
     } catch (error) {
-      console.error(
-        "Send message error:",
-        error
-      );
+      console.error("Send message error:", error);
     }
   }
 
   return (
-    <div className="mx-auto flex h-[85vh] max-w-4xl flex-col rounded-lg border bg-white shadow">
+    <div className="flex min-h-screen flex-col bg-[#efeae2]">
+      <header className="sticky top-0 z-30 flex items-center gap-3 bg-[#075e54] px-4 py-3 text-white shadow">
+        <button
+          type="button"
+          onClick={() => navigate("/chat")}
+          className="rounded-full p-2 text-xl hover:bg-white/10"
+          aria-label="Back"
+        >
+          ←
+        </button>
 
-      <div className="border-b p-4 text-xl font-bold">
-        Property Chat
-      </div>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 font-bold">
+          {chatUser.name.charAt(0).toUpperCase()}
+        </div>
 
-      <VideoCall
-        conversationId={conversationId}
-      />
-
-      <div className="flex flex-1 flex-col overflow-hidden">
-
-        <MessageList
-          messages={messages}
-          currentUserId={currentUserId}
-        />
-
-        {typingUser && (
-          <div className="px-4 py-2 text-sm text-gray-500">
-            Someone is typing...
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-semibold">{chatUser.name}</div>
+          <div className="text-xs text-white/70">
+            {typingUser ? "typing..." : "online"}
           </div>
-        )}
+        </div>
 
-        <MessageInput
-          onSend={sendMessage}
+        <VideoCall
           conversationId={conversationId}
+          otherUserId={chatUser.id}
+          otherUserName={chatUser.name}
         />
 
-      </div>
+        <button
+          type="button"
+          className="rounded-full p-2 text-xl hover:bg-white/10"
+          title="More"
+        >
+          ⋮
+        </button>
+      </header>
+
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col">
+        <div className="flex-1 overflow-hidden">
+          <MessageList
+            messages={messages}
+            currentUserId={currentUserId}
+          />
+        </div>
+
+        <div className="sticky bottom-0 p-3">
+          <MessageInput
+            onSend={sendMessage}
+            conversationId={conversationId}
+          />
+        </div>
+      </main>
     </div>
   );
 }
