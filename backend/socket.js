@@ -1,11 +1,9 @@
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
+const pool = require("./config/db");
 
 let io = null;
 
-/*
- * Initialize Socket.IO on the existing HTTP server.
- */
 function initSocket(server) {
   io = new Server(server, {
     cors: {
@@ -21,10 +19,6 @@ function initSocket(server) {
     },
   });
 
-  /*
-   * Authenticate Socket.IO connections using the same JWT
-   * used by the REST API.
-   */
   io.use((socket, next) => {
     try {
       if (!process.env.JWT_SECRET) {
@@ -33,56 +27,316 @@ function initSocket(server) {
 
       const token =
         socket.handshake.auth?.token ||
-        socket.handshake.headers?.authorization?.replace(/^Bearer\s+/i, "");
+        socket.handshake.headers?.authorization?.replace(
+          /^Bearer\s+/i,
+          ""
+        );
 
       if (!token) {
         return next(new Error("Authentication token required"));
       }
 
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET
+      );
 
       if (decoded.type === "2fa_pending") {
-        return next(new Error("Two-factor authentication required"));
+        return next(
+          new Error("Two-factor authentication required")
+        );
       }
 
       socket.user = decoded;
 
       next();
     } catch (error) {
-      console.error("Socket authentication failed:", error.message);
+      console.error(
+        "Socket authentication failed:",
+        error.message
+      );
+
       next(new Error("Invalid or expired token"));
     }
   });
 
   io.on("connection", (socket) => {
+    const userId = Number(socket.user.id);
+
     console.log(
-      `🔌 Socket connected: user ${socket.user.id} (${socket.user.email || "unknown"})`
+      `🔌 Socket connected: user ${userId} (${socket.user.email || "unknown"})`
     );
 
     /*
-     * Register this socket in a private user room.
+     * Private user room.
      */
-    socket.join(`user_${socket.user.id}`);
-
+    socket.join(`user_${userId}`);
 
     /*
-     * Join a conversation room for real-time chat messages.
+     * Join conversation.
      */
-    socket.on("joinConversation", (conversationId) => {
-      if (!conversationId) {
-        return;
+    socket.on("joinConversation", async (conversationId) => {
+      try {
+        const id = Number(conversationId);
+
+        if (!Number.isInteger(id) || id <= 0) {
+          return;
+        }
+
+        const access = await pool.query(
+          `
+          SELECT id
+          FROM conversations
+          WHERE id = $1
+          AND (
+            buyer_id = $2
+            OR seller_id = $2
+          )
+          LIMIT 1
+          `,
+          [id, userId]
+        );
+
+        if (access.rows.length === 0) {
+          console.warn(
+            `⚠️ User ${userId} denied conversation ${id}`
+          );
+          return;
+        }
+
+        socket.join(`conversation_${id}`);
+
+        console.log(
+          `💬 User ${userId} joined conversation ${id}`
+        );
+      } catch (error) {
+        console.error(
+          "joinConversation error:",
+          error.message
+        );
       }
-
-      socket.join(`conversation_${conversationId}`);
-
-      console.log(
-        `💬 User ${socket.user.id} joined conversation ${conversationId}`
-      );
     });
-    /*
-     * WebRTC Video Call Signaling
-     */
 
+    /*
+     * Typing indicator.
+     */
+    socket.on("typing", async (conversationId) => {
+      try {
+        const id = Number(conversationId);
+
+        if (!Number.isInteger(id)) {
+          return;
+        }
+
+        const access = await pool.query(
+          `
+          SELECT buyer_id, seller_id
+          FROM conversations
+          WHERE id = $1
+          AND (
+            buyer_id = $2
+            OR seller_id = $2
+          )
+          LIMIT 1
+          `,
+          [id, userId]
+        );
+
+        if (access.rows.length === 0) {
+          return;
+        }
+
+        socket
+          .to(`conversation_${id}`)
+          .emit("userTyping", {
+            userId,
+          });
+      } catch (error) {
+        console.error(
+          "typing error:",
+          error.message
+        );
+      }
+    });
+
+    /*
+     * Stop typing.
+     */
+    socket.on("stopTyping", async (conversationId) => {
+      try {
+        const id = Number(conversationId);
+
+        if (!Number.isInteger(id)) {
+          return;
+        }
+
+        socket
+          .to(`conversation_${id}`)
+          .emit("userStoppedTyping", {
+            userId,
+          });
+      } catch (error) {
+        console.error(
+          "stopTyping error:",
+          error.message
+        );
+      }
+    });
+
+    /*
+     * Mark messages in a conversation as read.
+     */
+    socket.on(
+      "markMessagesRead",
+      async (conversationId) => {
+        try {
+          const id = Number(conversationId);
+
+          if (!Number.isInteger(id) || id <= 0) {
+            return;
+          }
+
+          const conversation = await pool.query(
+            `
+            SELECT buyer_id, seller_id
+            FROM conversations
+            WHERE id = $1
+            AND (
+              buyer_id = $2
+              OR seller_id = $2
+            )
+            LIMIT 1
+            `,
+            [id, userId]
+          );
+
+          if (conversation.rows.length === 0) {
+            return;
+          }
+
+          const result = await pool.query(
+            `
+            UPDATE messages
+            SET
+              is_read = TRUE,
+              read_at = COALESCE(read_at, CURRENT_TIMESTAMP)
+            WHERE conversation_id = $1
+            AND sender_id <> $2
+            AND read_at IS NULL
+            RETURNING id
+            `,
+            [id, userId]
+          );
+
+          for (const row of result.rows) {
+            io
+              .to(`conversation_${id}`)
+              .emit("messageStatusUpdate", {
+                messageId: row.id,
+                status: "read",
+              });
+          }
+        } catch (error) {
+          console.error(
+            "markMessagesRead error:",
+            error.message
+          );
+        }
+      }
+    );
+
+    /*
+     * Mark a specific message as delivered.
+     */
+    socket.on(
+      "messageDelivered",
+      async ({ messageId, conversationId }) => {
+        try {
+          const messageIdNumber = Number(messageId);
+          const conversationIdNumber = Number(
+            conversationId
+          );
+
+          if (
+            !Number.isInteger(messageIdNumber) ||
+            !Number.isInteger(conversationIdNumber)
+          ) {
+            return;
+          }
+
+          const access = await pool.query(
+            `
+            SELECT
+              m.id,
+              m.sender_id
+            FROM messages m
+            JOIN conversations c
+              ON c.id = m.conversation_id
+            WHERE m.id = $1
+            AND m.conversation_id = $2
+            AND (
+              c.buyer_id = $3
+              OR c.seller_id = $3
+            )
+            LIMIT 1
+            `,
+            [
+              messageIdNumber,
+              conversationIdNumber,
+              userId,
+            ]
+          );
+
+          if (access.rows.length === 0) {
+            return;
+          }
+
+          const message = access.rows[0];
+
+          /*
+           * Do not mark our own message as delivered
+           * from the receiving client.
+           */
+          if (
+            Number(message.sender_id) === userId
+          ) {
+            return;
+          }
+
+          const updated = await pool.query(
+            `
+            UPDATE messages
+            SET delivered_at =
+              COALESCE(
+                delivered_at,
+                CURRENT_TIMESTAMP
+              )
+            WHERE id = $1
+            RETURNING id
+            `,
+            [messageIdNumber]
+          );
+
+          if (updated.rows.length > 0) {
+            io
+              .to(`conversation_${conversationIdNumber}`)
+              .emit("messageStatusUpdate", {
+                messageId: messageIdNumber,
+                status: "delivered",
+              });
+          }
+        } catch (error) {
+          console.error(
+            "messageDelivered error:",
+            error.message
+          );
+        }
+      }
+    );
+
+    /*
+     * WebRTC video-call signaling.
+     */
     socket.on(
       "callUser",
       ({ userToCall, offer, conversationId }) => {
@@ -90,15 +344,18 @@ function initSocket(server) {
           return;
         }
 
-        io.to(`user_${userToCall}`).emit("incomingCall", {
-          from: socket.user.id,
-          callerName:
-            socket.user.full_name ||
-            socket.user.email ||
-            "PropertyNestHomes User",
-          offer,
-          conversationId,
-        });
+        io.to(`user_${Number(userToCall)}`).emit(
+          "incomingCall",
+          {
+            from: userId,
+            callerName:
+              socket.user.full_name ||
+              socket.user.email ||
+              "PropertyNestHomes User",
+            offer,
+            conversationId,
+          }
+        );
       }
     );
 
@@ -109,26 +366,36 @@ function initSocket(server) {
           return;
         }
 
-        io.to(`user_${callerId}`).emit("callAccepted", {
-          from: socket.user.id,
-          answer,
-          conversationId,
-        });
+        io.to(`user_${Number(callerId)}`).emit(
+          "callAccepted",
+          {
+            from: userId,
+            answer,
+            conversationId,
+          }
+        );
       }
     );
 
     socket.on(
       "iceCandidate",
-      ({ targetUserId, candidate, conversationId }) => {
+      ({
+        targetUserId,
+        candidate,
+        conversationId,
+      }) => {
         if (!targetUserId || !candidate) {
           return;
         }
 
-        io.to(`user_${targetUserId}`).emit("iceCandidate", {
-          from: socket.user.id,
-          candidate,
-          conversationId,
-        });
+        io.to(`user_${Number(targetUserId)}`).emit(
+          "iceCandidate",
+          {
+            from: userId,
+            candidate,
+            conversationId,
+          }
+        );
       }
     );
 
@@ -139,16 +406,19 @@ function initSocket(server) {
           return;
         }
 
-        io.to(`user_${targetUserId}`).emit("callEnded", {
-          from: socket.user.id,
-          conversationId,
-        });
+        io.to(`user_${Number(targetUserId)}`).emit(
+          "callEnded",
+          {
+            from: userId,
+            conversationId,
+          }
+        );
       }
     );
 
     socket.on("disconnect", (reason) => {
       console.log(
-        `🔌 Socket disconnected: user ${socket.user.id} (${reason})`
+        `🔌 Socket disconnected: user ${userId} (${reason})`
       );
     });
   });
@@ -158,12 +428,11 @@ function initSocket(server) {
   return io;
 }
 
-/*
- * Access the initialized Socket.IO instance from controllers.
- */
 function getIO() {
   if (!io) {
-    throw new Error("Socket.IO has not been initialized");
+    throw new Error(
+      "Socket.IO has not been initialized"
+    );
   }
 
   return io;
