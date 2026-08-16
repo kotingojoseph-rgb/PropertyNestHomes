@@ -64,6 +64,21 @@ function initSocket(server) {
      */
     socket.join(`user_${socket.user.id}`);
 
+
+    /*
+     * Join a conversation room for real-time chat messages.
+     */
+    socket.on("joinConversation", (conversationId) => {
+      if (!conversationId) {
+        return;
+      }
+
+      socket.join(`conversation_${conversationId}`);
+
+      console.log(
+        `💬 User ${socket.user.id} joined conversation ${conversationId}`
+      );
+    });
     /*
      * WebRTC Video Call Signaling
      */
