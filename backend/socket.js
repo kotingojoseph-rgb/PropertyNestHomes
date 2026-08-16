@@ -248,6 +248,140 @@ function initSocket(server) {
       }
     );
 
+
+    /*
+     * Message delivery confirmation
+     */
+
+    socket.on(
+      "messageDelivered",
+      async ({ messageId, conversationId }) => {
+        try {
+          const result = await pool.query(
+            `
+            SELECT
+              messages.id,
+              messages.sender_id
+            FROM messages
+            JOIN conversations
+              ON conversations.id = messages.conversation_id
+            WHERE messages.id = $1
+              AND messages.conversation_id = $2
+              AND (
+                conversations.buyer_id = $3
+                OR conversations.seller_id = $3
+              )
+            `,
+            [
+              messageId,
+              conversationId,
+              socket.user.id,
+            ]
+          );
+
+          if (result.rows.length === 0) {
+            return;
+          }
+
+          await pool.query(
+            `
+            UPDATE messages
+            SET delivered_at = COALESCE(
+              delivered_at,
+              CURRENT_TIMESTAMP
+            )
+            WHERE id = $1
+            `,
+            [messageId]
+          );
+
+          io.to(`conversation_${conversationId}`).emit(
+            "messageStatusUpdate",
+            {
+              messageId,
+              status: "delivered",
+            }
+          );
+        } catch (error) {
+          console.error(
+            "Message delivery update error:",
+            error
+          );
+        }
+      }
+    );
+
+
+    /*
+     * Message read confirmation
+     */
+
+    socket.on(
+      "markMessagesRead",
+      async (conversationId) => {
+        try {
+          const access = await pool.query(
+            `
+            SELECT id
+            FROM conversations
+            WHERE id = $1
+              AND (
+                buyer_id = $2
+                OR seller_id = $2
+              )
+            `,
+            [
+              conversationId,
+              socket.user.id,
+            ]
+          );
+
+          if (access.rows.length === 0) {
+            return;
+          }
+
+          const result = await pool.query(
+            `
+            UPDATE messages
+            SET
+              read_at = COALESCE(
+                read_at,
+                CURRENT_TIMESTAMP
+              ),
+              delivered_at = COALESCE(
+                delivered_at,
+                CURRENT_TIMESTAMP
+              )
+            WHERE conversation_id = $1
+              AND sender_id <> $2
+              AND read_at IS NULL
+            RETURNING id
+            `,
+            [
+              conversationId,
+              socket.user.id,
+            ]
+          );
+
+          for (const row of result.rows) {
+            io.to(`conversation_${conversationId}`).emit(
+              "messageStatusUpdate",
+              {
+                messageId: row.id,
+                status: "read",
+              }
+            );
+          }
+        } catch (error) {
+          console.error(
+            "Message read update error:",
+            error
+          );
+        }
+      }
+    );
+
+
     /*
      * Disconnect
      */

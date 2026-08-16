@@ -173,6 +173,11 @@ async function runChatMigrations() {
     `);
 
     await pool.query(`
+      ALTER TABLE messages
+      ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP
+    `);
+
+    await pool.query(`
       CREATE INDEX IF NOT EXISTS idx_conversations_direct_chat
       ON conversations(buyer_id, seller_id)
       WHERE property_id IS NULL

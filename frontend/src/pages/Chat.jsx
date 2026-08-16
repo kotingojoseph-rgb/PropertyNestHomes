@@ -11,7 +11,7 @@ export default function Chat() {
 
   const [messages, setMessages] = useState([]);
   const [currentUserId, setCurrentUserId] = useState(null);
-const [typingUser, setTypingUser] = useState(false);
+  const [typingUser, setTypingUser] = useState(false);
 
   const token = localStorage.getItem("token");
 
@@ -34,65 +34,161 @@ const [typingUser, setTypingUser] = useState(false);
 
     loadMessages();
 
-connectSocket();
+    connectSocket();
 
-const joinConversation = () => {
-  console.log(
-    "[Chat] Socket connected, joining conversation:",
-    conversationId
-  );
+    const joinConversation = () => {
+      socket.emit(
+        "joinConversation",
+        conversationId
+      );
 
-  socket.emit(
-    "joinConversation",
-    conversationId
-  );
-};
+      socket.emit(
+        "markMessagesRead",
+        conversationId
+      );
+    };
 
-if (socket.connected) {
-  joinConversation();
-} else {
-  socket.once(
-    "connect",
-    joinConversation
-  );
-}
+    if (socket.connected) {
+      joinConversation();
+    } else {
+      socket.once(
+        "connect",
+        joinConversation
+      );
+    }
 
-    socket.on("newMessage", (message) => {
+    function handleNewMessage(message) {
+      setMessages((previous) => {
+        if (
+          previous.some(
+            (item) => item.id === message.id
+          )
+        ) {
+          return previous;
+        }
 
-  setMessages((previous) => [
-    ...previous,
-    message,
+        return [
+          ...previous,
+          message,
+        ];
+      });
+
+      if (
+        Number(message.sender_id) !==
+        Number(currentUserId)
+      ) {
+        socket.emit(
+          "messageDelivered",
+          {
+            messageId: message.id,
+            conversationId: Number(
+              conversationId
+            ),
+          }
+        );
+
+        socket.emit(
+          "markMessagesRead",
+          conversationId
+        );
+      }
+    }
+
+    function handleMessageStatusUpdate({
+      messageId,
+      status,
+    }) {
+      setMessages((previous) =>
+        previous.map((message) => {
+          if (message.id !== messageId) {
+            return message;
+          }
+
+          if (status === "read") {
+            return {
+              ...message,
+              delivered_at:
+                message.delivered_at ||
+                new Date().toISOString(),
+              read_at:
+                message.read_at ||
+                new Date().toISOString(),
+            };
+          }
+
+          if (status === "delivered") {
+            return {
+              ...message,
+              delivered_at:
+                message.delivered_at ||
+                new Date().toISOString(),
+            };
+          }
+
+          return message;
+        })
+      );
+    }
+
+    function handleTyping() {
+      setTypingUser(true);
+    }
+
+    function handleStoppedTyping() {
+      setTypingUser(false);
+    }
+
+    socket.on(
+      "newMessage",
+      handleNewMessage
+    );
+
+    socket.on(
+      "messageStatusUpdate",
+      handleMessageStatusUpdate
+    );
+
+    socket.on(
+      "userTyping",
+      handleTyping
+    );
+
+    socket.on(
+      "userStoppedTyping",
+      handleStoppedTyping
+    );
+
+    return () => {
+      socket.off(
+        "newMessage",
+        handleNewMessage
+      );
+
+      socket.off(
+        "messageStatusUpdate",
+        handleMessageStatusUpdate
+      );
+
+      socket.off(
+        "userTyping",
+        handleTyping
+      );
+
+      socket.off(
+        "userStoppedTyping",
+        handleStoppedTyping
+      );
+
+      socket.off(
+        "connect",
+        joinConversation
+      );
+    };
+  }, [
+    conversationId,
+    token,
+    currentUserId,
   ]);
-
-  socket.emit(
-    "messageDelivered",
-    message.id
-  );
-
-});
-    
-socket.on(
-  "userTyping",
-  () => {
-    setTypingUser(true);
-  }
-);
-
-socket.on(
-  "userStoppedTyping",
-  () => {
-    setTypingUser(false);
-  }
-);
-
- return () => {
-  socket.off("newMessage");
-  socket.off("userTyping");
-  socket.off("userStoppedTyping");
-};
-     
-
-  }, [conversationId, token]);
 
   async function loadMessages() {
     try {
@@ -107,10 +203,16 @@ socket.on(
 
       const data = await response.json();
 
-      setMessages(data);
-
+      setMessages(
+        Array.isArray(data)
+          ? data
+          : []
+      );
     } catch (error) {
-      console.error(error);
+      console.error(
+        "Load messages error:",
+        error
+      );
     }
   }
 
@@ -120,25 +222,30 @@ socket.on(
         `${import.meta.env.VITE_API_URL}/api/chat/messages`,
         {
           method: "POST",
-
           headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            "Content-Type":
+              "application/json",
+            Authorization:
+              `Bearer ${token}`,
           },
-
           body: JSON.stringify({
-            conversation_id: Number(conversationId),
+            conversation_id:
+              Number(conversationId),
             message,
           }),
         }
       );
 
       if (!response.ok) {
-        console.error("Failed to send message");
+        console.error(
+          "Failed to send message"
+        );
       }
-
     } catch (error) {
-      console.error(error);
+      console.error(
+        "Send message error:",
+        error
+      );
     }
   }
 
@@ -149,29 +256,29 @@ socket.on(
         Property Chat
       </div>
 
+      <VideoCall
+        conversationId={conversationId}
+      />
 
+      <div className="flex flex-1 flex-col overflow-hidden">
 
-<VideoCall conversationId={conversationId} />
+        <MessageList
+          messages={messages}
+          currentUserId={currentUserId}
+        />
 
-<div className="flex flex-1 flex-col overflow-hidden">
+        {typingUser && (
+          <div className="px-4 py-2 text-sm text-gray-500">
+            Someone is typing...
+          </div>
+        )}
 
-  <MessageList
-    messages={messages}
-    currentUserId={currentUserId}
-  />
+        <MessageInput
+          onSend={sendMessage}
+          conversationId={conversationId}
+        />
 
-  {typingUser && (
-    <div className="px-4 py-2 text-sm text-gray-500">
-      Someone is typing...
+      </div>
     </div>
-  )}
-
-      <MessageInput
-      onSend={sendMessage}
-      conversationId={conversationId}
-    />
-
-    </div>
-  </div>
   );
 }
