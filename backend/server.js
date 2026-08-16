@@ -153,9 +153,51 @@ const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 
 const { initSocket } = require("./socket");
+const pool = require("./config/db");
+
+async function runChatMigrations() {
+  try {
+    await pool.query(`
+      ALTER TABLE conversations
+      ALTER COLUMN property_id DROP NOT NULL
+    `);
+
+    await pool.query(`
+      ALTER TABLE messages
+      ADD COLUMN IF NOT EXISTS video_url TEXT
+    `);
+
+    await pool.query(`
+      ALTER TABLE messages
+      ADD COLUMN IF NOT EXISTS media_type VARCHAR(20) DEFAULT 'text'
+    `);
+
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_conversations_direct_chat
+      ON conversations(buyer_id, seller_id)
+      WHERE property_id IS NULL
+    `);
+
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_messages_media_type
+      ON messages(media_type)
+    `);
+
+    console.log("✅ Chat database migration completed");
+  } catch (error) {
+    console.error("❌ Chat database migration failed:", error);
+    throw error;
+  }
+}
 
 initSocket(server);
 
-server.listen(PORT, () => {
-  console.log(`🚀 PropertyNestHomes API running on port ${PORT}`);
-});
+runChatMigrations()
+  .then(() => {
+    server.listen(PORT, () => {
+      console.log(`🚀 PropertyNestHomes API running on port ${PORT}`);
+    });
+  })
+  .catch(() => {
+    process.exit(1);
+  });
