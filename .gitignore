@@ -34,3 +34,8 @@ keystore.properties
 *.bak
 *.backup
 backup_mobile_fix/
+
+# Local backup files
+*.backup
+*.backup-*
+*.backup.*
