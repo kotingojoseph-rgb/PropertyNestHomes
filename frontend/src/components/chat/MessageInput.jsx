@@ -376,7 +376,7 @@ export default function MessageInput({
   }, [conversationId]);
 
   return (
-    <div className="border-t border-black/5 bg-[#f0f2f5] p-2 sm:p-3">
+    <div className="shrink-0 border-t border-black/5 bg-[#f0f2f5] px-1.5 pb-[max(6px,env(safe-area-inset-bottom))] pt-1.5 sm:p-3">
       {uploadError && (
         <div className="mx-auto mb-2 flex w-full max-w-3xl items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           <span className="min-w-0">
@@ -398,9 +398,9 @@ export default function MessageInput({
 
       <form
         onSubmit={handleSubmit}
-        className="mx-auto flex w-full max-w-3xl items-end gap-2"
+        className="mx-auto flex w-full max-w-3xl items-end gap-1.5 sm:gap-2"
       >
-        <div className="flex min-w-0 flex-1 items-end rounded-2xl bg-white px-2 py-1.5 shadow-sm">
+        <div className="flex min-w-0 flex-1 items-end rounded-[22px] bg-white px-1.5 py-1 shadow-sm sm:px-2 sm:py-1.5">
           {recording ? (
             <button
               type="button"
@@ -428,7 +428,7 @@ export default function MessageInput({
                 disabled ||
                 uploading
               }
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg text-gray-500 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex h-10 w-9 shrink-0 items-center justify-center rounded-full text-base text-gray-500 transition hover:bg-gray-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:w-10 sm:text-lg"
               title="Record voice note"
               aria-label="Record voice note"
             >
@@ -454,7 +454,7 @@ export default function MessageInput({
                 ? "Recording voice note..."
                 : "Type a message..."
             }
-            className="max-h-32 min-h-10 flex-1 resize-none border-0 bg-transparent px-2 py-2.5 text-sm outline-none placeholder:text-gray-400 disabled:opacity-60"
+            className="max-h-28 min-h-10 min-w-0 flex-1 resize-none border-0 bg-transparent px-1.5 py-2.5 text-[15px] leading-5 outline-none placeholder:text-gray-400 disabled:opacity-60 sm:px-2 sm:text-sm"
           />
         </div>
 
@@ -466,7 +466,7 @@ export default function MessageInput({
             recording ||
             !message.trim()
           }
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-lg text-white shadow-sm transition hover:bg-[#064e47] disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-base text-white shadow-sm transition hover:bg-[#064e47] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:h-12 sm:w-12 sm:text-lg"
           title="Send message"
           aria-label="Send message"
         >

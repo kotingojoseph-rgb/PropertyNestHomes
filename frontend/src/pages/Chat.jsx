@@ -339,6 +339,16 @@ export default function Chat() {
       handleStatusUpdate
     );
     socket.on("userTyping", handleTyping);
+
+    socket.on(
+      "presenceSnapshot",
+      handlePresenceSnapshot
+    );
+
+    socket.on(
+      "presenceUpdate",
+      handlePresenceUpdate
+    );
     socket.on(
       "userStoppedTyping",
       handleStoppedTyping
@@ -488,18 +498,18 @@ export default function Chat() {
     chatUser.name?.charAt(0)?.toUpperCase() || "P";
 
   return (
-    <div className="flex h-[100dvh] min-h-0 flex-col bg-[#efeae2]">
-      <header className="z-30 flex shrink-0 items-center gap-3 bg-[#075e54] px-3 py-2.5 text-white shadow-md sm:px-4">
+    <div className="fixed inset-0 flex min-h-0 w-full flex-col overflow-hidden bg-[#efeae2]">
+      <header className="z-30 flex min-h-[60px] shrink-0 items-center gap-1.5 bg-[#075e54] px-1.5 py-2 text-white shadow-md sm:gap-3 sm:px-4">
         <button
           type="button"
           onClick={() => navigate("/chat")}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl transition hover:bg-white/10"
+          className="flex h-10 w-9 shrink-0 items-center justify-center rounded-full text-xl transition hover:bg-white/10 active:scale-95 sm:w-10"
           aria-label="Back to chats"
         >
           ←
         </button>
 
-        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 font-bold">
+        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20 text-sm font-bold sm:h-10 sm:w-10">
           {initial}
 
           {otherUserOnline && (
@@ -542,7 +552,7 @@ export default function Chat() {
 
         <button
           type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-full text-xl transition hover:bg-white/10"
+          className="flex h-10 w-9 shrink-0 items-center justify-center rounded-full text-lg transition hover:bg-white/10 active:scale-95 sm:w-10"
           title="More options"
           aria-label="More options"
         >
@@ -567,7 +577,7 @@ export default function Chat() {
         </div>
       )}
 
-      <main className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col">
+      <main className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col overflow-hidden">
         <MessageList
           messages={messages}
           currentUserId={currentUserId}

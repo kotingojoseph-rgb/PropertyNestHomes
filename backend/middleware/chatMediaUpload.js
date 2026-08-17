@@ -30,9 +30,15 @@ const upload = multer({
       .split(";")[0]
       .trim();
 
+    // Browsers such as Chrome/Android may send codec
+    // parameters or closely related audio containers.
+    const normalizedMimeType = mimetype
+      .replace("audio/x-m4a", "audio/mp4")
+      .replace("audio/x-wav", "audio/wav");
+
     if (
-      ALLOWED_AUDIO.has(mimetype) ||
-      ALLOWED_VIDEO.has(mimetype)
+      ALLOWED_AUDIO.has(normalizedMimeType) ||
+      ALLOWED_VIDEO.has(normalizedMimeType)
     ) {
       return cb(null, true);
     }

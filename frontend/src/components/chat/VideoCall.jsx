@@ -1,134 +1,147 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import socket from "../../socket";
 
-const CALL_TIMEOUT_MS = 30000;
+const CALL_TIMEOUT = 30000;
 
-function getMediaErrorMessage(error) {
-  if (!error) {
-    return "Unable to start the call.";
-  }
+const RTC_CONFIG = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+  ],
+};
+
+function mediaError(error) {
+  if (!error) return "Unable to access camera or microphone.";
 
   switch (error.name) {
     case "NotAllowedError":
     case "PermissionDeniedError":
-      return "Camera or microphone permission was denied. Please allow access in your browser settings and try again.";
+      return "Camera/microphone permission was denied. Please allow access and try again.";
 
     case "NotFoundError":
     case "DevicesNotFoundError":
-      return "No camera or microphone was found on this device.";
+      return "No camera or microphone was found.";
 
     case "NotReadableError":
     case "TrackStartError":
-      return "Your camera or microphone is already being used by another application.";
-
-    case "OverconstrainedError":
-      return "The available camera or microphone does not support the requested settings.";
+      return "Your camera or microphone is being used by another application.";
 
     case "SecurityError":
-      return "The browser blocked camera or microphone access for security reasons. Make sure you are using HTTPS.";
+      return "Camera and microphone require HTTPS.";
 
     default:
-      return error.message || "Unable to access the camera or microphone.";
+      return error.message || "Unable to access your camera or microphone.";
   }
 }
 
 export default function VideoCall({
   conversationId,
   otherUserId,
-  otherUserName = "User",
+  otherUserName = "PropertyNestHomes User",
 }) {
   const localVideo = useRef(null);
   const remoteVideo = useRef(null);
+
   const peer = useRef(null);
   const localStream = useRef(null);
   const pendingCandidates = useRef([]);
-  const callTimer = useRef(null);
 
-  const [callState, setCallState] = useState("idle");
-  const [incomingOffer, setIncomingOffer] = useState(null);
-  const [incomingCallerId, setIncomingCallerId] = useState(null);
-  const [incomingCallerName, setIncomingCallerName] = useState("");
+  const callTimer = useRef(null);
+  const mounted = useRef(true);
+  const stateRef = useRef("idle");
+
+  const [state, setState] = useState("idle");
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+  const [incoming, setIncoming] = useState(null);
   const [error, setError] = useState("");
 
-  function clearCallTimer() {
+  const clearTimer = useCallback(() => {
     if (callTimer.current) {
       clearTimeout(callTimer.current);
       callTimer.current = null;
     }
-  }
+  }, []);
 
-  function startCallTimer() {
-    clearCallTimer();
-
-    callTimer.current = setTimeout(() => {
-      setError("The call was not answered.");
-      cleanupCall(true);
-    }, CALL_TIMEOUT_MS);
-  }
-
-  function stopLocalStream() {
+  const stopStream = useCallback(() => {
     if (!localStream.current) return;
 
     localStream.current.getTracks().forEach((track) => {
-      track.stop();
+      try {
+        track.stop();
+      } catch {}
     });
 
     localStream.current = null;
-  }
-
-  function cleanupCall(notifyPeer = false) {
-    clearCallTimer();
-
-    if (notifyPeer && otherUserId && socket.connected) {
-      socket.emit("endCall", {
-        targetUserId: Number(otherUserId),
-        conversationId: Number(conversationId),
-      });
-    }
-
-    stopLocalStream();
 
     if (localVideo.current) {
       localVideo.current.srcObject = null;
     }
+  }, []);
+
+  const closePeer = useCallback(() => {
+    if (!peer.current) return;
+
+    try {
+      peer.current.onicecandidate = null;
+      peer.current.ontrack = null;
+      peer.current.onconnectionstatechange = null;
+      peer.current.oniceconnectionstatechange = null;
+      peer.current.close();
+    } catch {}
+
+    peer.current = null;
 
     if (remoteVideo.current) {
       remoteVideo.current.srcObject = null;
     }
+  }, []);
 
-    if (peer.current) {
-      try {
-        peer.current.onicecandidate = null;
-        peer.current.ontrack = null;
-        peer.current.close();
-      } catch {
-        // Ignore cleanup errors.
+  const resetCall = useCallback(
+    (notifyUser = false, targetId = null) => {
+      clearTimer();
+
+      const target = targetId || otherUserId;
+
+      if (notifyUser && target && socket.connected) {
+        socket.emit("endCall", {
+          targetUserId: Number(target),
+          conversationId: Number(conversationId),
+        });
       }
 
-      peer.current = null;
-    }
+      closePeer();
+      stopStream();
 
-    pendingCandidates.current = [];
-    setIncomingOffer(null);
-    setIncomingCallerId(null);
-    setIncomingCallerName("");
-    setCallState("idle");
-  }
+      pendingCandidates.current = [];
+      setIncoming(null);
+      setState("idle");
+    },
+    [
+      clearTimer,
+      closePeer,
+      stopStream,
+      otherUserId,
+      conversationId,
+    ]
+  );
 
-  async function getLocalStream() {
-    if (localStream.current) {
-      return localStream.current;
-    }
+  const getStream = useCallback(async () => {
+    if (localStream.current) return localStream.current;
 
     if (!navigator.mediaDevices?.getUserMedia) {
       throw new Error(
-        "Camera and microphone access is not supported by this browser."
+        "Camera and microphone are not supported by this browser."
       );
     }
 
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: "user",
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
       },
       audio: {
         echoCancellation: true,
@@ -141,92 +154,87 @@ export default function VideoCall({
 
     if (localVideo.current) {
       localVideo.current.srcObject = stream;
+      localVideo.current.play().catch(() => {});
     }
 
     return stream;
-  }
+  }, []);
 
-  function createPeer(targetUserId) {
-    if (peer.current) {
-      return peer.current;
-    }
+  const createPeer = useCallback(
+    (targetUserId) => {
+      if (peer.current) return peer.current;
 
-    const connection = new RTCPeerConnection({
-      iceServers: [
-        {
-          urls: "stun:stun.l.google.com:19302",
-        },
-        {
-          urls: "stun:stun1.l.google.com:19302",
-        },
-      ],
-    });
+      const connection = new RTCPeerConnection(RTC_CONFIG);
 
-    connection.onicecandidate = (event) => {
-      if (!event.candidate) return;
-      if (!socket.connected) return;
+      connection.onicecandidate = (event) => {
+        if (!event.candidate || !socket.connected) return;
 
-      socket.emit("iceCandidate", {
-        targetUserId: Number(targetUserId),
-        candidate: event.candidate,
-        conversationId: Number(conversationId),
-      });
-    };
+        socket.emit("iceCandidate", {
+          targetUserId: Number(targetUserId),
+          candidate: event.candidate,
+          conversationId: Number(conversationId),
+        });
+      };
 
-    connection.ontrack = (event) => {
-      const stream = event.streams?.[0];
+      connection.ontrack = (event) => {
+        const stream = event.streams?.[0];
 
-      if (stream && remoteVideo.current) {
+        if (!stream || !remoteVideo.current) return;
+
         remoteVideo.current.srcObject = stream;
         remoteVideo.current.play().catch(() => {});
-      }
-    };
+      };
 
-    connection.onconnectionstatechange = () => {
-      console.log(
-        "WebRTC connection state:",
-        connection.connectionState
-      );
-
-      if (connection.connectionState === "connected") {
-        clearCallTimer();
-        setError("");
-        setCallState("connected");
-      }
-
-      if (connection.connectionState === "failed") {
-        setError(
-          "The call could not establish a network connection. Please try again."
+      connection.onconnectionstatechange = () => {
+        console.log(
+          "📡 WebRTC connection:",
+          connection.connectionState
         );
-        cleanupCall(false);
-      }
 
-      if (connection.connectionState === "closed") {
-        cleanupCall(false);
-      }
-    };
+        if (connection.connectionState === "connected") {
+          clearTimer();
+          setError("");
+          setState("connected");
+        }
 
-    connection.oniceconnectionstatechange = () => {
-      console.log(
-        "WebRTC ICE state:",
-        connection.iceConnectionState
-      );
+        if (
+          connection.connectionState === "failed" ||
+          connection.connectionState === "closed"
+        ) {
+          if (mounted.current) {
+            setError(
+              connection.connectionState === "failed"
+                ? "The call could not establish a connection."
+                : ""
+            );
 
-      if (
-        connection.iceConnectionState === "failed"
-      ) {
-        setError(
-          "The devices could not establish a direct connection. A TURN server may be required for this network."
-        );
-      }
-    };
+            resetCall(false);
+          }
+        }
 
-    peer.current = connection;
+        if (connection.connectionState === "disconnected") {
+          setState("connecting");
+        }
+      };
 
-    return connection;
-  }
+      connection.oniceconnectionstatechange = () => {
+        if (
+          connection.iceConnectionState === "failed"
+        ) {
+          setError(
+            "Network connection failed. Please try again."
+          );
+        }
+      };
 
-  async function startCall() {
+      peer.current = connection;
+
+      return connection;
+    },
+    [conversationId, clearTimer, resetCall]
+  );
+
+  const startCall = useCallback(async () => {
     setError("");
 
     if (!otherUserId) {
@@ -241,26 +249,23 @@ export default function VideoCall({
 
     if (!socket.connected) {
       setError(
-        "Chat connection is offline. Please wait a moment and try again."
-      );
-      console.error(
-        "Cannot start call: Socket.IO is not connected."
+        "Chat connection is offline. Please wait and try again."
       );
       return;
     }
 
     try {
-      setCallState("calling");
+      setState("calling");
 
-      const stream = await getLocalStream();
+      const stream = await getStream();
       const connection = createPeer(otherUserId);
 
       stream.getTracks().forEach((track) => {
-        const exists = connection
+        const alreadyAdded = connection
           .getSenders()
           .some((sender) => sender.track === track);
 
-        if (!exists) {
+        if (!alreadyAdded) {
           connection.addTrack(track, stream);
         }
       });
@@ -269,77 +274,73 @@ export default function VideoCall({
 
       await connection.setLocalDescription(offer);
 
-      console.log("📞 Sending call offer", {
-        conversationId: Number(conversationId),
-        targetUserId: Number(otherUserId),
-      });
-
       socket.emit("callUser", {
         userToCall: Number(otherUserId),
-        offer,
+        offer: connection.localDescription,
         conversationId: Number(conversationId),
       });
 
-      startCallTimer();
-    } catch (callError) {
-      console.error("Start call error:", callError);
+      clearTimer();
 
-      cleanupCall(false);
+      callTimer.current = setTimeout(() => {
+        setError("The call was not answered.");
+        resetCall(true, otherUserId);
+      }, CALL_TIMEOUT);
+    } catch (err) {
+      console.error("Start call error:", err);
 
-      const message =
-        callError.name === "NotAllowedError" ||
-        callError.name === "PermissionDeniedError" ||
-        callError.name === "NotFoundError" ||
-        callError.name === "NotReadableError"
-          ? getMediaErrorMessage(callError)
-          : callError.message ||
-            "Unable to start the video call.";
-
-      setError(message);
+      resetCall(false);
+      setError(mediaError(err));
     }
-  }
+  }, [
+    otherUserId,
+    conversationId,
+    getStream,
+    createPeer,
+    clearTimer,
+    resetCall,
+  ]);
 
-  async function acceptCall() {
-    setError("");
-
-    if (!incomingCallerId || !incomingOffer) {
-      setError("The incoming call is no longer available.");
-      cleanupCall(false);
+  const acceptCall = useCallback(async () => {
+    if (!incoming?.from || !incoming?.offer) {
+      setError("This incoming call is no longer available.");
+      resetCall(false);
       return;
     }
 
     if (!socket.connected) {
-      setError(
-        "Chat connection is offline. Please reconnect and try again."
-      );
+      setError("Chat connection is offline.");
       return;
     }
 
     try {
-      const stream = await getLocalStream();
-      const connection = createPeer(incomingCallerId);
+      setError("");
+      setState("connecting");
+
+      const stream = await getStream();
+      const connection = createPeer(incoming.from);
 
       stream.getTracks().forEach((track) => {
-        const exists = connection
+        const alreadyAdded = connection
           .getSenders()
           .some((sender) => sender.track === track);
 
-        if (!exists) {
+        if (!alreadyAdded) {
           connection.addTrack(track, stream);
         }
       });
 
       await connection.setRemoteDescription(
-        new RTCSessionDescription(incomingOffer)
+        new RTCSessionDescription(incoming.offer)
       );
 
       for (const candidate of pendingCandidates.current) {
         try {
           await connection.addIceCandidate(candidate);
-        } catch (candidateError) {
+        } catch (err) {
           console.warn(
-            "Pending ICE candidate failed:",
-            candidateError
+            "Unable to add pending ICE candidate:",
+            err
           );
         }
       }
@@ -350,329 +351,240 @@ export default function VideoCall({
 
       await connection.setLocalDescription(answer);
 
-      console.log("📞 Sending call answer", {
-        callerId: Number(incomingCallerId),
-        conversationId: Number(conversationId),
-      });
-
       socket.emit("answerCall", {
-        callerId: Number(incomingCallerId),
-        answer,
+        callerId: Number(incoming.from),
+        answer: connection.localDescription,
         conversationId: Number(conversationId),
       });
 
-      setIncomingOffer(null);
-      setIncomingCallerId(null);
-      setIncomingCallerName("");
-      setCallState("connected");
-    } catch (callError) {
-      console.error("Accept call error:", callError);
+      setIncoming(null);
 
-      const message = getMediaErrorMessage(callError);
+      // Do NOT say connected yet.
+      // onconnectionstatechange will do that.
+      setState("connecting");
+    } catch (err) {
+      console.error("Accept call error:", err);
 
-      cleanupCall(false);
-      setError(message);
+      resetCall(false);
+      setError(mediaError(err));
     }
-  }
+  }, [
+    incoming,
+    conversationId,
+    getStream,
+    createPeer,
+    resetCall,
+  ]);
 
-  function rejectCall() {
-    if (incomingCallerId && socket.connected) {
+  const rejectCall = useCallback(() => {
+    if (incoming?.from && socket.connected) {
       socket.emit("endCall", {
-        targetUserId: Number(incomingCallerId),
+        targetUserId: Number(incoming.from),
         conversationId: Number(conversationId),
       });
     }
 
-    cleanupCall(false);
-  }
+    resetCall(false);
+  }, [incoming, conversationId, resetCall]);
 
-  function handleIncomingCall({
-    from,
-    callerName,
-    offer,
-    conversationId: incomingConversationId,
-  }) {
-    if (
-      Number(incomingConversationId) !==
-      Number(conversationId)
-    ) {
-      return;
-    }
+  useEffect(() => {
+    mounted.current = true;
 
-    console.log("📲 Incoming call received", {
-      from,
-      conversationId: incomingConversationId,
-    });
-
-    if (callState !== "idle") {
-      socket.emit("endCall", {
-        targetUserId: Number(from),
-        conversationId: Number(conversationId),
-      });
-      return;
-    }
-
-    setIncomingCallerId(Number(from));
-    setIncomingCallerName(
-      callerName || "PropertyNestHomes User"
-    );
-    setIncomingOffer(offer);
-    setCallState("incoming");
-  }
-
-  async function handleCallAccepted({
-    answer,
-    conversationId: acceptedConversationId,
-  }) {
-    if (
-      Number(acceptedConversationId) !==
-      Number(conversationId)
-    ) {
-      return;
-    }
-
-    try {
-      if (!peer.current) {
+    const handleIncoming = (data) => {
+      if (
+        Number(data?.conversationId) !==
+        Number(conversationId)
+      ) {
         return;
       }
 
-      console.log("📲 Call accepted");
+      if (!data?.from || !data?.offer) return;
 
-      await peer.current.setRemoteDescription(
-        new RTCSessionDescription(answer)
-      );
+      console.log("📲 INCOMING VIDEO CALL", data);
 
-      for (const candidate of pendingCandidates.current) {
-        try {
-          await peer.current.addIceCandidate(candidate);
-        } catch (candidateError) {
-          console.warn(
-            "Pending ICE candidate failed:",
-            candidateError
-          );
-        }
+      if (stateRef.current !== "idle") {
+        socket.emit("endCall", {
+          targetUserId: Number(data.from),
+          conversationId: Number(conversationId),
+        });
+        return;
       }
 
-      pendingCandidates.current = [];
-      clearCallTimer();
-      setCallState("connected");
-    } catch (callError) {
-      console.error(
-        "Call accepted error:",
-        callError
-      );
+      setIncoming({
+        from: Number(data.from),
+        name:
+          data.callerName ||
+          "PropertyNestHomes User",
+        offer: data.offer,
+      });
 
-      setError(
-        callError.message ||
-          "Unable to complete the call connection."
-      );
-    }
-  }
+      setState("incoming");
+    };
 
-  async function handleIceCandidate({
-    candidate,
-    conversationId: candidateConversationId,
-  }) {
-    if (!candidate) return;
-
-    if (
-      Number(candidateConversationId) !==
-      Number(conversationId)
-    ) {
-      return;
-    }
-
-    try {
-      const iceCandidate =
-        new RTCIceCandidate(candidate);
-
-      if (peer.current?.remoteDescription) {
-        await peer.current.addIceCandidate(
-          iceCandidate
-        );
-      } else {
-        pendingCandidates.current.push(
-          iceCandidate
-        );
+    const handleAccepted = async (data) => {
+      if (
+        Number(data?.conversationId) !==
+        Number(conversationId)
+      ) {
+        return;
       }
-    } catch (candidateError) {
-      console.error(
-        "ICE candidate error:",
-        candidateError
-      );
-    }
-  }
 
-  function handleCallEnded({
-    conversationId: endedConversationId,
-  }) {
-    if (
-      Number(endedConversationId) !==
-      Number(conversationId)
-    ) {
-      return;
-    }
+      if (!peer.current || !data.answer) return;
 
-    console.log("📴 Call ended by remote user.");
-    cleanupCall(false);
-  }
-
-  function handleCallError({
-    message,
-    conversationId: errorConversationId,
-  }) {
-    if (
-      Number(errorConversationId) !==
-      Number(conversationId)
-    ) {
-      return;
-    }
-
-    console.warn("⚠️ Call error:", message);
-
-    clearCallTimer();
-
-    if (peer.current) {
       try {
-        peer.current.close();
-      } catch {
-        // Ignore cleanup errors.
+        await peer.current.setRemoteDescription(
+          new RTCSessionDescription(data.answer)
+        );
+
+        for (const candidate of pendingCandidates.current) {
+          try {
+            await peer.current.addIceCandidate(candidate);
+          } catch {}
+        }
+
+        pendingCandidates.current = [];
+
+        setState("connecting");
+      } catch (err) {
+        console.error("Call answer error:", err);
+        setError(
+          "The call answer could not be completed."
+        );
+      }
+    };
+
+    const handleIce = async (data) => {
+      if (
+        Number(data?.conversationId) !==
+        Number(conversationId)
+      ) {
+        return;
       }
 
-      peer.current = null;
-    }
+      if (!data?.candidate) return;
 
-    stopLocalStream();
+      try {
+        const candidate = new RTCIceCandidate(
+          data.candidate
+        );
 
-    if (localVideo.current) {
-      localVideo.current.srcObject = null;
-    }
+        if (peer.current?.remoteDescription) {
+          await peer.current.addIceCandidate(candidate);
+        } else {
+          pendingCandidates.current.push(candidate);
+        }
+      } catch (err) {
+        console.warn("ICE candidate error:", err);
+      }
+    };
 
-    if (remoteVideo.current) {
-      remoteVideo.current.srcObject = null;
-    }
+    const handleEnded = (data) => {
+      if (
+        Number(data?.conversationId) !==
+        Number(conversationId)
+      ) {
+        return;
+      }
 
-    pendingCandidates.current = [];
-    setIncomingOffer(null);
-    setIncomingCallerId(null);
-    setIncomingCallerName("");
-    setCallState("idle");
-    setError(
-      message || "The call could not be connected."
-    );
-  }
+      console.log("📴 Remote call ended.");
 
-  useEffect(() => {
-    const onIncomingCall = (data) =>
-      handleIncomingCall(data);
+      resetCall(false);
+    };
 
-    const onCallAccepted = (data) =>
-      handleCallAccepted(data);
+    const handleError = (data) => {
+      if (
+        Number(data?.conversationId) !==
+        Number(conversationId)
+      ) {
+        return;
+      }
 
-    const onIceCandidate = (data) =>
-      handleIceCandidate(data);
+      clearTimer();
+      resetCall(false);
+      setError(
+        data?.message || "The call could not be connected."
+      );
+    };
 
-    const onCallEnded = (data) =>
-      handleCallEnded(data);
-
-    const onCallError = (data) =>
-      handleCallError(data);
-
-    socket.on("incomingCall", onIncomingCall);
-    socket.on("callAccepted", onCallAccepted);
-    socket.on("iceCandidate", onIceCandidate);
-    socket.on("callEnded", onCallEnded);
-    socket.on("callError", onCallError);
+    socket.on("incomingCall", handleIncoming);
+    socket.on("callAccepted", handleAccepted);
+    socket.on("iceCandidate", handleIce);
+    socket.on("callEnded", handleEnded);
+    socket.on("callError", handleError);
 
     return () => {
-      socket.off("incomingCall", onIncomingCall);
-      socket.off("callAccepted", onCallAccepted);
-      socket.off("iceCandidate", onIceCandidate);
-      socket.off("callEnded", onCallEnded);
-      socket.off("callError", onCallError);
+      socket.off("incomingCall", handleIncoming);
+      socket.off("callAccepted", handleAccepted);
+      socket.off("iceCandidate", handleIce);
+      socket.off("callEnded", handleEnded);
+      socket.off("callError", handleError);
+
+      mounted.current = false;
     };
-  }, [conversationId]);
+  }, [
+    conversationId,
+    clearTimer,
+    resetCall,
+  ]);
 
   useEffect(() => {
     return () => {
-      clearCallTimer();
-      cleanupCall(false);
+      clearTimer();
+      closePeer();
+      stopStream();
     };
-  }, [conversationId, otherUserId]);
+  }, [conversationId, clearTimer, closePeer, stopStream]);
 
-  if (error && callState === "idle") {
-    return (
-      <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => {
-            setError("");
-            startCall();
-          }}
-          className="rounded-full p-2 text-xl hover:bg-white/10"
-          title="Retry video call"
-          aria-label="Retry video call"
-        >
-          📹
-        </button>
-
-        <span
-          className="max-w-[220px] truncate text-[10px] text-red-200"
-          title={error}
-        >
-          {error}
-        </span>
-      </div>
-    );
-  }
-
-  if (callState === "idle") {
+  if (state === "idle") {
     return (
       <button
         type="button"
         onClick={startCall}
-        className="rounded-full p-2 text-xl hover:bg-white/10"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg transition hover:bg-white/10 active:scale-95"
+        aria-label="Start video call"
         title="Video call"
-        aria-label="Video call"
       >
-        📹
+        🎥
       </button>
     );
   }
 
-  if (callState === "incoming") {
+  if (state === "incoming") {
+    const name =
+      incoming?.name || "PropertyNestHomes User";
+
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-        <div className="w-full max-w-sm rounded-3xl bg-white p-7 text-center shadow-2xl">
-          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#25d366] text-3xl font-bold text-white animate-pulse">
-            {incomingCallerName
-              .charAt(0)
-              .toUpperCase()}
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm">
+        <div className="w-full max-w-sm overflow-hidden rounded-[28px] bg-white shadow-2xl">
+          <div className="bg-[#075e54] px-6 py-8 text-center text-white">
+            <div className="mx-auto flex h-24 w-24 animate-pulse items-center justify-center rounded-full bg-white/20 text-3xl font-bold">
+              {name.charAt(0).toUpperCase()}
+            </div>
+
+            <p className="mt-5 text-sm text-white/70">
+              Incoming video call
+            </p>
+
+            <h2 className="mt-1 text-2xl font-bold">
+              {name}
+            </h2>
           </div>
 
-          <h2 className="text-xl font-bold">
-            {incomingCallerName}
-          </h2>
-
-          <p className="mt-1 text-gray-500">
-            Incoming video call
-          </p>
-
-          <div className="mt-7 flex justify-center gap-8">
+          <div className="flex items-center justify-center gap-12 p-7">
             <button
               type="button"
               onClick={rejectCall}
-              className="flex h-14 w-14 items-center justify-center rounded-full bg-red-600 text-2xl text-white shadow-lg"
+              className="flex h-16 w-16 items-center justify-center rounded-full bg-red-600 text-2xl text-white shadow-lg active:scale-95"
               aria-label="Decline call"
             >
-              📵
+              ✕
             </button>
 
             <button
               type="button"
               onClick={acceptCall}
-              className="flex h-14 w-14 items-center justify-center rounded-full bg-[#25d366] text-2xl text-white shadow-lg"
-              aria-label="Answer call"
+              className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500 text-2xl text-white shadow-lg active:scale-95"
+              aria-label="Accept call"
             >
               📹
             </button>
@@ -683,7 +595,7 @@ export default function VideoCall({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black">
+    <div className="fixed inset-0 z-[100] bg-black">
       <video
         ref={remoteVideo}
         autoPlay
@@ -691,7 +603,17 @@ export default function VideoCall({
         className="h-full w-full object-cover"
       />
 
-      <div className="absolute right-4 top-4 h-36 w-28 overflow-hidden rounded-xl border-2 border-white bg-gray-900 shadow-xl">
+      <div className="absolute inset-x-0 top-0 flex items-center justify-center px-4 pt-[max(16px,env(safe-area-inset-top))]">
+        <div className="rounded-full bg-black/60 px-5 py-2 text-center text-sm text-white backdrop-blur">
+          {state === "calling"
+            ? `Calling ${otherUserName}...`
+            : state === "connecting"
+            ? "Connecting..."
+            : otherUserName}
+        </div>
+      </div>
+
+      <div className="absolute right-4 top-[max(65px,env(safe-area-inset-top)+50px)] h-36 w-28 overflow-hidden rounded-2xl border-2 border-white/80 bg-gray-900 shadow-xl sm:h-44 sm:w-32">
         <video
           ref={localVideo}
           autoPlay
@@ -701,27 +623,19 @@ export default function VideoCall({
         />
       </div>
 
-      <div className="absolute left-1/2 top-6 -translate-x-1/2 rounded-full bg-black/60 px-5 py-2 text-sm text-white">
-        {callState === "calling"
-          ? `Calling ${otherUserName}...`
-          : callState === "connected"
-          ? otherUserName
-          : "Connecting..."}
-      </div>
-
       {error && (
-        <div className="absolute left-1/2 top-20 w-[90%] max-w-md -translate-x-1/2 rounded-xl bg-red-600/90 px-4 py-3 text-center text-sm text-white">
+        <div className="absolute left-1/2 top-24 w-[calc(100%-32px)] max-w-md -translate-x-1/2 rounded-2xl bg-red-600/90 px-4 py-3 text-center text-sm text-white">
           {error}
         </div>
       )}
 
       <button
         type="button"
-        onClick={() => cleanupCall(true)}
-        className="absolute bottom-10 left-1/2 flex h-16 w-16 -translate-x-1/2 items-center justify-center rounded-full bg-red-600 text-2xl text-white shadow-xl"
+        onClick={() => resetCall(true)}
+        className="absolute bottom-[max(28px,env(safe-area-inset-bottom))] left-1/2 flex h-16 w-16 -translate-x-1/2 items-center justify-center rounded-full bg-red-600 text-2xl text-white shadow-2xl active:scale-95"
         aria-label="End call"
       >
-        📞
+        ☎
       </button>
     </div>
   );
