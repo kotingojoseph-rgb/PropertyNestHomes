@@ -10,6 +10,7 @@ export default function MessageInput({
   const [recording, setRecording] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   const inputRef = useRef(null);
   const typingTimer = useRef(null);
@@ -22,6 +23,7 @@ export default function MessageInput({
     const value = event.target.value;
 
     setMessage(value);
+    setUploadError("");
 
     if (!conversationId || disabled) return;
 
@@ -54,7 +56,9 @@ export default function MessageInput({
 
     const cleanMessage = message.trim();
 
-    if (!cleanMessage || disabled || uploading) return;
+    if (!cleanMessage || disabled || uploading || recording) {
+      return;
+    }
 
     socket.emit("stopTyping", Number(conversationId));
 
@@ -67,27 +71,63 @@ export default function MessageInput({
     });
   }
 
+  function getSupportedMimeType() {
+    const types = [
+      "audio/webm;codecs=opus",
+      "audio/webm",
+      "audio/mp4",
+      "audio/ogg;codecs=opus",
+      "audio/ogg",
+    ];
+
+    for (const type of types) {
+      try {
+        if (MediaRecorder.isTypeSupported(type)) {
+          return type;
+        }
+      } catch {
+        // Continue checking the next type.
+      }
+    }
+
+    return "";
+  }
+
+  function getFileExtension(mimeType) {
+    if (mimeType.includes("mp4")) return "m4a";
+    if (mimeType.includes("ogg")) return "ogg";
+    return "webm";
+  }
+
   async function startRecording() {
-    if (disabled || uploading) return;
+    if (disabled || uploading || recording) return;
+
+    setUploadError("");
 
     try {
       if (!navigator.mediaDevices?.getUserMedia) {
-        throw new Error("Voice recording is not supported by this browser.");
+        throw new Error(
+          "Voice recording is not supported by this browser."
+        );
+      }
+
+      if (typeof MediaRecorder === "undefined") {
+        throw new Error(
+          "This browser does not support voice recording."
+        );
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
       });
 
       mediaStream.current = stream;
 
-      let mimeType = "";
-
-      if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
-        mimeType = "audio/webm;codecs=opus";
-      } else if (MediaRecorder.isTypeSupported("audio/webm")) {
-        mimeType = "audio/webm";
-      }
+      const mimeType = getSupportedMimeType();
 
       const recorder = mimeType
         ? new MediaRecorder(stream, { mimeType })
@@ -97,55 +137,106 @@ export default function MessageInput({
       chunks.current = [];
 
       recorder.ondataavailable = (event) => {
-        if (event.data?.size > 0) {
+        if (event.data && event.data.size > 0) {
           chunks.current.push(event.data);
         }
       };
 
       recorder.onerror = (event) => {
-        console.error("MediaRecorder error:", event.error);
+        console.error(
+          "MediaRecorder error:",
+          event.error
+        );
+
+        setUploadError(
+          "Voice recording failed. Please try again."
+        );
       };
 
       recorder.onstop = async () => {
         try {
+          const actualMimeType =
+            recorder.mimeType ||
+            mimeType ||
+            "audio/webm";
+
           const blob = new Blob(chunks.current, {
-            type: recorder.mimeType || "audio/webm",
+            type: actualMimeType,
           });
 
           if (!blob.size) {
-            return;
+            throw new Error(
+              "No voice recording was captured."
+            );
           }
 
           setUploading(true);
+          setUploadError("");
 
-          await uploadVoice(blob);
+          await uploadVoice(
+            blob,
+            actualMimeType
+          );
         } catch (error) {
-          console.error("Voice upload error:", error);
-          alert(error.message || "Voice note upload failed.");
+          console.error(
+            "Voice upload error:",
+            error
+          );
+
+          setUploadError(
+            error.message ||
+              "Voice note upload failed."
+          );
         } finally {
           setUploading(false);
 
           if (mediaStream.current) {
-            mediaStream.current.getTracks().forEach((track) => track.stop());
+            mediaStream.current
+              .getTracks()
+              .forEach((track) => track.stop());
+
             mediaStream.current = null;
           }
 
           mediaRecorder.current = null;
           chunks.current = [];
+
+          requestAnimationFrame(() => {
+            inputRef.current?.focus();
+          });
         }
       };
 
-      recorder.start();
+      recorder.start(250);
 
       setRecordSeconds(0);
       setRecording(true);
 
       timerRef.current = setInterval(() => {
-        setRecordSeconds((seconds) => seconds + 1);
+        setRecordSeconds(
+          (seconds) => seconds + 1
+        );
       }, 1000);
     } catch (error) {
-      console.error("Recording error:", error);
-      alert(error.message || "Microphone permission is required.");
+      console.error(
+        "Recording error:",
+        error
+      );
+
+      if (mediaStream.current) {
+        mediaStream.current
+          .getTracks()
+          .forEach((track) => track.stop());
+
+        mediaStream.current = null;
+      }
+
+      setRecording(false);
+
+      setUploadError(
+        error.message ||
+          "Microphone permission is required."
+      );
     }
   }
 
@@ -164,19 +255,30 @@ export default function MessageInput({
     setRecordSeconds(0);
   }
 
-  async function uploadVoice(blob) {
+  async function uploadVoice(blob, mimeType) {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      throw new Error("Please log in again.");
+      throw new Error(
+        "Your session has expired. Please log in again."
+      );
     }
+
+    if (!conversationId) {
+      throw new Error(
+        "Conversation could not be identified."
+      );
+    }
+
+    const extension =
+      getFileExtension(mimeType);
 
     const formData = new FormData();
 
     formData.append(
       "file",
       blob,
-      `voice-${Date.now()}.webm`
+      `voice-${Date.now()}.${extension}`
     );
 
     formData.append(
@@ -184,10 +286,22 @@ export default function MessageInput({
       String(conversationId)
     );
 
-    formData.append("media_type", "audio");
+    formData.append(
+      "media_type",
+      "audio"
+    );
+
+    const apiUrl =
+      import.meta.env.VITE_API_URL;
+
+    if (!apiUrl) {
+      throw new Error(
+        "API URL is not configured."
+      );
+    }
 
     const response = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/chat/media`,
+      `${apiUrl}/api/chat/media`,
       {
         method: "POST",
         headers: {
@@ -197,38 +311,91 @@ export default function MessageInput({
       }
     );
 
-    const data = await response.json().catch(() => ({}));
+    const data =
+      await response.json().catch(
+        () => ({})
+      );
 
     if (!response.ok) {
       throw new Error(
-        data.error || "Voice upload failed."
+        data.error ||
+          `Voice upload failed (${response.status}).`
       );
     }
+
+    if (!data.id) {
+      throw new Error(
+        "Voice note was uploaded but the server returned an invalid message."
+      );
+    }
+
+    /*
+     * The backend emits newMessage through Socket.IO.
+     * Return the message as well so callers can use it if needed.
+     */
+    return data;
   }
 
   useEffect(() => {
     return () => {
-      clearTimeout(typingTimer.current);
-      clearInterval(timerRef.current);
+      clearTimeout(
+        typingTimer.current
+      );
+
+      clearInterval(
+        timerRef.current
+      );
 
       if (conversationId) {
-        socket.emit("stopTyping", Number(conversationId));
+        socket.emit(
+          "stopTyping",
+          Number(conversationId)
+        );
       }
 
-      if (mediaRecorder.current?.state !== "inactive") {
-        mediaRecorder.current?.stop();
+      if (
+        mediaRecorder.current &&
+        mediaRecorder.current.state !==
+          "inactive"
+      ) {
+        try {
+          mediaRecorder.current.stop();
+        } catch {
+          // Recorder may already be stopping.
+        }
       }
 
       if (mediaStream.current) {
-        mediaStream.current.getTracks().forEach((track) => {
-          track.stop();
-        });
+        mediaStream.current
+          .getTracks()
+          .forEach((track) =>
+            track.stop()
+          );
       }
     };
   }, [conversationId]);
 
   return (
     <div className="border-t border-black/5 bg-[#f0f2f5] p-2 sm:p-3">
+      {uploadError && (
+        <div className="mx-auto mb-2 flex w-full max-w-3xl items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <span className="min-w-0">
+            {uploadError}
+          </span>
+
+          <button
+            type="button"
+            onClick={() =>
+              setUploadError("")
+            }
+            className="shrink-0 font-bold"
+            aria-label="Dismiss error"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       <form
         onSubmit={handleSubmit}
         className="mx-auto flex w-full max-w-3xl items-end gap-2"
@@ -239,15 +406,28 @@ export default function MessageInput({
               type="button"
               onClick={stopRecording}
               className="flex h-10 shrink-0 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-red-600 hover:bg-red-50"
+              title="Stop recording"
+              aria-label="Stop recording"
             >
               <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-600" />
               {recordSeconds}s
             </button>
+          ) : uploading ? (
+            <div
+              className="flex h-10 w-10 shrink-0 items-center justify-center text-lg"
+              title="Uploading voice note"
+              aria-label="Uploading voice note"
+            >
+              ⏳
+            </div>
           ) : (
             <button
               type="button"
               onClick={startRecording}
-              disabled={disabled || uploading}
+              disabled={
+                disabled ||
+                uploading
+              }
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg text-gray-500 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
               title="Record voice note"
               aria-label="Record voice note"
@@ -261,7 +441,11 @@ export default function MessageInput({
             value={message}
             onChange={handleTyping}
             onKeyDown={handleKeyDown}
-            disabled={disabled || recording || uploading}
+            disabled={
+              disabled ||
+              recording ||
+              uploading
+            }
             rows={1}
             placeholder={
               uploading

@@ -1,5 +1,22 @@
 const multer = require("multer");
 
+const ALLOWED_AUDIO = new Set([
+  "audio/webm",
+  "audio/ogg",
+  "audio/wav",
+  "audio/mpeg",
+  "audio/mp4",
+  "audio/x-m4a",
+  "audio/aac",
+]);
+
+const ALLOWED_VIDEO = new Set([
+  "video/webm",
+  "video/mp4",
+  "video/quicktime",
+  "video/mov",
+]);
+
 const upload = multer({
   storage: multer.memoryStorage(),
 
@@ -8,26 +25,27 @@ const upload = multer({
   },
 
   fileFilter: (req, file, cb) => {
-    const allowed = [
-      "audio/webm",
-      "audio/mpeg",
-      "audio/mp4",
-      "audio/ogg",
-      "audio/wav",
-      "video/mp4",
-      "video/webm",
-      "video/quicktime",
-    ];
+    const mimetype = String(file.mimetype || "")
+      .toLowerCase()
+      .split(";")[0]
+      .trim();
 
-    if (!allowed.includes(file.mimetype)) {
-      return cb(
-        new Error(
-          "Only supported audio and video files are allowed."
-        )
-      );
+    if (
+      ALLOWED_AUDIO.has(mimetype) ||
+      ALLOWED_VIDEO.has(mimetype)
+    ) {
+      return cb(null, true);
     }
 
-    cb(null, true);
+    console.warn(
+      `Rejected chat media: ${file.originalname} (${file.mimetype})`
+    );
+
+    return cb(
+      new Error(
+        `Unsupported media type: ${file.mimetype || "unknown"}`
+      )
+    );
   },
 });
 
