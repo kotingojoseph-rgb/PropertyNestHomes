@@ -20,6 +20,10 @@ export default function Chat() {
 
   const [typingUser, setTypingUser] = useState(false);
   const [socketOnline, setSocketOnline] = useState(false);
+
+  const [otherUserOnline, setOtherUserOnline] = useState(false);
+  const [otherUserLastSeen, setOtherUserLastSeen] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
@@ -65,12 +69,23 @@ export default function Chat() {
         );
       }
 
+      const otherUserId = Number(
+        data.other_user_id
+      );
+
       setChatUser({
-        id: Number(data.other_user_id),
+        id: otherUserId,
         name:
           data.other_user_name ||
           "PropertyNestHomes User",
       });
+
+      if (socket.connected && otherUserId) {
+        socket.emit(
+          "getUserPresence",
+          otherUserId
+        );
+      }
 
       setError("");
     } catch (err) {
@@ -285,6 +300,36 @@ export default function Chat() {
       setTypingUser(false);
     };
 
+    const handlePresenceSnapshot = (items = []) => {
+      const other = items.find(
+        (item) =>
+          Number(item.userId) ===
+          Number(chatUser.id)
+      );
+
+      if (!other) return;
+
+      setOtherUserOnline(Boolean(other.isOnline));
+      setOtherUserLastSeen(other.lastSeen || null);
+    };
+
+    const handlePresenceUpdate = (presence) => {
+      if (
+        Number(presence?.userId) !==
+        Number(chatUser.id)
+      ) {
+        return;
+      }
+
+      setOtherUserOnline(
+        Boolean(presence.isOnline)
+      );
+
+      setOtherUserLastSeen(
+        presence.lastSeen || null
+      );
+    };
+
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
     socket.on("connect_error", handleConnectError);
@@ -323,12 +368,23 @@ export default function Chat() {
         handleStoppedTyping
       );
 
+      socket.off(
+        "presenceSnapshot",
+        handlePresenceSnapshot
+      );
+
+      socket.off(
+        "presenceUpdate",
+        handlePresenceUpdate
+      );
+
       clearTimeout(typingTimeout.current);
     };
   }, [
     conversationId,
     token,
     currentUserId,
+    chatUser.id,
   ]);
 
   async function sendMessage(message) {
@@ -446,7 +502,7 @@ export default function Chat() {
         <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 font-bold">
           {initial}
 
-          {socketOnline && (
+          {otherUserOnline && (
             <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#075e54] bg-green-400" />
           )}
         </div>
@@ -457,11 +513,24 @@ export default function Chat() {
           </div>
 
           <div className="truncate text-[11px] text-white/75 sm:text-xs">
-            {typingUser
-              ? "typing..."
-              : socketOnline
-              ? "Connected"
-              : "Connecting..."}
+            {typingUser ? (
+              <span className="text-white">
+                typing...
+              </span>
+            ) : otherUserOnline ? (
+              <span className="text-green-300">
+                online
+              </span>
+            ) : otherUserLastSeen ? (
+              `last seen ${new Date(
+                otherUserLastSeen
+              ).toLocaleString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}`
+            ) : (
+              "offline"
+            )}
           </div>
         </div>
 
@@ -509,7 +578,7 @@ export default function Chat() {
         <MessageInput
           onSend={sendMessage}
           conversationId={conversationId}
-          disabled={sending || !socketOnline}
+          disabled={sending}
         />
       </main>
     </div>
