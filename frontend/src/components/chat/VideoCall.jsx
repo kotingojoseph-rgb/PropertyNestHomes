@@ -12,6 +12,8 @@ export default function VideoCall({
   const localStream = useRef(null);
   const pendingCandidates = useRef([]);
 
+  const callStateRef = useRef("idle");
+
   const audioContext = useRef(null);
   const ringtoneTimer = useRef(null);
 
@@ -19,6 +21,10 @@ export default function VideoCall({
   const [incomingOffer, setIncomingOffer] = useState(null);
   const [incomingCallerId, setIncomingCallerId] = useState(null);
   const [incomingCallerName, setIncomingCallerName] = useState("");
+
+  useEffect(() => {
+    callStateRef.current = callState;
+  }, [callState]);
 
   function stopRingtone() {
     if (ringtoneTimer.current) {
@@ -260,7 +266,7 @@ export default function VideoCall({
     callerName,
     offer,
   }) {
-    if (callState !== "idle") {
+    if (callStateRef.current !== "idle") {
       socket.emit("endCall", {
         targetUserId: Number(from),
         conversationId,
@@ -362,10 +368,19 @@ export default function VideoCall({
       socket.off("callAccepted", handleCallAccepted);
       socket.off("iceCandidate", handleIceCandidate);
       socket.off("callEnded", handleCallEnded);
+    };
+  }, [conversationId, otherUserId]);
 
+  /*
+   * Only clean up the actual WebRTC connection when
+   * this VideoCall component is unmounted or the
+   * conversation/user changes.
+   */
+  useEffect(() => {
+    return () => {
       cleanupCall(false);
     };
-  }, [conversationId, otherUserId, callState]);
+  }, [conversationId, otherUserId]);
 
   if (callState === "idle") {
     return (

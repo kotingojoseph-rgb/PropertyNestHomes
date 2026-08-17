@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -222,12 +222,12 @@ export default function Login() {
               </div>
 
               <div className="text-right">
-                <a
-                  href="/forgot-password"
-                  className="text-sm text-green-600 hover:text-green-700 font-medium"
-                >
-                  Forgot Password?
-                </a>
+              <Link
+  to="/forgot-password"
+  className="text-sm text-green-600 hover:text-green-700 font-medium"
+>
+  Forgot Password?
+</Link>
               </div>
 
               <button

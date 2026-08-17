@@ -28,9 +28,6 @@ export default function Chat() {
 
   const token = localStorage.getItem("token");
 
-  /*
-   * Decode the logged-in user once.
-   */
   useEffect(() => {
     if (!token) {
       setCurrentUserId(null);
@@ -38,9 +35,7 @@ export default function Chat() {
     }
 
     try {
-      const payload = JSON.parse(
-        atob(token.split(".")[1])
-      );
+      const payload = JSON.parse(atob(token.split(".")[1]));
 
       setCurrentUserId(Number(payload.id));
     } catch (err) {
@@ -49,9 +44,6 @@ export default function Chat() {
     }
   }, [token]);
 
-  /*
-   * Load conversation information.
-   */
   const loadConversation = useCallback(async () => {
     if (!conversationId || !token) return;
 
@@ -69,7 +61,7 @@ export default function Chat() {
 
       if (!response.ok) {
         throw new Error(
-          data.error || "Unable to load conversation"
+          data.error || "Unable to load conversation."
         );
       }
 
@@ -82,21 +74,14 @@ export default function Chat() {
 
       setError("");
     } catch (err) {
-      console.error(
-        "Load conversation error:",
-        err
-      );
+      console.error("Load conversation error:", err);
 
       setError(
-        err.message ||
-          "Unable to load conversation."
+        err.message || "Unable to load conversation."
       );
     }
   }, [conversationId, token]);
 
-  /*
-   * Load existing messages.
-   */
   const loadMessages = useCallback(async () => {
     if (!conversationId || !token) return;
 
@@ -116,38 +101,31 @@ export default function Chat() {
 
       if (!response.ok) {
         throw new Error(
-          data.error || "Unable to load messages"
+          data.error || "Unable to load messages."
         );
       }
 
-      setMessages(
-        Array.isArray(data) ? data : []
-      );
-
+      setMessages(Array.isArray(data) ? data : []);
       setError("");
     } catch (err) {
-      console.error(
-        "Load messages error:",
-        err
-      );
+      console.error("Load messages error:", err);
 
       setError(
-        err.message ||
-          "Unable to load messages."
+        err.message || "Unable to load messages."
       );
     } finally {
       setLoading(false);
     }
   }, [conversationId, token]);
 
-  /*
-   * Load conversation and messages.
-   */
   useEffect(() => {
     if (!conversationId || !token) {
       setLoading(false);
       return;
     }
+
+    setMessages([]);
+    setError("");
 
     loadConversation();
     loadMessages();
@@ -158,16 +136,12 @@ export default function Chat() {
     loadMessages,
   ]);
 
-  /*
-   * Socket connection + real-time events.
-   */
   useEffect(() => {
-    if (!conversationId || !token) {
+    if (!conversationId || !token || !currentUserId) {
       return;
     }
 
-    const conversationNumber =
-      Number(conversationId);
+    const conversationNumber = Number(conversationId);
 
     if (!Number.isInteger(conversationNumber)) {
       return;
@@ -188,18 +162,12 @@ export default function Chat() {
     };
 
     const handleConnect = () => {
-      console.log(
-        "✅ Chat socket connected"
-      );
-
+      console.log("✅ Chat socket connected");
       joinConversation();
     };
 
     const handleDisconnect = () => {
-      console.warn(
-        "⚠️ Chat socket disconnected"
-      );
-
+      console.warn("⚠️ Chat socket disconnected");
       setSocketOnline(false);
     };
 
@@ -223,8 +191,7 @@ export default function Chat() {
       setMessages((previous) => {
         const exists = previous.some(
           (item) =>
-            Number(item.id) ===
-            Number(message.id)
+            Number(item.id) === Number(message.id)
         );
 
         if (exists) {
@@ -234,22 +201,14 @@ export default function Chat() {
         return [...previous, message];
       });
 
-      /*
-       * If the message came from the other user,
-       * acknowledge delivery and mark it read.
-       */
       if (
         Number(message.sender_id) !==
         Number(currentUserId)
       ) {
-        socket.emit(
-          "messageDelivered",
-          {
-            messageId: message.id,
-            conversationId:
-              conversationNumber,
-          }
-        );
+        socket.emit("messageDelivered", {
+          messageId: message.id,
+          conversationId: conversationNumber,
+        });
 
         socket.emit(
           "markMessagesRead",
@@ -298,9 +257,7 @@ export default function Chat() {
       );
     };
 
-    const handleTyping = ({
-      userId,
-    }) => {
+    const handleTyping = ({ userId }) => {
       if (
         Number(userId) ===
         Number(currentUserId)
@@ -310,19 +267,14 @@ export default function Chat() {
 
       setTypingUser(true);
 
-      clearTimeout(
-        typingTimeout.current
-      );
+      clearTimeout(typingTimeout.current);
 
-      typingTimeout.current =
-        setTimeout(() => {
-          setTypingUser(false);
-        }, 2500);
+      typingTimeout.current = setTimeout(() => {
+        setTypingUser(false);
+      }, 2500);
     };
 
-    const handleStoppedTyping = ({
-      userId,
-    }) => {
+    const handleStoppedTyping = ({ userId }) => {
       if (
         Number(userId) ===
         Number(currentUserId)
@@ -333,44 +285,20 @@ export default function Chat() {
       setTypingUser(false);
     };
 
-    socket.on(
-      "connect",
-      handleConnect
-    );
-
-    socket.on(
-      "disconnect",
-      handleDisconnect
-    );
-
-    socket.on(
-      "connect_error",
-      handleConnectError
-    );
-
-    socket.on(
-      "newMessage",
-      handleNewMessage
-    );
-
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+    socket.on("connect_error", handleConnectError);
+    socket.on("newMessage", handleNewMessage);
     socket.on(
       "messageStatusUpdate",
       handleStatusUpdate
     );
-
-    socket.on(
-      "userTyping",
-      handleTyping
-    );
-
+    socket.on("userTyping", handleTyping);
     socket.on(
       "userStoppedTyping",
       handleStoppedTyping
     );
 
-    /*
-     * Socket may already be connected.
-     */
     if (socket.connected) {
       joinConversation();
     } else {
@@ -378,44 +306,24 @@ export default function Chat() {
     }
 
     return () => {
-      socket.off(
-        "connect",
-        handleConnect
-      );
-
-      socket.off(
-        "disconnect",
-        handleDisconnect
-      );
-
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
       socket.off(
         "connect_error",
         handleConnectError
       );
-
-      socket.off(
-        "newMessage",
-        handleNewMessage
-      );
-
+      socket.off("newMessage", handleNewMessage);
       socket.off(
         "messageStatusUpdate",
         handleStatusUpdate
       );
-
-      socket.off(
-        "userTyping",
-        handleTyping
-      );
-
+      socket.off("userTyping", handleTyping);
       socket.off(
         "userStoppedTyping",
         handleStoppedTyping
       );
 
-      clearTimeout(
-        typingTimeout.current
-      );
+      clearTimeout(typingTimeout.current);
     };
   }, [
     conversationId,
@@ -423,12 +331,8 @@ export default function Chat() {
     currentUserId,
   ]);
 
-  /*
-   * Send text message.
-   */
   async function sendMessage(message) {
-    const cleanMessage =
-      String(message || "").trim();
+    const cleanMessage = String(message || "").trim();
 
     if (
       !cleanMessage ||
@@ -440,6 +344,7 @@ export default function Chat() {
     }
 
     setSending(true);
+    setError("");
 
     try {
       const response = await fetch(
@@ -447,40 +352,29 @@ export default function Chat() {
         {
           method: "POST",
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            conversation_id:
-              Number(conversationId),
+            conversation_id: Number(conversationId),
             message: cleanMessage,
           }),
         }
       );
 
-      const data =
-        await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data.error ||
-            "Message could not be sent"
+          data.error || "Message could not be sent."
         );
       }
 
-      /*
-       * Normally the Socket.IO event will add
-       * the message. This fallback makes the UI
-       * reliable even if the sender's socket
-       * misses the event.
-       */
       setMessages((previous) => {
         if (
           previous.some(
             (item) =>
-              Number(item.id) ===
-              Number(data.id)
+              Number(item.id) === Number(data.id)
           )
         ) {
           return previous;
@@ -494,14 +388,11 @@ export default function Chat() {
         Number(conversationId)
       );
     } catch (err) {
-      console.error(
-        "Send message error:",
-        err
-      );
+      console.error("Send message error:", err);
 
       setError(
         err.message ||
-          "Message could not be sent."
+          "Message could not be sent. Please try again."
       );
     } finally {
       setSending(false);
@@ -510,20 +401,25 @@ export default function Chat() {
 
   if (!token) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#efeae2] p-6">
-        <div className="rounded-2xl bg-white p-6 text-center shadow">
-          <h2 className="text-lg font-bold">
-            Login required
+      <div className="flex min-h-screen items-center justify-center bg-[#f5f7f9] p-6">
+        <div className="w-full max-w-sm rounded-3xl bg-white p-7 text-center shadow-lg">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#075e54] text-2xl text-white">
+            💬
+          </div>
+
+          <h2 className="text-xl font-bold text-gray-900">
+            Sign in to Chat
           </h2>
 
-          <p className="mt-2 text-sm text-gray-500">
-            Please log in to use chat.
+          <p className="mt-2 text-sm leading-5 text-gray-500">
+            Please log in to your PropertyNestHomes
+            account to continue your conversation.
           </p>
 
           <button
             type="button"
             onClick={() => navigate("/login")}
-            className="mt-5 rounded-xl bg-[#075e54] px-5 py-3 text-sm font-semibold text-white"
+            className="mt-6 w-full rounded-xl bg-[#075e54] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#064e47]"
           >
             Go to Login
           </button>
@@ -532,92 +428,89 @@ export default function Chat() {
     );
   }
 
+  const initial =
+    chatUser.name?.charAt(0)?.toUpperCase() || "P";
+
   return (
-    <div className="flex min-h-screen flex-col bg-[#efeae2]">
-      <header className="sticky top-0 z-30 flex items-center gap-3 bg-[#075e54] px-4 py-3 text-white shadow">
+    <div className="flex h-[100dvh] min-h-0 flex-col bg-[#efeae2]">
+      <header className="z-30 flex shrink-0 items-center gap-3 bg-[#075e54] px-3 py-2.5 text-white shadow-md sm:px-4">
         <button
           type="button"
           onClick={() => navigate("/chat")}
-          className="rounded-full p-2 text-xl hover:bg-white/10"
-          aria-label="Back"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl transition hover:bg-white/10"
+          aria-label="Back to chats"
         >
           ←
         </button>
 
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 font-bold">
-          {chatUser.name
-            .charAt(0)
-            .toUpperCase()}
+        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20 font-bold">
+          {initial}
+
+          {socketOnline && (
+            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#075e54] bg-green-400" />
+          )}
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="truncate font-semibold">
+          <div className="truncate text-sm font-semibold sm:text-base">
             {chatUser.name}
           </div>
 
-          <div className="text-xs text-white/75">
+          <div className="truncate text-[11px] text-white/75 sm:text-xs">
             {typingUser
               ? "typing..."
               : socketOnline
-              ? "online"
-              : "connecting..."}
+              ? "Connected"
+              : "Connecting..."}
           </div>
         </div>
 
         <VideoCall
-          conversationId={
-            conversationId
-          }
-          otherUserId={
-            chatUser.id
-          }
-          otherUserName={
-            chatUser.name
-          }
+          conversationId={conversationId}
+          otherUserId={chatUser.id}
+          otherUserName={chatUser.name}
         />
 
         <button
           type="button"
-          className="rounded-full p-2 text-xl hover:bg-white/10"
-          title="More"
+          className="flex h-10 w-10 items-center justify-center rounded-full text-xl transition hover:bg-white/10"
+          title="More options"
+          aria-label="More options"
         >
           ⋮
         </button>
       </header>
 
       {error && (
-        <div className="mx-auto w-full max-w-3xl px-3 pt-3">
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
+        <div className="z-20 mx-auto w-full max-w-3xl px-3 pt-2">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700 shadow-sm">
+            <span>{error}</span>
+
+            <button
+              type="button"
+              onClick={() => setError("")}
+              className="font-bold"
+              aria-label="Dismiss error"
+            >
+              ×
+            </button>
           </div>
         </div>
       )}
 
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col">
-        <div className="min-h-0 flex-1 overflow-hidden">
-          {loading ? (
-            <div className="flex h-full items-center justify-center text-sm text-gray-500">
-              Loading messages...
-            </div>
-          ) : (
-            <MessageList
-              messages={messages}
-              currentUserId={
-                currentUserId
-              }
-            />
-          )}
-        </div>
+      <main className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col">
+        <MessageList
+          messages={messages}
+          currentUserId={currentUserId}
+          loading={loading}
+          otherUserName={chatUser.name}
+        />
 
-        <div className="sticky bottom-0 p-3">
-          <MessageInput
-            onSend={sendMessage}
-            conversationId={
-              conversationId
-            }
-            disabled={sending}
-          />
-        </div>
+        <MessageInput
+          onSend={sendMessage}
+          conversationId={conversationId}
+          disabled={sending || !socketOnline}
+        />
       </main>
     </div>
   );
