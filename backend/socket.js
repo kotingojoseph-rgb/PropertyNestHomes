@@ -558,9 +558,53 @@ function initSocket(server) {
 
     /*
      * =========================
-     * WEBRTC VIDEO CALL SIGNALING
+     * WEBRTC CALL SIGNALING
      * =========================
      */
+
+    async function verifyCallAccess(
+      conversationId,
+      targetUserId
+    ) {
+      const conversationNumber =
+        Number(conversationId);
+
+      const targetNumber =
+        Number(targetUserId);
+
+      if (
+        !Number.isInteger(conversationNumber) ||
+        conversationNumber <= 0 ||
+        !Number.isInteger(targetNumber) ||
+        targetNumber <= 0
+      ) {
+        return false;
+      }
+
+      const access = await pool.query(
+        `
+        SELECT id
+        FROM conversations
+        WHERE id = $1
+        AND (
+          buyer_id = $2
+          OR seller_id = $2
+        )
+        AND (
+          buyer_id = $3
+          OR seller_id = $3
+        )
+        LIMIT 1
+        `,
+        [
+          conversationNumber,
+          userId,
+          targetNumber,
+        ]
+      );
+
+      return access.rows.length > 0;
+    }
 
     socket.on(
       "callUser",
@@ -573,56 +617,126 @@ function initSocket(server) {
           const targetUserId =
             Number(userToCall);
 
-          if (
-            !Number.isInteger(
+          const allowed =
+            await verifyCallAccess(
+              conversationId,
               targetUserId
-            ) ||
-            targetUserId <= 0 ||
-            !offer
-          ) {
+            );
+
+          if (!allowed) {
+            console.warn(
+              `⚠️ Call denied: user ${userId} -> user ${targetUserId}, conversation ${conversationId}`
+            );
+
+            socket.emit("callError", {
+              message:
+                "You are not authorized to call this user in this conversation.",
+              conversationId:
+                Number(conversationId),
+            });
+
             return;
           }
 
-          const access = await pool.query(
-            `
-            SELECT id
-            FROM conversations
-            WHERE id = $1
-            AND (
-              buyer_id = $2
-              OR seller_id = $2
-            )
-            AND (
-              buyer_id = $3
-              OR seller_id = $3
-            )
-            LIMIT 1
-            `,
-            [
-              conversationId,
-              userId,
-              targetUserId,
-            ]
+          if (!offer) {
+            return;
+          }
+
+          console.log(
+            `📞 CALL OFFER: ${userId} -> ${targetUserId} conversation ${conversationId}`
           );
 
-          if (access.rows.length === 0) {
+          const targetRoom =
+            `user_${targetUserId}`;
+
+          const targetSockets =
+            io.sockets.adapter.rooms.get(
+              targetRoom
+            );
+
+          if (
+            !targetSockets ||
+            targetSockets.size === 0
+          ) {
+            console.warn(
+              `⚠️ Call target ${targetUserId} is not connected`
+            );
+
+            socket.emit("callError", {
+              message:
+                "The other user is currently offline.",
+              conversationId:
+                Number(conversationId),
+            });
+
             return;
           }
 
-          io
-            .to(`user_${targetUserId}`)
-            .emit("incomingCall", {
+          io.to(targetRoom).emit(
+            "incomingCall",
+            {
               from: userId,
               callerName:
                 socket.user.full_name ||
                 socket.user.email ||
                 "PropertyNestHomes User",
               offer,
-              conversationId,
-            });
+              conversationId:
+                Number(conversationId),
+            }
+          );
         } catch (error) {
           console.error(
             "callUser error:",
+            error.message
+          );
+
+          socket.emit("callError", {
+            message:
+              "Unable to send the call.",
+            conversationId:
+              Number(conversationId),
+          });
+        }
+      }
+    );
+
+    socket.on(
+      "answerCall",
+      async ({
+        callerId,
+        answer,
+        conversationId,
+      }) => {
+        try {
+          const target =
+            Number(callerId);
+
+          const allowed =
+            await verifyCallAccess(
+              conversationId,
+              target
+            );
+
+          if (!allowed || !answer) {
+            return;
+          }
+
+          console.log(
+            `📲 CALL ANSWER: ${userId} -> ${target} conversation ${conversationId}`
+          );
+
+          io
+            .to(`user_${target}`)
+            .emit("callAccepted", {
+              from: userId,
+              answer,
+              conversationId:
+                Number(conversationId),
+            });
+        } catch (error) {
+          console.error(
+            "answerCall error:",
             error.message
           );
         }
@@ -630,79 +744,80 @@ function initSocket(server) {
     );
 
     socket.on(
-      "answerCall",
-      ({
-        callerId,
-        answer,
-        conversationId,
-      }) => {
-        const target = Number(callerId);
-
-        if (
-          !Number.isInteger(target) ||
-          !answer
-        ) {
-          return;
-        }
-
-        io
-          .to(`user_${target}`)
-          .emit("callAccepted", {
-            from: userId,
-            answer,
-            conversationId,
-          });
-      }
-    );
-
-    socket.on(
       "iceCandidate",
-      ({
+      async ({
         targetUserId,
         candidate,
         conversationId,
       }) => {
-        const target =
-          Number(targetUserId);
+        try {
+          const target =
+            Number(targetUserId);
 
-        if (
-          !Number.isInteger(target) ||
-          !candidate
-        ) {
-          return;
+          const allowed =
+            await verifyCallAccess(
+              conversationId,
+              target
+            );
+
+          if (!allowed || !candidate) {
+            return;
+          }
+
+          io
+            .to(`user_${target}`)
+            .emit("iceCandidate", {
+              from: userId,
+              candidate,
+              conversationId:
+                Number(conversationId),
+            });
+        } catch (error) {
+          console.error(
+            "iceCandidate error:",
+            error.message
+          );
         }
-
-        io
-          .to(`user_${target}`)
-          .emit("iceCandidate", {
-            from: userId,
-            candidate,
-            conversationId,
-          });
       }
     );
 
     socket.on(
       "endCall",
-      ({
+      async ({
         targetUserId,
         conversationId,
       }) => {
-        const target =
-          Number(targetUserId);
+        try {
+          const target =
+            Number(targetUserId);
 
-        if (
-          !Number.isInteger(target)
-        ) {
-          return;
+          const allowed =
+            await verifyCallAccess(
+              conversationId,
+              target
+            );
+
+          if (!allowed) {
+            return;
+          }
+
+          console.log(
+            `📴 CALL END: ${userId} -> ${target} conversation ${conversationId}`
+          );
+
+          io
+            .to(`user_${target}`)
+            .emit("callEnded", {
+              from: userId,
+              conversationId:
+                Number(conversationId),
+            });
+        } catch (error) {
+          console.error(
+            "endCall error:",
+            error.message
+          );
         }
-
-        io
-          .to(`user_${target}`)
-          .emit("callEnded", {
-            from: userId,
-            conversationId,
-          });
       }
     );
 
