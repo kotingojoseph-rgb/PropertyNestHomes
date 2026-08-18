@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 
 import MainLayout from "./layout/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { connectSocket } from "./socket";
 
 import Home from "./pages/Home";
 import Buy from "./pages/Buy";
@@ -18,6 +20,14 @@ import Chat from "./pages/Chat";
 import ChatCenter from "./pages/ChatCenter";
 
 export default function App() {
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      connectSocket();
+    }
+  }, []);
+
   return (
     <MainLayout>
       <Routes>

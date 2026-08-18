@@ -27,6 +27,7 @@ export default function Chat() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
 
   const typingTimeout = useRef(null);
 
@@ -498,7 +499,7 @@ export default function Chat() {
     chatUser.name?.charAt(0)?.toUpperCase() || "P";
 
   return (
-    <div className="fixed inset-0 flex min-h-0 w-full flex-col overflow-hidden bg-[#efeae2]">
+    <div className="fixed inset-0 z-[60] flex min-h-0 w-full flex-col overflow-hidden bg-[#efeae2]">
       <header className="z-30 flex min-h-[60px] shrink-0 items-center gap-1.5 bg-[#075e54] px-1.5 py-2 text-white shadow-md sm:gap-3 sm:px-4">
         <button
           type="button"
@@ -550,14 +551,64 @@ export default function Chat() {
           otherUserName={chatUser.name}
         />
 
-        <button
-          type="button"
-          className="flex h-10 w-9 shrink-0 items-center justify-center rounded-full text-lg transition hover:bg-white/10 active:scale-95 sm:w-10"
-          title="More options"
-          aria-label="More options"
-        >
-          ⋮
-        </button>
+        <div className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() =>
+              setShowMoreOptions((open) => !open)
+            }
+            className="flex h-10 w-9 items-center justify-center rounded-full text-lg transition hover:bg-white/10 active:scale-95 sm:w-10"
+            title="More options"
+            aria-label="More options"
+            aria-expanded={showMoreOptions}
+          >
+            ⋮
+          </button>
+
+          {showMoreOptions && (
+            <div className="absolute right-0 top-12 z-[80] w-56 overflow-hidden rounded-2xl bg-white py-1 text-sm text-gray-800 shadow-2xl ring-1 ring-black/10">
+              <div className="border-b border-gray-100 px-4 py-3">
+                <div className="font-semibold text-gray-900">
+                  Conversation options
+                </div>
+                <div className="mt-1 text-xs text-gray-500">
+                  PropertyNestHomes chat
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowMoreOptions(false);
+                  setError("");
+                  window.scrollTo({
+                    top: 0,
+                    behavior: "smooth",
+                  });
+                }}
+                className="flex w-full items-center px-4 py-3 text-left hover:bg-gray-50"
+              >
+                ℹ️
+                <span className="ml-3">
+                  Conversation info
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setShowMoreOptions(false)
+                }
+                className="flex w-full items-center px-4 py-3 text-left hover:bg-gray-50"
+              >
+                ✕
+                <span className="ml-3">
+                  Close menu
+                </span>
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
       {error && (

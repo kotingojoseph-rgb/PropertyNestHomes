@@ -214,12 +214,40 @@ exports.sendMessage = async (req, res) => {
     );
 
     // Real-time delivery
-    getIO()
-      .to(`conversation_${conversation_id}`)
-      .emit(
-        "newMessage",
-        newMessage
-      );
+const io = getIO();
+
+io.to(`conversation_${conversation_id}`).emit(
+  "newMessage",
+  newMessage
+);
+
+// Also notify both participants directly.
+// This makes delivery reliable even if one client has
+// not joined the conversation room yet.
+const conversationUsers = await pool.query(
+  `
+  SELECT buyer_id, seller_id
+  FROM conversations
+  WHERE id = $1
+  LIMIT 1
+  `,
+  [conversation_id]
+);
+
+if (conversationUsers.rows.length > 0) {
+  const { buyer_id, seller_id } =
+    conversationUsers.rows[0];
+
+  io.to(`user_${buyer_id}`).emit(
+    "conversationUpdated",
+    newMessage
+  );
+
+  io.to(`user_${seller_id}`).emit(
+    "conversationUpdated",
+    newMessage
+  );
+}
 
     return res.json(newMessage);
 
@@ -713,8 +741,7 @@ exports.uploadChatMedia = async (
     );
 
     return res.status(500).json({
-      error:
-        "Media upload failed",
+      error: error.message || "Media upload failed",
     });
   }
 };

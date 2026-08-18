@@ -111,10 +111,10 @@ export default function ChatCenter() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-6">
-      <h1 className="mb-6 text-3xl font-bold">Chat Center</h1>
+    <div className="mx-auto w-full min-w-0 max-w-5xl overflow-x-hidden px-2 py-3 sm:px-6 sm:py-6">
+      <h1 className="mb-4 truncate text-2xl font-bold sm:mb-6 sm:text-3xl">Chat Center</h1>
 
-      <section className="mb-8 rounded-xl border bg-white p-5 shadow-sm">
+      <section className="mb-5 min-w-0 overflow-hidden rounded-xl border bg-white p-3 shadow-sm sm:mb-8 sm:p-5">
         <div className="mb-4">
           <h2 className="text-xl font-semibold">People</h2>
           <p className="text-sm text-gray-500">
@@ -145,18 +145,18 @@ export default function ChatCenter() {
                 key={person.id}
                 className="flex items-center justify-between rounded-xl border p-4"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                   <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 font-semibold text-white">
                     {(person.full_name || "?")
                       .charAt(0)
                       .toUpperCase()}
                   </div>
 
-                  <div>
+                  <div className="min-w-0">
                     <div className="font-semibold">
                       {person.full_name || "User"}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="truncate text-xs text-gray-500 sm:text-sm">
                       {person.email}
                     </div>
                   </div>
@@ -165,7 +165,7 @@ export default function ChatCenter() {
                 <button
                   type="button"
                   onClick={() => startConversation(person)}
-                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  className="shrink-0 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 sm:px-4 sm:text-sm"
                 >
                   Message
                 </button>
@@ -183,23 +183,23 @@ export default function ChatCenter() {
             No conversations yet.
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-3">
             {conversations.map((chat) => (
               <button
                 key={chat.id}
                 onClick={() => navigate(`/chat/${chat.id}`)}
-                className="flex w-full items-center gap-4 rounded-xl border bg-white p-4 text-left shadow-sm hover:bg-gray-50"
+                className="flex w-full min-w-0 items-center gap-2 overflow-hidden rounded-xl border bg-white p-3 text-left shadow-sm hover:bg-gray-50 sm:gap-4 sm:p-4"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-xl text-white">
                   💬
                 </div>
 
-                <div>
-                  <h3 className="font-bold">
+                <div className="min-w-0 flex-1 overflow-hidden">
+                  <h3 className="truncate font-bold">
                     {chat.buyer_name || chat.seller_name || "Conversation"}
                   </h3>
 
-                  <p className="text-sm text-gray-600">
+                  <p className="truncate text-xs text-gray-600 sm:text-sm">
                     {chat.last_message || "No messages yet"}
                   </p>
                 </div>

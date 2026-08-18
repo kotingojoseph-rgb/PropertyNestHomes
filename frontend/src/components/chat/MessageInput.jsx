@@ -8,112 +8,91 @@ export default function MessageInput({
 }) {
   const [message, setMessage] = useState("");
   const [recording, setRecording] = useState(false);
-  const [recordSeconds, setRecordSeconds] = useState(0);
+  const [seconds, setSeconds] = useState(0);
+  const [pendingVoice, setPendingVoice] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState("");
+  const [error, setError] = useState("");
 
-  const inputRef = useRef(null);
-  const typingTimer = useRef(null);
-  const mediaRecorder = useRef(null);
-  const mediaStream = useRef(null);
-  const chunks = useRef([]);
+  const recorderRef = useRef(null);
+  const streamRef = useRef(null);
+  const chunksRef = useRef([]);
   const timerRef = useRef(null);
+  const inputRef = useRef(null);
+  const previewUrlRef = useRef(null);
+  const typingTimerRef = useRef(null);
+
+  function supportedMime() {
+    const types = [
+      "audio/webm;codecs=opus",
+      "audio/webm",
+      "audio/ogg;codecs=opus",
+      "audio/ogg",
+      "audio/mp4",
+    ];
+
+    for (const type of types) {
+      try {
+        if (MediaRecorder.isTypeSupported(type)) return type;
+      } catch {}
+    }
+
+    return "";
+  }
+
+  function extension(type = "") {
+    if (type.includes("ogg")) return "ogg";
+    if (type.includes("mp4")) return "m4a";
+    return "webm";
+  }
+
+  function stopStream() {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+  }
+
+  function clearTimer() {
+    clearInterval(timerRef.current);
+    timerRef.current = null;
+  }
 
   function handleTyping(event) {
     const value = event.target.value;
-
     setMessage(value);
-    setUploadError("");
+    setError("");
 
     if (!conversationId || disabled) return;
 
     socket.emit("typing", Number(conversationId));
 
-    clearTimeout(typingTimer.current);
+    clearTimeout(typingTimerRef.current);
 
     if (!value.trim()) {
       socket.emit("stopTyping", Number(conversationId));
       return;
     }
 
-    typingTimer.current = setTimeout(() => {
+    typingTimerRef.current = setTimeout(() => {
       socket.emit("stopTyping", Number(conversationId));
     }, 1200);
   }
 
-  function handleKeyDown(event) {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-
-      if (message.trim() && !disabled) {
-        handleSubmit(event);
-      }
-    }
-  }
-
-  function handleSubmit(event) {
-    event.preventDefault();
-
-    const cleanMessage = message.trim();
-
-    if (!cleanMessage || disabled || uploading || recording) {
-      return;
-    }
-
-    socket.emit("stopTyping", Number(conversationId));
-
-    onSend(cleanMessage);
-
-    setMessage("");
-
-    requestAnimationFrame(() => {
-      inputRef.current?.focus();
-    });
-  }
-
-  function getSupportedMimeType() {
-    const types = [
-      "audio/webm;codecs=opus",
-      "audio/webm",
-      "audio/mp4",
-      "audio/ogg;codecs=opus",
-      "audio/ogg",
-    ];
-
-    for (const type of types) {
-      try {
-        if (MediaRecorder.isTypeSupported(type)) {
-          return type;
-        }
-      } catch {
-        // Continue checking the next type.
-      }
-    }
-
-    return "";
-  }
-
-  function getFileExtension(mimeType) {
-    if (mimeType.includes("mp4")) return "m4a";
-    if (mimeType.includes("ogg")) return "ogg";
-    return "webm";
-  }
-
   async function startRecording() {
-    if (disabled || uploading || recording) return;
+    if (disabled || recording || uploading || pendingVoice) return;
 
-    setUploadError("");
+    setError("");
 
     try {
       if (!navigator.mediaDevices?.getUserMedia) {
         throw new Error(
-          "Voice recording is not supported by this browser."
+          "Microphone recording is not supported on this device."
         );
       }
 
       if (typeof MediaRecorder === "undefined") {
         throw new Error(
-          "This browser does not support voice recording."
+          "Voice recording is not supported by this browser."
         );
       }
 
@@ -125,226 +104,233 @@ export default function MessageInput({
         },
       });
 
-      mediaStream.current = stream;
+      streamRef.current = stream;
 
-      const mimeType = getSupportedMimeType();
+      const mimeType = supportedMime();
 
       const recorder = mimeType
         ? new MediaRecorder(stream, { mimeType })
         : new MediaRecorder(stream);
 
-      mediaRecorder.current = recorder;
-      chunks.current = [];
+      recorderRef.current = recorder;
+      chunksRef.current = [];
 
       recorder.ondataavailable = (event) => {
         if (event.data && event.data.size > 0) {
-          chunks.current.push(event.data);
+          chunksRef.current.push(event.data);
         }
       };
 
       recorder.onerror = (event) => {
-        console.error(
-          "MediaRecorder error:",
-          event.error
-        );
-
-        setUploadError(
-          "Voice recording failed. Please try again."
-        );
+        console.error("MediaRecorder error:", event.error);
+        setError("Voice recording failed. Please try again.");
       };
 
-      recorder.onstop = async () => {
-        try {
-          const actualMimeType =
-            recorder.mimeType ||
-            mimeType ||
-            "audio/webm";
+      recorder.onstop = () => {
+        const actualType =
+          recorder.mimeType || mimeType || "audio/webm";
 
-          const blob = new Blob(chunks.current, {
-            type: actualMimeType,
-          });
+        const blob = new Blob(chunksRef.current, {
+          type: actualType,
+        });
 
-          if (!blob.size) {
-            throw new Error(
-              "No voice recording was captured."
-            );
-          }
+        clearTimer();
+        setRecording(false);
+        stopStream();
+        recorderRef.current = null;
 
-          setUploading(true);
-          setUploadError("");
-
-          await uploadVoice(
-            blob,
-            actualMimeType
-          );
-        } catch (error) {
-          console.error(
-            "Voice upload error:",
-            error
-          );
-
-          setUploadError(
-            error.message ||
-              "Voice note upload failed."
-          );
-        } finally {
-          setUploading(false);
-
-          if (mediaStream.current) {
-            mediaStream.current
-              .getTracks()
-              .forEach((track) => track.stop());
-
-            mediaStream.current = null;
-          }
-
-          mediaRecorder.current = null;
-          chunks.current = [];
-
-          requestAnimationFrame(() => {
-            inputRef.current?.focus();
-          });
+        if (!blob.size) {
+          setError("No voice recording was captured.");
+          chunksRef.current = [];
+          return;
         }
+
+        if (previewUrlRef.current) {
+          URL.revokeObjectURL(previewUrlRef.current);
+        }
+
+        previewUrlRef.current = URL.createObjectURL(blob);
+
+        setPendingVoice({
+          blob,
+          mimeType: actualType,
+          duration: seconds,
+        });
+
+        chunksRef.current = [];
       };
 
       recorder.start(250);
 
-      setRecordSeconds(0);
+      setSeconds(0);
       setRecording(true);
 
       timerRef.current = setInterval(() => {
-        setRecordSeconds(
-          (seconds) => seconds + 1
-        );
+        setSeconds((value) => value + 1);
       }, 1000);
-    } catch (error) {
-      console.error(
-        "Recording error:",
-        error
-      );
+    } catch (err) {
+      console.error("Start recording error:", err);
 
-      if (mediaStream.current) {
-        mediaStream.current
-          .getTracks()
-          .forEach((track) => track.stop());
-
-        mediaStream.current = null;
-      }
-
+      clearTimer();
+      stopStream();
       setRecording(false);
 
-      setUploadError(
-        error.message ||
+      setError(
+        err.message ||
           "Microphone permission is required."
       );
     }
   }
 
-  function stopRecording() {
-    clearInterval(timerRef.current);
-    timerRef.current = null;
+  function stopRecording(event) {
+    event?.preventDefault();
+    event?.stopPropagation();
 
-    if (
-      mediaRecorder.current &&
-      mediaRecorder.current.state !== "inactive"
-    ) {
-      mediaRecorder.current.stop();
+    clearTimer();
+
+    const recorder = recorderRef.current;
+
+    if (recorder && recorder.state !== "inactive") {
+      recorder.stop();
+    } else {
+      setRecording(false);
+      stopStream();
     }
-
-    setRecording(false);
-    setRecordSeconds(0);
   }
 
-  async function uploadVoice(blob, mimeType) {
+  async function sendVoice() {
+    if (
+      !pendingVoice ||
+      uploading ||
+      disabled ||
+      !conversationId
+    ) {
+      return;
+    }
+
     const token = localStorage.getItem("token");
 
     if (!token) {
-      throw new Error(
-        "Your session has expired. Please log in again."
-      );
+      setError("Your session has expired. Please log in again.");
+      return;
     }
 
-    if (!conversationId) {
-      throw new Error(
-        "Conversation could not be identified."
+    try {
+      setUploading(true);
+      setError("");
+
+      const formData = new FormData();
+
+      formData.append(
+        "file",
+        pendingVoice.blob,
+        `voice-${Date.now()}.${extension(
+          pendingVoice.mimeType
+        )}`
       );
-    }
 
-    const extension =
-      getFileExtension(mimeType);
-
-    const formData = new FormData();
-
-    formData.append(
-      "file",
-      blob,
-      `voice-${Date.now()}.${extension}`
-    );
-
-    formData.append(
-      "conversation_id",
-      String(conversationId)
-    );
-
-    formData.append(
-      "media_type",
-      "audio"
-    );
-
-    const apiUrl =
-      import.meta.env.VITE_API_URL;
-
-    if (!apiUrl) {
-      throw new Error(
-        "API URL is not configured."
+      formData.append(
+        "conversation_id",
+        String(conversationId)
       );
-    }
 
-    const response = await fetch(
-      `${apiUrl}/api/chat/media`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
+      formData.append("media_type", "audio");
+
+      const apiUrl = import.meta.env.VITE_API_URL;
+
+      if (!apiUrl) {
+        throw new Error("API URL is not configured.");
       }
-    );
 
-    const data =
-      await response.json().catch(
-        () => ({})
+      const response = await fetch(
+        `${apiUrl}/api/chat/media`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
       );
 
-    if (!response.ok) {
-      throw new Error(
-        data.error ||
-          `Voice upload failed (${response.status}).`
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            `Voice upload failed (${response.status}).`
+        );
+      }
+
+      if (!data.id || !data.audio_url) {
+        console.error("Invalid voice response:", data);
+        throw new Error(
+          "Voice note was uploaded but no audio URL was returned."
+        );
+      }
+
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
+      }
+
+      setPendingVoice(null);
+    } catch (err) {
+      console.error("Voice send error:", err);
+      setError(
+        err.message || "Voice note could not be sent."
       );
+    } finally {
+      setUploading(false);
+
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+      });
+    }
+  }
+
+  function cancelVoice() {
+    if (uploading) return;
+
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
     }
 
-    if (!data.id) {
-      throw new Error(
-        "Voice note was uploaded but the server returned an invalid message."
-      );
+    setPendingVoice(null);
+    setError("");
+  }
+
+  async function sendText(event) {
+    event.preventDefault();
+
+    if (
+      disabled ||
+      recording ||
+      uploading ||
+      pendingVoice
+    ) {
+      return;
     }
 
-    /*
-     * The backend emits newMessage through Socket.IO.
-     * Return the message as well so callers can use it if needed.
-     */
-    return data;
+    const clean = message.trim();
+
+    if (!clean) return;
+
+    socket.emit("stopTyping", Number(conversationId));
+
+    onSend(clean);
+    setMessage("");
+
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
   }
 
   useEffect(() => {
     return () => {
-      clearTimeout(
-        typingTimer.current
-      );
-
-      clearInterval(
-        timerRef.current
-      );
+      clearTimer();
+      clearTimeout(typingTimerRef.current);
 
       if (conversationId) {
         socket.emit(
@@ -354,40 +340,33 @@ export default function MessageInput({
       }
 
       if (
-        mediaRecorder.current &&
-        mediaRecorder.current.state !==
-          "inactive"
+        recorderRef.current &&
+        recorderRef.current.state !== "inactive"
       ) {
         try {
-          mediaRecorder.current.stop();
-        } catch {
-          // Recorder may already be stopping.
-        }
+          recorderRef.current.stop();
+        } catch {}
       }
 
-      if (mediaStream.current) {
-        mediaStream.current
-          .getTracks()
-          .forEach((track) =>
-            track.stop()
-          );
+      stopStream();
+
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
       }
     };
   }, [conversationId]);
 
   return (
-    <div className="shrink-0 border-t border-black/5 bg-[#f0f2f5] px-1.5 pb-[max(6px,env(safe-area-inset-bottom))] pt-1.5 sm:p-3">
-      {uploadError && (
-        <div className="mx-auto mb-2 flex w-full max-w-3xl items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          <span className="min-w-0">
-            {uploadError}
+    <div className="w-full min-w-0 shrink-0 overflow-hidden border-t border-black/5 bg-[#f0f2f5] px-1 pb-[max(3px,env(safe-area-inset-bottom))] pt-1 sm:p-3">
+      {error && (
+        <div className="mx-auto mb-1.5 flex w-full min-w-0 max-w-3xl items-center gap-2 overflow-hidden rounded-lg border border-red-200 bg-red-50 px-2 py-1.5 text-xs text-red-700 sm:mb-2 sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm">
+          <span className="min-w-0 flex-1 break-words">
+            {error}
           </span>
 
           <button
             type="button"
-            onClick={() =>
-              setUploadError("")
-            }
+            onClick={() => setError("")}
             className="shrink-0 font-bold"
             aria-label="Dismiss error"
           >
@@ -397,81 +376,103 @@ export default function MessageInput({
       )}
 
       <form
-        onSubmit={handleSubmit}
-        className="mx-auto flex w-full max-w-3xl items-end gap-1.5 sm:gap-2"
+        onSubmit={sendText}
+        className="mx-auto flex w-full min-w-0 max-w-3xl items-end gap-1 sm:gap-2"
       >
-        <div className="flex min-w-0 flex-1 items-end rounded-[22px] bg-white px-1.5 py-1 shadow-sm sm:px-2 sm:py-1.5">
+        <div className="flex min-w-0 flex-1 items-center overflow-hidden rounded-[18px] bg-white px-1 py-1 shadow-sm sm:rounded-[22px] sm:px-2">
           {recording ? (
             <button
               type="button"
               onClick={stopRecording}
-              className="flex h-10 shrink-0 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-red-600 hover:bg-red-50"
-              title="Stop recording"
+              className="flex h-8 shrink-0 items-center gap-1 rounded-full px-2 text-xs font-semibold text-red-600 active:bg-red-50 sm:h-10 sm:px-3 sm:text-sm"
               aria-label="Stop recording"
             >
               <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-600" />
-              {recordSeconds}s
+              {seconds}s
             </button>
-          ) : uploading ? (
-            <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center text-lg"
-              title="Uploading voice note"
-              aria-label="Uploading voice note"
-            >
-              ⏳
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={startRecording}
-              disabled={
-                disabled ||
-                uploading
-              }
-              className="flex h-10 w-9 shrink-0 items-center justify-center rounded-full text-base text-gray-500 transition hover:bg-gray-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:w-10 sm:text-lg"
-              title="Record voice note"
-              aria-label="Record voice note"
-            >
-              🎤
-            </button>
-          )}
+          ) : pendingVoice ? (
+            <>
+              <audio
+                controls
+                preload="metadata"
+                src={previewUrlRef.current || undefined}
+                className="h-8 min-w-0 flex-1"
+              />
 
-          <textarea
-            ref={inputRef}
-            value={message}
-            onChange={handleTyping}
-            onKeyDown={handleKeyDown}
-            disabled={
-              disabled ||
-              recording ||
-              uploading
-            }
-            rows={1}
-            placeholder={
-              uploading
-                ? "Uploading voice note..."
-                : recording
-                ? "Recording voice note..."
-                : "Type a message..."
-            }
-            className="max-h-28 min-h-10 min-w-0 flex-1 resize-none border-0 bg-transparent px-1.5 py-2.5 text-[15px] leading-5 outline-none placeholder:text-gray-400 disabled:opacity-60 sm:px-2 sm:text-sm"
-          />
+              <button
+                type="button"
+                onClick={cancelVoice}
+                disabled={uploading}
+                className="ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-lg text-gray-500 active:bg-gray-100 disabled:opacity-40"
+                aria-label="Cancel voice note"
+              >
+                ×
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={startRecording}
+                disabled={disabled || uploading}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
+                aria-label="Record voice note"
+              >
+                🎤
+              </button>
+
+              <textarea
+                ref={inputRef}
+                value={message}
+                onChange={handleTyping}
+                disabled={disabled || recording || uploading}
+                onKeyDown={(event) => {
+                  if (
+                    event.key === "Enter" &&
+                    !event.shiftKey
+                  ) {
+                    event.preventDefault();
+                    sendText(event);
+                  }
+                }}
+                rows={1}
+                placeholder={
+                  uploading
+                    ? "Sending..."
+                    : "Type a message..."
+                }
+                className="min-h-8 min-w-0 flex-1 resize-none overflow-y-auto border-0 bg-transparent px-1.5 py-1.5 text-[13px] leading-5 outline-none placeholder:text-gray-400 sm:min-h-10 sm:px-2 sm:py-2.5 sm:text-sm"
+              />
+            </>
+          )}
         </div>
 
-        <button
-          type="submit"
-          disabled={
-            disabled ||
-            uploading ||
-            recording ||
-            !message.trim()
-          }
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-base text-white shadow-sm transition hover:bg-[#064e47] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:h-12 sm:w-12 sm:text-lg"
-          title="Send message"
-          aria-label="Send message"
-        >
-          ➤
-        </button>
+        {pendingVoice ? (
+          <button
+            type="button"
+            onClick={sendVoice}
+            disabled={disabled || uploading}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-white shadow-md transition active:scale-90 disabled:opacity-50 sm:h-11 sm:w-11"
+            aria-label="Send voice message"
+            title="Send voice message"
+          >
+            {uploading ? "…" : "➤"}
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={
+              disabled ||
+              uploading ||
+              recording ||
+              !message.trim()
+            }
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-white shadow-md transition active:scale-90 disabled:opacity-40 sm:h-11 sm:w-11"
+            aria-label="Send message"
+          >
+            ➤
+          </button>
+        )}
       </form>
     </div>
   );

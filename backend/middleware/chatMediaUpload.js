@@ -8,6 +8,7 @@ const ALLOWED_AUDIO = new Set([
   "audio/mp4",
   "audio/x-m4a",
   "audio/aac",
+  "audio/x-wav",
 ]);
 
 const ALLOWED_VIDEO = new Set([
@@ -25,16 +26,17 @@ const upload = multer({
   },
 
   fileFilter: (req, file, cb) => {
-    const mimetype = String(file.mimetype || "")
+    const mimeType = String(file.mimetype || "")
       .toLowerCase()
       .split(";")[0]
       .trim();
 
-    // Browsers such as Chrome/Android may send codec
-    // parameters or closely related audio containers.
-    const normalizedMimeType = mimetype
-      .replace("audio/x-m4a", "audio/mp4")
-      .replace("audio/x-wav", "audio/wav");
+    const normalizedMimeType =
+      mimeType === "audio/x-m4a"
+        ? "audio/mp4"
+        : mimeType === "audio/x-wav"
+        ? "audio/wav"
+        : mimeType;
 
     if (
       ALLOWED_AUDIO.has(normalizedMimeType) ||
@@ -49,7 +51,9 @@ const upload = multer({
 
     return cb(
       new Error(
-        `Unsupported media type: ${file.mimetype || "unknown"}`
+        `Unsupported media type: ${
+          file.mimetype || "unknown"
+        }`
       )
     );
   },

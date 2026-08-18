@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+import { connectSocket } from "../socket";
 export default function Login() {
   const navigate = useNavigate();
 
@@ -60,6 +61,7 @@ export default function Login() {
       // Normal login without 2FA.
       if (data.token) {
         localStorage.setItem("token", data.token);
+        connectSocket();
 
         if (data.user) {
           localStorage.setItem("user", JSON.stringify(data.user));
@@ -129,6 +131,7 @@ export default function Login() {
       }
 
       localStorage.setItem("token", data.token);
+      connectSocket();
 
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));

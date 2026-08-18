@@ -537,15 +537,27 @@ export default function VideoCall({
 
   if (state === "idle") {
     return (
-      <button
-        type="button"
-        onClick={startCall}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg transition hover:bg-white/10 active:scale-95"
-        aria-label="Start video call"
-        title="Video call"
-      >
-        🎥
-      </button>
+      <div className="relative flex shrink-0 items-center">
+        <button
+          type="button"
+          onClick={startCall}
+          disabled={!otherUserId || !conversationId}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg transition hover:bg-white/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+          aria-label="Start video call"
+          title="Video call"
+        >
+          🎥
+        </button>
+
+        {error && (
+          <div
+            role="alert"
+            className="absolute right-0 top-12 z-[120] w-64 rounded-xl bg-red-600 px-3 py-2 text-xs font-medium text-white shadow-xl"
+          >
+            {error}
+          </div>
+        )}
+      </div>
     );
   }
 
