@@ -39,3 +39,6 @@ backup_mobile_fix/
 *.backup
 *.backup-*
 *.backup.*
+
+# Local development backups
+backups/
