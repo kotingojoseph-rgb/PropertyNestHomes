@@ -606,7 +606,7 @@ export default function ChatCenter() {
                         }
               
 
-className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-xs font-semibold text-white transition hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:w-auto sm:gap-1.5 sm:px-3.5"
+className="flex h-9 w-[88px] shrink-0 items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-2 text-xs font-semibold text-white transition hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:w-auto sm:px-3.5"
 
                       >
                         {isStarting ? (
