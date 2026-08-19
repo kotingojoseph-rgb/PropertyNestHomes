@@ -1,30 +1,159 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+function getInitials(name = "User") {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+}
+
+function formatTime(value) {
+  if (!value) return "";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  const now = new Date();
+
+  const sameDay =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+
+  if (sameDay) {
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  return date.toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function Icon({ children, className = "" }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`inline-flex shrink-0 items-center justify-center ${className}`}
+    >
+      {children}
+    </span>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      className="h-5 w-5"
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+  );
+}
+
+function MessageIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      className="h-5 w-5"
+    >
+      <path
+        d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H8l-4 2v-4.5a7.5 7.5 0 0 1 8.5-10.4A7.5 7.5 0 0 1 20 11.5Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ArrowRightIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      className="h-4 w-4"
+    >
+      <path d="M5 12h13" strokeLinecap="round" />
+      <path
+        d="m13 6 6 6-6 6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function RefreshIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      className="h-5 w-5"
+    >
+      <path
+        d="M20 11a8.1 8.1 0 0 0-14.8-4.5L4 8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M4 4v4h4" strokeLinecap="round" />
+      <path
+        d="M4 13a8.1 8.1 0 0 0 14.8 4.5L20 16"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M20 20v-4h-4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PersonAvatar({ name }) {
+  return (
+    <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600 ring-1 ring-slate-200">
+      {getInitials(name)}
+    </div>
+  );
+}
 
 export default function ChatCenter() {
   const [conversations, setConversations] = useState([]);
   const [people, setPeople] = useState([]);
   const [search, setSearch] = useState("");
+  const [loadingConversations, setLoadingConversations] = useState(true);
   const [loadingPeople, setLoadingPeople] = useState(false);
-  const navigate = useNavigate();
+  const [startingConversation, setStartingConversation] = useState(null);
+  const [error, setError] = useState("");
 
+  const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    loadConversations();
-    loadPeople();
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      loadPeople(search);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [search]);
-
   async function loadConversations() {
+    if (!token) {
+      setLoadingConversations(false);
+      return;
+    }
+
     try {
+      setLoadingConversations(true);
+
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/chat/conversations`,
         {
@@ -37,18 +166,27 @@ export default function ChatCenter() {
       const data = await response.json();
 
       if (!response.ok) {
-        console.error("Conversations error:", data);
-        setConversations([]);
-        return;
+        throw new Error(
+          data.error || "Unable to load conversations."
+        );
       }
 
-      setConversations(data);
-    } catch (error) {
-      console.error("Load conversations error:", error);
+      setConversations(Array.isArray(data) ? data : []);
+      setError("");
+    } catch (err) {
+      console.error("Load conversations error:", err);
+      setConversations([]);
+      setError(
+        err.message || "Unable to load conversations."
+      );
+    } finally {
+      setLoadingConversations(false);
     }
   }
 
   async function loadPeople(searchValue = "") {
+    if (!token) return;
+
     try {
       setLoadingPeople(true);
 
@@ -66,22 +204,40 @@ export default function ChatCenter() {
       const data = await response.json();
 
       if (!response.ok) {
-        console.error("People error:", data);
-        setPeople([]);
-        return;
+        throw new Error(
+          data.error || "Unable to load people."
+        );
       }
 
-      setPeople(data);
-    } catch (error) {
-      console.error("Load people error:", error);
+      setPeople(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Load people error:", err);
       setPeople([]);
     } finally {
       setLoadingPeople(false);
     }
   }
 
+  useEffect(() => {
+    loadConversations();
+    loadPeople();
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadPeople(search);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
   async function startConversation(person) {
+    if (!person?.id || startingConversation) return;
+
     try {
+      setStartingConversation(person.id);
+      setError("");
+
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/chat/conversations`,
         {
@@ -100,114 +256,383 @@ export default function ChatCenter() {
       const data = await response.json();
 
       if (!response.ok) {
-        console.error("Start conversation error:", data);
-        return;
+        throw new Error(
+          data.error || "Unable to start conversation."
+        );
       }
 
       navigate(`/chat/${data.id}`);
-    } catch (error) {
-      console.error("Start conversation error:", error);
+    } catch (err) {
+      console.error("Start conversation error:", err);
+
+      setError(
+        err.message || "Unable to start conversation."
+      );
+    } finally {
+      setStartingConversation(null);
     }
   }
 
-  return (
-    <div className="mx-auto w-full min-w-0 max-w-5xl overflow-x-hidden px-2 py-3 sm:px-6 sm:py-6">
-      <h1 className="mb-4 truncate text-2xl font-bold sm:mb-6 sm:text-3xl">Chat Center</h1>
+  const filteredConversations = useMemo(() => {
+    const value = search.trim().toLowerCase();
 
-      <section className="mb-5 min-w-0 overflow-hidden rounded-xl border bg-white p-3 shadow-sm sm:mb-8 sm:p-5">
-        <div className="mb-4">
-          <h2 className="text-xl font-semibold">People</h2>
-          <p className="text-sm text-gray-500">
-            Find a PropertyNestHomes user and start a conversation.
+    if (!value) return conversations;
+
+    return conversations.filter((chat) => {
+      const name =
+        chat.buyer_name ||
+        chat.seller_name ||
+        "Conversation";
+
+      const message = chat.last_message || "";
+
+      return `${name} ${message}`
+        .toLowerCase()
+        .includes(value);
+    });
+  }, [conversations, search]);
+
+  if (!token) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center bg-slate-50 px-4">
+        <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900 text-white">
+            <MessageIcon />
+          </div>
+
+          <h1 className="mt-5 text-2xl font-bold text-slate-900">
+            Sign in to Messages
+          </h1>
+
+          <p className="mt-2 text-sm leading-6 text-slate-500">
+            Sign in to your PropertyNestHomes account to
+            view your conversations and contact other users.
           </p>
+
+          <button
+            type="button"
+            onClick={() => navigate("/login")}
+            className="mt-6 w-full rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+          >
+            Sign in
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-[calc(100vh-64px)] min-w-0 overflow-x-hidden bg-slate-50">
+      <div className="mx-auto w-full max-w-6xl px-3 py-4 sm:px-6 sm:py-7 lg:px-8">
+        {/* Page heading */}
+        <div className="mb-5 flex items-center justify-between gap-3 sm:mb-7">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+              PropertyNestHomes
+            </p>
+
+            <h1 className="mt-1 truncate text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+              Messages
+            </h1>
+
+            <p className="mt-1 hidden text-sm text-slate-500 sm:block">
+              Connect with buyers, sellers and property users.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              loadConversations();
+              loadPeople(search);
+            }}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 active:scale-95"
+            title="Refresh messages"
+            aria-label="Refresh messages"
+          >
+            <RefreshIcon />
+          </button>
         </div>
 
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name or email..."
-          className="mb-4 w-full rounded-lg border px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-        />
+        {/* Search */}
+        <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:mb-7 sm:p-3">
+          <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2.5">
+            <Icon className="text-slate-400">
+              <SearchIcon />
+            </Icon>
 
-        {loadingPeople ? (
-          <div className="py-6 text-center text-gray-500">
-            Loading people...
-          </div>
-        ) : people.length === 0 ? (
-          <div className="py-6 text-center text-gray-500">
-            No people found.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {people.map((person) => (
-              <div
-                key={person.id}
-                className="flex items-center justify-between rounded-xl border p-4"
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search conversations or people..."
+              className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
+            />
+
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="flex h-7 w-7 items-center justify-center rounded-full text-lg text-slate-400 hover:bg-white hover:text-slate-700"
+                aria-label="Clear search"
               >
-                <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 font-semibold text-white">
-                    {(person.full_name || "?")
-                      .charAt(0)
-                      .toUpperCase()}
-                  </div>
+                ×
+              </button>
+            )}
+          </div>
+        </div>
 
-                  <div className="min-w-0">
-                    <div className="font-semibold">
-                      {person.full_name || "User"}
-                    </div>
-                    <div className="truncate text-xs text-gray-500 sm:text-sm">
-                      {person.email}
-                    </div>
-                  </div>
-                </div>
+        {error && (
+          <div className="mb-5 flex items-start justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <span>{error}</span>
 
-                <button
-                  type="button"
-                  onClick={() => startConversation(person)}
-                  className="shrink-0 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 sm:px-4 sm:text-sm"
-                >
-                  Message
-                </button>
-              </div>
-            ))}
+            <button
+              type="button"
+              onClick={() => setError("")}
+              className="shrink-0 font-bold"
+              aria-label="Dismiss error"
+            >
+              ×
+            </button>
           </div>
         )}
-      </section>
 
-      <section>
-        <h2 className="mb-4 text-xl font-semibold">Conversations</h2>
+        {/* Main content */}
+        <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.8fr)] lg:items-start">
+          {/* Conversations */}
+          <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4 sm:px-5">
+              <div>
+                <h2 className="text-base font-bold text-slate-900">
+                  Conversations
+                </h2>
 
-        {conversations.length === 0 ? (
-          <div className="rounded-lg border p-6 text-center text-gray-500">
-            No conversations yet.
-          </div>
-        ) : (
-          <div className="min-w-0 space-y-3">
-            {conversations.map((chat) => (
-              <button
-                key={chat.id}
-                onClick={() => navigate(`/chat/${chat.id}`)}
-                className="flex w-full min-w-0 items-center gap-2 overflow-hidden rounded-xl border bg-white p-3 text-left shadow-sm hover:bg-gray-50 sm:gap-4 sm:p-4"
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-xl text-white">
-                  💬
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Your recent messages
+                </p>
+              </div>
+
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">
+                {filteredConversations.length}
+              </span>
+            </div>
+
+            {loadingConversations ? (
+              <div className="divide-y divide-slate-100">
+                {[1, 2, 3].map((item) => (
+                  <div
+                    key={item}
+                    className="flex items-center gap-3 px-4 py-4 sm:px-5"
+                  >
+                    <div className="h-12 w-12 shrink-0 animate-pulse rounded-full bg-slate-100" />
+
+                    <div className="min-w-0 flex-1">
+                      <div className="h-4 w-32 animate-pulse rounded bg-slate-100" />
+                      <div className="mt-2 h-3 w-48 max-w-full animate-pulse rounded bg-slate-100" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredConversations.length === 0 ? (
+              <div className="px-5 py-14 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+                  <MessageIcon />
                 </div>
 
-                <div className="min-w-0 flex-1 overflow-hidden">
-                  <h3 className="truncate font-bold">
-                    {chat.buyer_name || chat.seller_name || "Conversation"}
-                  </h3>
+                <h3 className="mt-4 font-semibold text-slate-900">
+                  {search
+                    ? "No matching conversations"
+                    : "No conversations yet"}
+                </h3>
 
-                  <p className="truncate text-xs text-gray-600 sm:text-sm">
-                    {chat.last_message || "No messages yet"}
+                <p className="mx-auto mt-1 max-w-sm text-sm leading-5 text-slate-500">
+                  {search
+                    ? "Try another name or message."
+                    : "Start a conversation with someone from the People section."}
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {filteredConversations.map((chat) => {
+                  const name =
+                    chat.buyer_name ||
+                    chat.seller_name ||
+                    "Conversation";
+
+                  const unread =
+                    Number(chat.unread_count || 0) > 0;
+
+                  return (
+                    <button
+                      key={chat.id}
+                      type="button"
+                      onClick={() =>
+                        navigate(`/chat/${chat.id}`)
+                      }
+                      className="group flex w-full min-w-0 items-center gap-3 px-4 py-4 text-left transition hover:bg-slate-50 active:bg-slate-100 sm:gap-4 sm:px-5"
+                    >
+                      <div className="relative shrink-0">
+                        <PersonAvatar name={name} />
+
+                        {unread && (
+                          <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-white bg-blue-600" />
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3
+                            className={`min-w-0 flex-1 truncate text-sm ${
+                              unread
+                                ? "font-bold text-slate-900"
+                                : "font-semibold text-slate-800"
+                            }`}
+                          >
+                            {name}
+                          </h3>
+
+                          <span className="shrink-0 text-[11px] text-slate-400">
+                            {formatTime(
+                              chat.updated_at ||
+                                chat.last_message_at ||
+                                chat.created_at
+                            )}
+                          </span>
+                        </div>
+
+                        <p
+                          className={`mt-1 truncate text-xs sm:text-sm ${
+                            unread
+                              ? "font-medium text-slate-700"
+                              : "text-slate-500"
+                          }`}
+                        >
+                          {chat.last_message ||
+                            "No messages yet"}
+                        </p>
+                      </div>
+
+                      <Icon className="text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-500">
+                        <ArrowRightIcon />
+                      </Icon>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          {/* People */}
+          <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="border-b border-slate-100 px-4 py-4 sm:px-5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">
+                    People
+                  </h2>
+
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Find someone to message
                   </p>
                 </div>
-              </button>
-            ))}
-          </div>
-        )}
-      </section>
+
+                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">
+                  {people.length}
+                </span>
+              </div>
+            </div>
+
+            {loadingPeople ? (
+              <div className="divide-y divide-slate-100">
+                {[1, 2, 3].map((item) => (
+                  <div
+                    key={item}
+                    className="flex items-center gap-3 px-4 py-4 sm:px-5"
+                  >
+                    <div className="h-11 w-11 animate-pulse rounded-full bg-slate-100" />
+
+                    <div className="min-w-0 flex-1">
+                      <div className="h-4 w-28 animate-pulse rounded bg-slate-100" />
+                      <div className="mt-2 h-3 w-36 animate-pulse rounded bg-slate-100" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : people.length === 0 ? (
+              <div className="px-5 py-12 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                  <SearchIcon />
+                </div>
+
+                <h3 className="mt-4 font-semibold text-slate-900">
+                  No people found
+                </h3>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Try searching for another user.
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {people.map((person) => {
+                  const name =
+                    person.full_name || "PropertyNestHomes User";
+
+                  const isStarting =
+                    startingConversation === person.id;
+
+                  return (
+                    <div
+                      key={person.id}
+                      className="flex min-w-0 items-center gap-3 px-4 py-3.5 sm:px-5"
+                    >
+                      <PersonAvatar name={name} />
+
+                      <div className="min-w-0 flex-1">
+                        <h3 className="truncate text-sm font-semibold text-slate-800">
+                          {name}
+                        </h3>
+
+                        <p className="mt-0.5 truncate text-xs text-slate-500">
+                          {person.email || "PropertyNestHomes user"}
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={Boolean(startingConversation)}
+                        onClick={() =>
+                          startConversation(person)
+                        }
+              
+
+className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-xs font-semibold text-white transition hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:w-auto sm:gap-1.5 sm:px-3.5"
+
+                      >
+                        {isStarting ? (
+                          <>
+                            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                            <span className="hidden sm:inline">
+                              Opening
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <MessageIcon />
+                            <span className="hidden sm:inline">
+                              Message
+                            </span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
     </div>
   );
 }
