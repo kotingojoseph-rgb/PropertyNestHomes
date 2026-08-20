@@ -1,66 +1,49 @@
-const https = require("https");
+const twilio = require("twilio");
 
-function sendSMS(to, message) {
-  return new Promise((resolve, reject) => {
-    const apiKey = process.env.TERMII_API_KEY;
-    const baseUrl = process.env.TERMII_BASE_URL;
-    const senderId = process.env.TERMII_SENDER_ID || "PropertyNest";
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const fromNumber = process.env.TWILIO_PHONE_NUMBER;
 
-    if (!apiKey || !baseUrl) {
-      return reject(
-        new Error("TERMII_API_KEY or TERMII_BASE_URL is not configured")
-      );
-    }
+let client = null;
 
-    let cleanBaseUrl = baseUrl.replace(/\/+$/, "");
+if (accountSid && authToken) {
+  client = twilio(accountSid, authToken);
+}
 
-    const payload = JSON.stringify({
-      api_key: apiKey,
-      to,
-      from: senderId,
-      sms: message,
-      type: "plain",
-      channel: "generic",
-    });
+async function sendSMS(to, message) {
+  if (!client) {
+    throw new Error(
+      "TWILIO_ACCOUNT_SID or TWILIO_AUTH_TOKEN is not configured"
+    );
+  }
 
-    const url = new URL(`${cleanBaseUrl}/api/sms/send`);
+  if (!fromNumber) {
+    throw new Error(
+      "TWILIO_PHONE_NUMBER is not configured"
+    );
+  }
 
-    const options = {
-      hostname: url.hostname,
-      port: 443,
-      path: `${url.pathname}${url.search}`,
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Content-Length": Buffer.byteLength(payload),
-      },
-    };
+  if (!to) {
+    throw new Error("SMS recipient phone number is required");
+  }
 
-    const request = https.request(options, (response) => {
-      let data = "";
+  if (!message) {
+    throw new Error("SMS message is required");
+  }
 
-      response.on("data", (chunk) => {
-        data += chunk;
-      });
-
-      response.on("end", () => {
-        if (response.statusCode >= 200 && response.statusCode < 300) {
-          resolve(data);
-        } else {
-          reject(
-            new Error(
-              `SMS provider returned ${response.statusCode}: ${data}`
-            )
-          );
-        }
-      });
-    });
-
-    request.on("error", reject);
-
-    request.write(payload);
-    request.end();
+  const result = await client.messages.create({
+    body: String(message),
+    from: fromNumber,
+    to: String(to),
   });
+
+  console.log("Twilio SMS sent:", {
+    sid: result.sid,
+    to: result.to,
+    status: result.status,
+  });
+
+  return result;
 }
 
 module.exports = {
