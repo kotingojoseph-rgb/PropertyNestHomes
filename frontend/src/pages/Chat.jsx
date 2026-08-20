@@ -28,6 +28,7 @@ export default function Chat() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [replyingTo, setReplyingTo] = useState(null);
 
   const typingTimeout = useRef(null);
 
@@ -398,7 +399,7 @@ export default function Chat() {
     chatUser.id,
   ]);
 
-  async function sendMessage(message) {
+  async function sendMessage(message, replyToMessageId = null) {
     const cleanMessage = String(message || "").trim();
 
     if (
@@ -425,6 +426,7 @@ export default function Chat() {
           body: JSON.stringify({
             conversation_id: Number(conversationId),
             message: cleanMessage,
+            reply_to_message_id: replyToMessageId || null,
           }),
         }
       );
@@ -634,12 +636,20 @@ export default function Chat() {
           currentUserId={currentUserId}
           loading={loading}
           otherUserName={chatUser.name}
+          onReply={(message) => {
+            setReplyingTo(message);
+          }}
         />
 
         <MessageInput
-          onSend={sendMessage}
+          onSend={async (message, replyToMessageId) => {
+            await sendMessage(message, replyToMessageId);
+            setReplyingTo(null);
+          }}
           conversationId={conversationId}
           disabled={sending}
+          replyingTo={replyingTo}
+          onCancelReply={() => setReplyingTo(null)}
         />
       </main>
     </div>

@@ -27,14 +27,61 @@ function MessageNotificationPopup({
     return null;
   }
 
+  const mediaType =
+    notification.mediaType || "text";
+
+  const replyTo =
+    notification.replyTo || null;
+
+  function getMessageText(message, type) {
+    if (message?.trim()) {
+      return message.trim();
+    }
+
+    switch (type) {
+      case "audio":
+        return "🎤 Voice message";
+
+      case "video":
+        return "🎥 Video message";
+
+      case "image":
+        return "📷 Photo";
+
+      case "document":
+        return "📄 Document";
+
+      default:
+        return "New message";
+    }
+  }
+
+  const messageText =
+    getMessageText(
+      notification.message,
+      mediaType
+    );
+
+  const replyText = replyTo
+    ? getMessageText(
+        replyTo.message,
+        replyTo.media_type
+      )
+    : "";
+
   return (
     <div
       style={{
         position: "fixed",
-        top: "20px",
-        right: "20px",
-        width: "min(380px, calc(100vw - 40px))",
+        top: "max(14px, env(safe-area-inset-top))",
+        left: "12px",
+        right: "12px",
+        width: "auto",
+        maxWidth: "420px",
+        marginLeft: "auto",
         zIndex: 99999,
+        animation:
+          "propertyNestMessagePopupIn 220ms ease-out",
       }}
     >
       <button
@@ -42,12 +89,13 @@ function MessageNotificationPopup({
         onClick={onOpen}
         style={{
           width: "100%",
-          border: "none",
-          borderRadius: "16px",
-          padding: "16px",
+          border: "1px solid rgba(0,0,0,0.06)",
+          borderRadius: "18px",
+          padding: "14px",
           background: "#ffffff",
           color: "#111827",
-          boxShadow: "0 15px 45px rgba(0,0,0,0.22)",
+          boxShadow:
+            "0 16px 45px rgba(0,0,0,0.22)",
           cursor: "pointer",
           textAlign: "left",
         }}
@@ -56,60 +104,57 @@ function MessageNotificationPopup({
           style={{
             display: "flex",
             alignItems: "flex-start",
-            justifyContent: "space-between",
-            gap: "12px",
+            gap: "11px",
           }}
         >
           <div
             style={{
+              width: "44px",
+              height: "44px",
+              minWidth: "44px",
+              borderRadius: "50%",
+              background: "#dc2626",
+              color: "#ffffff",
               display: "flex",
               alignItems: "center",
-              gap: "10px",
+              justifyContent: "center",
+              fontSize: "19px",
+              fontWeight: "700",
+            }}
+          >
+            💬
+          </div>
+
+          <div
+            style={{
               minWidth: 0,
+              flex: 1,
             }}
           >
             <div
               style={{
-                width: "42px",
-                height: "42px",
-                minWidth: "42px",
-                borderRadius: "50%",
-                background: "#dc2626",
-                color: "#ffffff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "18px",
+                fontSize: "11px",
                 fontWeight: "700",
+                color: "#dc2626",
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
               }}
             >
-              💬
+              New message
             </div>
 
-            <div style={{ minWidth: 0 }}>
-              <div
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "700",
-                  color: "#dc2626",
-                  marginBottom: "3px",
-                }}
-              >
-                New message
-              </div>
-
-              <div
-                style={{
-                  fontSize: "15px",
-                  fontWeight: "700",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {notification.senderName ||
-                  "PropertyNestHomes User"}
-              </div>
+            <div
+              style={{
+                marginTop: "2px",
+                fontSize: "15px",
+                fontWeight: "700",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {notification.senderName ||
+                "PropertyNestHomes User"}
             </div>
           </div>
 
@@ -148,12 +193,55 @@ function MessageNotificationPopup({
           </span>
         </div>
 
+        {replyTo && (
+          <div
+            style={{
+              marginTop: "12px",
+              marginLeft: "55px",
+              padding: "8px 10px",
+              borderLeft:
+                "4px solid #128c7e",
+              borderRadius: "8px",
+              background: "#f3f4f6",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "11px",
+                fontWeight: "700",
+                color: "#075e54",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              ↩ Replying to{" "}
+              {replyTo.sender_name ||
+                "message"}
+            </div>
+
+            <div
+              style={{
+                marginTop: "2px",
+                fontSize: "12px",
+                color: "#6b7280",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {replyText}
+            </div>
+          </div>
+        )}
+
         <div
           style={{
-            marginTop: "12px",
-            paddingLeft: "52px",
+            marginTop: "10px",
+            marginLeft: "55px",
             fontSize: "14px",
-            color: "#4b5563",
+            color: "#374151",
             lineHeight: "1.45",
             display: "-webkit-box",
             WebkitLineClamp: 2,
@@ -161,22 +249,37 @@ function MessageNotificationPopup({
             overflow: "hidden",
           }}
         >
-          {notification.message ||
-            "You received a new message."}
+          {messageText}
         </div>
 
         <div
           style={{
-            marginTop: "12px",
-            paddingLeft: "52px",
-            fontSize: "12px",
-            fontWeight: "600",
+            marginTop: "10px",
+            marginLeft: "55px",
+            fontSize: "11px",
+            fontWeight: "700",
             color: "#dc2626",
           }}
         >
           Tap to open conversation
         </div>
       </button>
+
+      <style>
+        {`
+          @keyframes propertyNestMessagePopupIn {
+            from {
+              opacity: 0;
+              transform: translateY(-12px) scale(0.98);
+            }
+
+            to {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }
