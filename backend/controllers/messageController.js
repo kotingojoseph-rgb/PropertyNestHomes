@@ -26,6 +26,7 @@ async function getMessageWithReply(messageId) {
       rm.media_type AS reply_to_media_type,
       rm.audio_url AS reply_to_audio_url,
       rm.video_url AS reply_to_video_url,
+      rm.image_url AS reply_to_image_url,
       rm.created_at AS reply_to_created_at,
 
       ru.full_name AS reply_to_sender_name
@@ -70,6 +71,8 @@ async function getMessageWithReply(messageId) {
             row.reply_to_audio_url || null,
           video_url:
             row.reply_to_video_url || null,
+          image_url:
+            row.reply_to_image_url || null,
           created_at:
             row.reply_to_created_at || null,
         }
@@ -230,6 +233,10 @@ async function notifyParticipants(
       newMessage.reply_to || null,
   };
 
+  const recipientId =
+  Number(senderId) === Number(buyer_id)
+    ? Number(seller_id)
+    : Number(buyer_id);
   const participantIds = [
     Number(buyer_id),
     Number(seller_id),
@@ -239,17 +246,14 @@ async function notifyParticipants(
   // GLOBAL USER NOTIFICATION
   // ----------------------------------------------------------
 
-  for (
-    const participantId
-    of participantIds
-  ) {
-    io.to(
-      `user_${participantId}`
-    ).emit(
-      "newMessageNotification",
-      notification
-    );
-  }
+/*
+ * Send the new-message notification ONLY
+ * to the person receiving the message.
+ */
+io.to(`user_${recipientId}`).emit(
+  "newMessageNotification",
+  notification
+);
 
   // ----------------------------------------------------------
   // CONVERSATION LIST UPDATE
@@ -650,6 +654,7 @@ exports.getMessages = async (
           rm.media_type AS reply_to_media_type,
           rm.audio_url AS reply_to_audio_url,
           rm.video_url AS reply_to_video_url,
+          rm.image_url AS reply_to_image_url,
           rm.created_at AS reply_to_created_at,
 
           ru.full_name AS reply_to_sender_name
@@ -730,6 +735,10 @@ exports.getMessages = async (
 
                   video_url:
                     row.reply_to_video_url ||
+                    null,
+
+                  image_url:
+                    row.reply_to_image_url ||
                     null,
 
                   created_at:
@@ -1053,13 +1062,13 @@ exports.uploadChatMedia =
       }
 
       if (
-        !["audio", "video"].includes(
+        !["audio", "video", "image"].includes(
           media_type
         )
       ) {
         return res.status(400).json({
           error:
-            "media_type must be audio or video",
+            "media_type must be audio, video, or image",
         });
       }
 
@@ -1114,7 +1123,14 @@ exports.uploadChatMedia =
       const folder =
         media_type === "audio"
           ? "propertynesthomes/chat/audio"
-          : "propertynesthomes/chat/video";
+          : media_type === "video"
+          ? "propertynesthomes/chat/video"
+          : "propertynesthomes/chat/images";
+
+      const resourceType =
+        media_type === "image"
+          ? "image"
+          : "video";
 
       const uploadResult =
         await new Promise(
@@ -1128,7 +1144,7 @@ exports.uploadChatMedia =
                   folder,
 
                   resource_type:
-                    "video",
+                    resourceType,
                 },
 
                 (
@@ -1161,10 +1177,17 @@ exports.uploadChatMedia =
           ? uploadResult.secure_url
           : null;
 
+      const imageUrl =
+        media_type === "image"
+          ? uploadResult.secure_url
+          : null;
+
       const label =
         media_type === "audio"
           ? "🎤 Voice message"
-          : "🎥 Video message";
+          : media_type === "video"
+          ? "🎥 Video message"
+          : "📷 Image";
 
       // --------------------------------------------------------
       // INSERT MEDIA MESSAGE
@@ -1180,6 +1203,7 @@ exports.uploadChatMedia =
             message,
             audio_url,
             video_url,
+            image_url,
             media_type,
             reply_to_message_id
           )
@@ -1191,7 +1215,8 @@ exports.uploadChatMedia =
             $4,
             $5,
             $6,
-            $7
+            $7,
+            $8
           )
 
           RETURNING *
@@ -1202,6 +1227,7 @@ exports.uploadChatMedia =
             label,
             audioUrl,
             videoUrl,
+            imageUrl,
             media_type,
             replyToId,
           ]

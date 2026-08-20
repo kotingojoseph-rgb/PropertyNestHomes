@@ -209,13 +209,15 @@ export default function MessageList({
               msg.id ??
               `${msg.created_at}-${msg.sender_id}-${msg.message}`;
 
-            const replyTarget = msg.reply_to_message_id
-              ? messages.find(
-                  (item) =>
-                    Number(item.id) ===
-                    Number(msg.reply_to_message_id)
-                )
-              : null;
+            const replyTarget =
+  msg.reply_to ||
+  (msg.reply_to_message_id
+    ? messages.find(
+        (item) =>
+          Number(item.id) ===
+          Number(msg.reply_to_message_id)
+      )
+    : null);
 
             const replyPreview =
               replyTarget

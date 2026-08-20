@@ -18,6 +18,13 @@ const ALLOWED_VIDEO = new Set([
   "video/mov",
 ]);
 
+const ALLOWED_IMAGE = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+]);
+
 const upload = multer({
   storage: multer.memoryStorage(),
 
@@ -40,7 +47,8 @@ const upload = multer({
 
     if (
       ALLOWED_AUDIO.has(normalizedMimeType) ||
-      ALLOWED_VIDEO.has(normalizedMimeType)
+      ALLOWED_VIDEO.has(normalizedMimeType) ||
+      ALLOWED_IMAGE.has(normalizedMimeType)
     ) {
       return cb(null, true);
     }

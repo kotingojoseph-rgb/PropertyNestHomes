@@ -56,11 +56,10 @@ function MessageNotificationPopup({
     }
   }
 
-  const messageText =
-    getMessageText(
-      notification.message,
-      mediaType
-    );
+  const messageText = getMessageText(
+    notification.message,
+    mediaType
+  );
 
   const replyText = replyTo
     ? getMessageText(
@@ -290,8 +289,40 @@ function AppContent() {
   const [notification, setNotification] =
     useState(null);
 
+  /*
+   * Ask the browser for notification permission.
+   */
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    if (!("Notification" in window)) {
+      console.log(
+        "Browser notifications are not supported."
+      );
+      return;
+    }
+
+    if (Notification.permission === "default") {
+      Notification.requestPermission()
+        .then((permission) => {
+          console.log(
+            "🔔 Notification permission:",
+            permission
+          );
+        })
+        .catch((error) => {
+          console.error(
+            "Notification permission error:",
+            error
+          );
+        });
+    }
+  }, []);
+
+  /*
+   * Connect to Socket.IO and listen for new messages.
+   */
+  useEffect(() => {
+    const token =
+      localStorage.getItem("token");
 
     if (!token) {
       return;
@@ -307,14 +338,7 @@ function AppContent() {
       }
 
       /*
-       * The logged-in user is stored by Login.jsx as:
-       *
-       * localStorage.setItem(
-       *   "user",
-       *   JSON.stringify(data.user)
-       * );
-       *
-       * Therefore we read the user object here.
+       * Get the currently logged-in user.
        */
       let currentUserId = 0;
 
@@ -323,7 +347,8 @@ function AppContent() {
           localStorage.getItem("user");
 
         if (storedUser) {
-          const user = JSON.parse(storedUser);
+          const user =
+            JSON.parse(storedUser);
 
           currentUserId = Number(
             user?.id ||
@@ -340,23 +365,112 @@ function AppContent() {
       }
 
       /*
-       * Do not show a notification for our own message.
+       * Do not show our own message
+       * as a notification.
        */
       if (
         currentUserId &&
-        Number(incomingNotification.senderId) ===
-          currentUserId
+        Number(
+          incomingNotification.senderId
+        ) === currentUserId
       ) {
         return;
       }
 
       console.log(
-        "🔔 New message notification:",
+        "🔔 RECEIVED MESSAGE NOTIFICATION:",
         incomingNotification
       );
 
-      setNotification(incomingNotification);
+      /*
+       * Show the PropertyNestHomes popup.
+       */
+      setNotification(
+        incomingNotification
+      );
 
+      /*
+       * Show a browser/device notification
+       * if permission has been granted.
+       */
+      if (
+        "Notification" in window &&
+        Notification.permission === "granted"
+      ) {
+        const notificationTitle =
+          incomingNotification.senderName ||
+          "PropertyNestHomes";
+
+        let notificationBody =
+          incomingNotification.message?.trim();
+
+        if (!notificationBody) {
+          switch (
+            incomingNotification.mediaType
+          ) {
+            case "audio":
+              notificationBody =
+                "🎤 Voice message";
+              break;
+
+            case "video":
+              notificationBody =
+                "🎥 Video message";
+              break;
+
+            case "image":
+              notificationBody =
+                "📷 Photo";
+              break;
+
+            case "document":
+              notificationBody =
+                "📄 Document";
+              break;
+
+            default:
+              notificationBody =
+                "New message";
+          }
+        }
+
+        try {
+          const phoneNotification =
+            new Notification(
+              notificationTitle,
+              {
+                body: notificationBody,
+                icon: "/favicon.ico",
+                tag: `propertynest-chat-${incomingNotification.conversationId}`,
+              }
+            );
+
+          phoneNotification.onclick = () => {
+            window.focus();
+
+            if (
+              incomingNotification.conversationId
+            ) {
+              navigate(
+                `/chat/${incomingNotification.conversationId}`
+              );
+            } else {
+              navigate("/chat");
+            }
+
+            phoneNotification.close();
+          };
+        } catch (error) {
+          console.error(
+            "Unable to create browser notification:",
+            error
+          );
+        }
+      }
+
+      /*
+       * Keep the popup visible for 6 seconds.
+       */
       window.clearTimeout(
         window.__propertyNestMessagePopupTimer
       );
@@ -382,7 +496,7 @@ function AppContent() {
         window.__propertyNestMessagePopupTimer
       );
     };
-  }, []);
+  }, [navigate]);
 
   const openNotification = () => {
     if (!notification) {
@@ -395,7 +509,9 @@ function AppContent() {
     setNotification(null);
 
     if (conversationId) {
-      navigate(`/chat/${conversationId}`);
+      navigate(
+        `/chat/${conversationId}`
+      );
     } else {
       navigate("/chat");
     }
@@ -405,14 +521,24 @@ function AppContent() {
     <>
       <MessageNotificationPopup
         notification={notification}
-        onClose={() => setNotification(null)}
+        onClose={() =>
+          setNotification(null)
+        }
         onOpen={openNotification}
       />
 
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/buy" element={<Buy />} />
+
+        <Route
+          path="/"
+          element={<Home />}
+        />
+
+        <Route
+          path="/buy"
+          element={<Buy />}
+        />
 
         <Route
           path="/property/:id"
@@ -440,6 +566,7 @@ function AppContent() {
         />
 
         {/* Chat */}
+
         <Route
           path="/chat"
           element={<ChatCenter />}
@@ -451,6 +578,7 @@ function AppContent() {
         />
 
         {/* Protected Routes */}
+
         <Route
           path="/add-property"
           element={
