@@ -5,6 +5,8 @@ export default function MessageInput({
   onSend,
   conversationId,
   disabled = false,
+  replyingTo = null,
+  onCancelReply,
 }) {
   const [message, setMessage] = useState("");
   const [recording, setRecording] = useState(false);
@@ -319,7 +321,10 @@ export default function MessageInput({
 
     socket.emit("stopTyping", Number(conversationId));
 
-    onSend(clean);
+    onSend(
+      clean,
+      replyingTo?.id || null
+    );
     setMessage("");
 
     requestAnimationFrame(() => {
@@ -358,6 +363,39 @@ export default function MessageInput({
 
   return (
     <div className="w-full min-w-0 shrink-0 overflow-hidden border-t border-black/5 bg-[#f0f2f5] px-1 pb-[max(3px,env(safe-area-inset-bottom))] pt-1 sm:p-3">
+      {replyingTo && (
+        <div className="mx-auto mb-1.5 flex w-full max-w-3xl items-center gap-2 rounded-xl border-l-4 border-[#128c7e] bg-white px-3 py-2 shadow-sm">
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] font-bold text-[#075e54]">
+              Replying to message
+            </div>
+
+            <div className="mt-0.5 truncate text-xs text-gray-600">
+              {replyingTo.message?.trim()
+                ? replyingTo.message
+                : replyingTo.audio_url
+                ? "🎤 Voice message"
+                : replyingTo.video_url
+                ? "🎥 Video"
+                : replyingTo.image_url
+                ? "📷 Photo"
+                : replyingTo.document_url
+                ? "📄 Document"
+                : "Message"}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onCancelReply}
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-lg text-gray-500 transition hover:bg-gray-100"
+            aria-label="Cancel reply"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {error && (
         <div className="mx-auto mb-1.5 flex w-full min-w-0 max-w-3xl items-center gap-2 overflow-hidden rounded-lg border border-red-200 bg-red-50 px-2 py-1.5 text-xs text-red-700 sm:mb-2 sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm">
           <span className="min-w-0 flex-1 break-words">
