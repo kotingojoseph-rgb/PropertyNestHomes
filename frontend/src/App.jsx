@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 
 import MainLayout from "./layout/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Status from "./pages/Status";
 import socket, { connectSocket } from "./socket";
 
 import Home from "./pages/Home";
@@ -566,6 +567,15 @@ function AppContent() {
         />
 
         {/* Chat */}
+
+        <Route
+          path="/status"
+          element={
+            <ProtectedRoute>
+              <Status />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/chat"
