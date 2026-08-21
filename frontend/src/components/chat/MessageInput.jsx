@@ -12,6 +12,7 @@ export default function MessageInput({
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [pendingVoice, setPendingVoice] = useState(null);
+  const [pendingImage, setPendingImage] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
@@ -20,7 +21,9 @@ export default function MessageInput({
   const chunksRef = useRef([]);
   const timerRef = useRef(null);
   const inputRef = useRef(null);
+  const imageInputRef = useRef(null);
   const previewUrlRef = useRef(null);
+  const imagePreviewUrlRef = useRef(null);
   const typingTimerRef = useRef(null);
 
   function supportedMime() {
@@ -303,6 +306,135 @@ export default function MessageInput({
     setError("");
   }
 
+
+  function handleImageSelect(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file.");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Image must be smaller than 10 MB.");
+      return;
+    }
+
+    if (imagePreviewUrlRef.current) {
+      URL.revokeObjectURL(imagePreviewUrlRef.current);
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    imagePreviewUrlRef.current = previewUrl;
+
+    setPendingImage({
+      file,
+      previewUrl,
+    });
+    setError("");
+  }
+
+  function cancelImage() {
+    if (uploading) return;
+
+    if (imagePreviewUrlRef.current) {
+      URL.revokeObjectURL(imagePreviewUrlRef.current);
+      imagePreviewUrlRef.current = null;
+    }
+
+    setPendingImage(null);
+    setError("");
+  }
+
+  async function sendImage() {
+    if (
+      !pendingImage ||
+      uploading ||
+      disabled ||
+      !conversationId
+    ) {
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setError("Your session has expired. Please log in again.");
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setError("");
+
+      const formData = new FormData();
+
+      formData.append(
+        "file",
+        pendingImage.file,
+        pendingImage.file.name
+      );
+
+      formData.append(
+        "conversation_id",
+        String(conversationId)
+      );
+
+      formData.append("media_type", "image");
+
+      const apiUrl = import.meta.env.VITE_API_URL;
+
+      if (!apiUrl) {
+        throw new Error("API URL is not configured.");
+      }
+
+      const response = await fetch(
+        `${apiUrl}/api/chat/media`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            `Image upload failed (${response.status}).`
+        );
+      }
+
+      if (!data.id && !data.image_url) {
+        console.warn("Image upload response:", data);
+      }
+
+      if (imagePreviewUrlRef.current) {
+        URL.revokeObjectURL(imagePreviewUrlRef.current);
+        imagePreviewUrlRef.current = null;
+      }
+
+      setPendingImage(null);
+    } catch (err) {
+      console.error("Image send error:", err);
+      setError(
+        err.message || "Image could not be sent."
+      );
+    } finally {
+      setUploading(false);
+
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+      });
+    }
+  }
+
   async function sendText(event) {
     event.preventDefault();
 
@@ -357,6 +489,10 @@ export default function MessageInput({
 
       if (previewUrlRef.current) {
         URL.revokeObjectURL(previewUrlRef.current);
+      }
+
+      if (imagePreviewUrlRef.current) {
+        URL.revokeObjectURL(imagePreviewUrlRef.current);
       }
     };
   }, [conversationId]);
@@ -413,6 +549,53 @@ export default function MessageInput({
         </div>
       )}
 
+      {pendingImage && (
+        <div className="mx-auto mb-2 flex w-full max-w-3xl items-center gap-2 rounded-xl bg-white p-2 shadow-sm">
+          <img
+            src={pendingImage.previewUrl}
+            alt="Selected image preview"
+            className="h-16 w-16 rounded-lg object-cover"
+          />
+
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-xs font-semibold text-gray-700">
+              {pendingImage.file.name}
+            </div>
+            <div className="text-[11px] text-gray-400">
+              Ready to send
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={cancelImage}
+            disabled={uploading}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40"
+            aria-label="Cancel image"
+          >
+            ×
+          </button>
+
+          <button
+            type="button"
+            onClick={sendImage}
+            disabled={uploading || disabled}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#075e54] text-white shadow-sm disabled:opacity-50"
+            aria-label="Send image"
+          >
+            {uploading ? "…" : "➤"}
+          </button>
+        </div>
+      )}
+
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/jpg"
+        onChange={handleImageSelect}
+        className="hidden"
+      />
+
       <form
         onSubmit={sendText}
         className="mx-auto flex w-full min-w-0 max-w-3xl items-end gap-1 sm:gap-2"
@@ -449,6 +632,17 @@ export default function MessageInput({
             </>
           ) : (
             <>
+              <button
+                type="button"
+                onClick={() => imageInputRef.current?.click()}
+                disabled={disabled || uploading}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
+                aria-label="Send image"
+                title="Send image"
+              >
+                📷
+              </button>
+
               <button
                 type="button"
                 onClick={startRecording}
