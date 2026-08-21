@@ -8,6 +8,8 @@ const chatMediaUpload = require("../middleware/chatMediaUpload");
 const {
   createConversation,
   sendMessage,
+  reactToMessage,
+  removeMessageReaction,
   getMessages,
   getConversations,
   getConversationDetails,
@@ -47,6 +49,19 @@ router.post(
   "/messages",
   authMiddleware,
   sendMessage
+);
+
+// WhatsApp-style message reactions
+router.post(
+  "/messages/:message_id/reaction",
+  authMiddleware,
+  reactToMessage
+);
+
+router.delete(
+  "/messages/:message_id/reaction",
+  authMiddleware,
+  removeMessageReaction
 );
 
 // Upload voice note or video message

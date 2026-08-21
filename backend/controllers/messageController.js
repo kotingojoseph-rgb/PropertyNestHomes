@@ -29,7 +29,24 @@ async function getMessageWithReply(messageId) {
       rm.image_url AS reply_to_image_url,
       rm.created_at AS reply_to_created_at,
 
-      ru.full_name AS reply_to_sender_name
+      ru.full_name AS reply_to_sender_name,
+
+      COALESCE(
+        (
+          SELECT json_agg(
+            json_build_object(
+              'id', mr.id,
+              'user_id', mr.user_id,
+              'reaction', mr.reaction,
+              'created_at', mr.created_at
+            )
+            ORDER BY mr.created_at ASC
+          )
+          FROM message_reactions mr
+          WHERE mr.message_id = m.id
+        ),
+        '[]'::json
+      ) AS reactions
 
     FROM messages m
 
@@ -624,6 +641,226 @@ exports.sendMessage = async (
 };
 
 
+
+// ============================================================
+// MESSAGE REACTION
+// ============================================================
+
+exports.reactToMessage = async (req, res) => {
+  try {
+    const messageId = Number(req.params.message_id);
+    const userId = Number(req.user.id);
+    const reaction = String(req.body.reaction || "").trim();
+
+    if (!Number.isInteger(messageId) || messageId <= 0) {
+      return res.status(400).json({
+        error: "Invalid message_id",
+      });
+    }
+
+    if (!reaction || reaction.length > 20) {
+      return res.status(400).json({
+        error: "Invalid reaction",
+      });
+    }
+
+    // Make sure the message exists and belongs to a
+    // conversation that this user can access.
+    const messageResult = await pool.query(
+      `
+      SELECT
+        m.id,
+        m.conversation_id,
+        c.buyer_id,
+        c.seller_id
+      FROM messages m
+      JOIN conversations c
+        ON c.id = m.conversation_id
+      WHERE m.id = $1
+      AND (
+        c.buyer_id = $2
+        OR c.seller_id = $2
+      )
+      LIMIT 1
+      `,
+      [messageId, userId]
+    );
+
+    if (messageResult.rows.length === 0) {
+      return res.status(404).json({
+        error: "Message not found",
+      });
+    }
+
+    const conversationId =
+      Number(messageResult.rows[0].conversation_id);
+
+    // One reaction per user per message.
+    // Sending another emoji replaces the previous reaction.
+    await pool.query(
+      `
+      INSERT INTO message_reactions
+      (
+        message_id,
+        user_id,
+        reaction
+      )
+      VALUES ($1, $2, $3)
+      ON CONFLICT (message_id, user_id)
+      DO UPDATE SET
+        reaction = EXCLUDED.reaction,
+        created_at = CURRENT_TIMESTAMP
+      `,
+      [
+        messageId,
+        userId,
+        reaction,
+      ]
+    );
+
+    const reactionsResult = await pool.query(
+      `
+      SELECT
+        message_reactions.id,
+        message_reactions.message_id,
+        message_reactions.user_id,
+        message_reactions.reaction,
+        message_reactions.created_at,
+        users.full_name
+      FROM message_reactions
+      JOIN users
+        ON users.id = message_reactions.user_id
+      WHERE message_reactions.message_id = $1
+      ORDER BY message_reactions.created_at ASC
+      `,
+      [messageId]
+    );
+
+    const payload = {
+      messageId,
+      conversationId,
+      reactions: reactionsResult.rows,
+    };
+
+    const io = getIO();
+
+    io
+      .to(`conversation_${conversationId}`)
+      .emit("messageReactionUpdated", payload);
+
+    return res.json(payload);
+  } catch (error) {
+    console.error(
+      "React to message error:",
+      error
+    );
+
+    return res.status(500).json({
+      error:
+        error.message ||
+        "Could not react to message.",
+    });
+  }
+};
+
+
+// ============================================================
+// REMOVE MESSAGE REACTION
+// ============================================================
+
+exports.removeMessageReaction = async (req, res) => {
+  try {
+    const messageId = Number(req.params.message_id);
+    const userId = Number(req.user.id);
+
+    if (!Number.isInteger(messageId) || messageId <= 0) {
+      return res.status(400).json({
+        error: "Invalid message_id",
+      });
+    }
+
+    const messageResult = await pool.query(
+      `
+      SELECT
+        m.id,
+        m.conversation_id
+      FROM messages m
+      JOIN conversations c
+        ON c.id = m.conversation_id
+      WHERE m.id = $1
+      AND (
+        c.buyer_id = $2
+        OR c.seller_id = $2
+      )
+      LIMIT 1
+      `,
+      [messageId, userId]
+    );
+
+    if (messageResult.rows.length === 0) {
+      return res.status(404).json({
+        error: "Message not found",
+      });
+    }
+
+    const conversationId =
+      Number(messageResult.rows[0].conversation_id);
+
+    await pool.query(
+      `
+      DELETE FROM message_reactions
+      WHERE message_id = $1
+      AND user_id = $2
+      `,
+      [messageId, userId]
+    );
+
+    const reactionsResult = await pool.query(
+      `
+      SELECT
+        message_reactions.id,
+        message_reactions.message_id,
+        message_reactions.user_id,
+        message_reactions.reaction,
+        message_reactions.created_at,
+        users.full_name
+      FROM message_reactions
+      JOIN users
+        ON users.id = message_reactions.user_id
+      WHERE message_reactions.message_id = $1
+      ORDER BY message_reactions.created_at ASC
+      `,
+      [messageId]
+    );
+
+    const payload = {
+      messageId,
+      conversationId,
+      reactions: reactionsResult.rows,
+    };
+
+    const io = getIO();
+
+    io
+      .to(`conversation_${conversationId}`)
+      .emit("messageReactionUpdated", payload);
+
+    return res.json(payload);
+  } catch (error) {
+    console.error(
+      "Remove message reaction error:",
+      error
+    );
+
+    return res.status(500).json({
+      error:
+        error.message ||
+        "Could not remove reaction.",
+    });
+  }
+};
+
+
 // ============================================================
 // GET CONVERSATION MESSAGES
 // ============================================================
@@ -657,7 +894,24 @@ exports.getMessages = async (
           rm.image_url AS reply_to_image_url,
           rm.created_at AS reply_to_created_at,
 
-          ru.full_name AS reply_to_sender_name
+          ru.full_name AS reply_to_sender_name,
+
+          COALESCE(
+            (
+              SELECT json_agg(
+                json_build_object(
+                  'id', mr.id,
+                  'user_id', mr.user_id,
+                  'reaction', mr.reaction,
+                  'created_at', mr.created_at
+                )
+                ORDER BY mr.created_at ASC
+              )
+              FROM message_reactions mr
+              WHERE mr.message_id = messages.id
+            ),
+            '[]'::json
+          ) AS reactions
 
         FROM messages
 

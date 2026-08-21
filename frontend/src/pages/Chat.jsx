@@ -34,6 +34,57 @@ export default function Chat() {
 
   const token = localStorage.getItem("token");
 
+  async function reactToMessage(message, reaction) {
+    if (!message?.id || !conversationId || !token) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/chat/messages/${message.id}/reaction`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            reaction,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "Could not react to message."
+        );
+      }
+
+      setMessages((previous) =>
+        previous.map((item) =>
+          Number(item.id) === Number(message.id)
+            ? {
+                ...item,
+                reactions: data.reactions || [],
+              }
+            : item
+        )
+      );
+    } catch (err) {
+      console.error(
+        "React to message error:",
+        err
+      );
+
+      setError(
+        err.message ||
+          "Could not react to message."
+      );
+    }
+  }
+
   useEffect(() => {
     if (!token) {
       setCurrentUserId(null);
@@ -41,11 +92,19 @@ export default function Chat() {
     }
 
     try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
+      const payload = JSON.parse(
+        atob(token.split(".")[1])
+      );
 
-      setCurrentUserId(Number(payload.id));
+      setCurrentUserId(
+        Number(payload.id)
+      );
     } catch (err) {
-      console.error("Token decode error:", err);
+      console.error(
+        "Token decode error:",
+        err
+      );
+
       setCurrentUserId(null);
     }
   }, [token]);
@@ -234,6 +293,30 @@ export default function Chat() {
       }
     };
 
+    const handleReactionUpdate = ({
+      messageId,
+      reactions = [],
+      conversationId: reactionConversationId,
+    }) => {
+      if (
+        Number(reactionConversationId) !==
+        conversationNumber
+      ) {
+        return;
+      }
+
+      setMessages((previous) =>
+        previous.map((message) =>
+          Number(message.id) === Number(messageId)
+            ? {
+                ...message,
+                reactions,
+              }
+            : message
+        )
+      );
+    };
+
     const handleStatusUpdate = ({
       messageId,
       status,
@@ -340,6 +423,12 @@ export default function Chat() {
       "messageStatusUpdate",
       handleStatusUpdate
     );
+
+    socket.on(
+      "messageReactionUpdated",
+      handleReactionUpdate
+    );
+
     socket.on("userTyping", handleTyping);
 
     socket.on(
@@ -374,6 +463,12 @@ export default function Chat() {
         "messageStatusUpdate",
         handleStatusUpdate
       );
+
+      socket.off(
+        "messageReactionUpdated",
+        handleReactionUpdate
+      );
+
       socket.off("userTyping", handleTyping);
       socket.off(
         "userStoppedTyping",
@@ -639,6 +734,7 @@ export default function Chat() {
           onReply={(message) => {
             setReplyingTo(message);
           }}
+          onReact={reactToMessage}
         />
 
         <MessageInput
