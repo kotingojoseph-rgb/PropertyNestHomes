@@ -45,6 +45,7 @@ export default function MessageList({
   loading = false,
   otherUserName = "User",
   onReply,
+  onReact,
 }) {
   const bottomRef = useRef(null);
   const containerRef = useRef(null);
@@ -140,6 +141,23 @@ export default function MessageList({
     }
 
     swipeState.current = null;
+  }
+
+  function getReactionSummary(reactions = []) {
+    const grouped = new Map();
+
+    reactions.forEach((item) => {
+      const reaction = item?.reaction;
+
+      if (!reaction) return;
+
+      grouped.set(
+        reaction,
+        (grouped.get(reaction) || 0) + 1
+      );
+    });
+
+    return Array.from(grouped.entries());
   }
 
   function scrollToMessage(messageId) {
@@ -278,6 +296,31 @@ export default function MessageList({
                         : "rounded-bl-md bg-white text-gray-900"
                     }`}
                   >
+                    {/* WhatsApp-style reaction bar */}
+                    <div
+                      className={`absolute bottom-full z-30 mb-1 hidden items-center gap-1 rounded-full bg-white px-2 py-1 shadow-xl ring-1 ring-black/5 group-hover:flex ${
+                        mine
+                          ? "right-0"
+                          : "left-0"
+                      }`}
+                    >
+                      {["❤️", "😂", "😮", "😢", "🙏", "👍"].map(
+                        (emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() =>
+                              onReact?.(msg, emoji)
+                            }
+                            className="flex h-8 w-8 items-center justify-center rounded-full text-lg transition hover:bg-gray-100 hover:scale-110 active:scale-95"
+                            title={`React ${emoji}`}
+                          >
+                            {emoji}
+                          </button>
+                        )
+                      )}
+                    </div>
+
                     {/* Desktop reply action */}
                     <button
                       type="button"
@@ -338,6 +381,31 @@ export default function MessageList({
                     ) : (
                       <div className="whitespace-pre-wrap break-words text-[14px] leading-5">
                         {msg.message}
+                      </div>
+                    )}
+
+                    {msg.reactions?.length > 0 && (
+                      <div className="mt-1 flex flex-wrap justify-end gap-1">
+                        {getReactionSummary(msg.reactions).map(
+                          ([emoji, count]) => (
+                            <button
+                              key={emoji}
+                              type="button"
+                              onClick={() =>
+                                onReact?.(msg, emoji)
+                              }
+                              className="flex items-center gap-1 rounded-full border border-white bg-white/90 px-1.5 py-0.5 text-xs shadow-sm transition hover:scale-105 active:scale-95"
+                              title="React"
+                            >
+                              <span>{emoji}</span>
+                              {count > 1 && (
+                                <span className="text-[10px] text-gray-600">
+                                  {count}
+                                </span>
+                              )}
+                            </button>
+                          )
+                        )}
                       </div>
                     )}
 
