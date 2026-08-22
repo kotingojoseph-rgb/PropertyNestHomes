@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ChatTabs from "../components/chat/ChatTabs";
-import socket, {
-  connectSocket,
-  disconnectSocket,
-} from "../socket";
+import socket, { connectSocket } from "../socket";
 
 function getInitials(name = "User") {
   return name
@@ -304,7 +301,6 @@ export default function ChatCenter() {
         handleConversationUpdated
       );
 
-      disconnectSocket();
     };
   }, []);
 
