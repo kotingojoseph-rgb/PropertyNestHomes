@@ -12,7 +12,6 @@ export default function Chat() {
 
   const [messages, setMessages] = useState([]);
   const [currentUserId, setCurrentUserId] = useState(null);
-  const [statusHighlights, setStatusHighlights] = useState([]);
 
   const [chatUser, setChatUser] = useState({
     id: null,
@@ -213,44 +212,6 @@ export default function Chat() {
     loadMessages,
   ]);
 
-  const loadStatusHighlights = useCallback(async () => {
-    if (!token) return;
-
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/status`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.error || "Unable to load statuses."
-        );
-      }
-
-      setStatusHighlights(
-        Array.isArray(data.statuses)
-          ? data.statuses
-          : []
-      );
-    } catch (err) {
-      console.error(
-        "Load chat status highlights error:",
-        err
-      );
-    }
-  }, [token]);
-
-  useEffect(() => {
-    loadStatusHighlights();
-  }, [loadStatusHighlights]);
-
   useEffect(() => {
     if (!conversationId || !token || !currentUserId) {
       return;
@@ -293,11 +254,6 @@ export default function Chat() {
       );
 
       setSocketOnline(false);
-    };
-
-    const handleNewStatus = () => {
-      console.log("📸 New status received");
-      loadStatusHighlights();
     };
 
     const handleNewMessage = (message) => {
@@ -463,7 +419,6 @@ export default function Chat() {
     socket.on("disconnect", handleDisconnect);
     socket.on("connect_error", handleConnectError);
     socket.on("newMessage", handleNewMessage);
-    socket.on("newStatus", handleNewStatus);
     socket.on(
       "messageStatusUpdate",
       handleStatusUpdate
@@ -504,7 +459,6 @@ export default function Chat() {
         handleConnectError
       );
       socket.off("newMessage", handleNewMessage);
-      socket.off("newStatus", handleNewStatus);
       socket.off(
         "messageStatusUpdate",
         handleStatusUpdate
@@ -537,8 +491,7 @@ export default function Chat() {
     conversationId,
     token,
     currentUserId,
-    chatUser.id,
-    loadStatusHighlights,
+    chatUser.id
   ]);
 
   async function sendMessage(message, replyToMessageId = null) {
@@ -773,78 +726,6 @@ export default function Chat() {
       )}
 
       <main className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col overflow-hidden">
-        {statusHighlights.length > 0 && (
-          <div className="shrink-0 border-b border-black/5 bg-white px-3 py-2">
-            <div className="flex items-center gap-3 overflow-x-auto pb-1">
-              <button
-                type="button"
-                onClick={() => navigate("/status")}
-                className="flex shrink-0 flex-col items-center"
-              >
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#075e54] text-xl text-white shadow-sm ring-2 ring-[#25d366] ring-offset-2">
-                  +
-                </div>
-
-                <span className="mt-1 max-w-16 truncate text-[11px] font-medium text-gray-700">
-                  My Status
-                </span>
-              </button>
-
-              {statusHighlights.map((group) => {
-                const user = group.user || {};
-                const name =
-                  user.full_name ||
-                  user.email ||
-                  "User";
-
-                const latestStatus =
-                  group.statuses?.[
-                    group.statuses.length - 1
-                  ];
-
-                if (!latestStatus) return null;
-
-                const initials = name
-                  .split(/\s+/)
-                  .filter(Boolean)
-                  .slice(0, 2)
-                  .map((part) => part[0])
-                  .join("")
-                  .toUpperCase();
-
-                return (
-                  <button
-                    key={user.id}
-                    type="button"
-                    onClick={() => navigate("/status")}
-                    className="flex shrink-0 flex-col items-center"
-                  >
-                    <div className="h-14 w-14 rounded-full bg-gradient-to-tr from-[#25d366] to-[#075e54] p-[2px] shadow-sm">
-                      <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full border-2 border-white bg-gray-100 text-sm font-bold text-[#075e54]">
-                        {latestStatus.media_url &&
-                        latestStatus.media_type ===
-                          "image" ? (
-                          <img
-                            src={latestStatus.media_url}
-                            alt={name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          initials || "U"
-                        )}
-                      </div>
-                    </div>
-
-                    <span className="mt-1 max-w-20 truncate text-[11px] font-medium text-gray-700">
-                      {name}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
         <MessageList
           messages={messages}
           currentUserId={currentUserId}

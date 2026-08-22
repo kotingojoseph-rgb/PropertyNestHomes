@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import ChatTabs from "../components/chat/ChatTabs";
 import socket, {
   connectSocket,
   disconnectSocket,
@@ -435,6 +436,8 @@ export default function ChatCenter() {
 
   return (
     <div className="min-h-[calc(100vh-64px)] min-w-0 overflow-x-hidden bg-slate-50">
+
+      <ChatTabs />
 
       {/* ======================================================
           NEW MESSAGE POPUP

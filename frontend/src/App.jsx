@@ -18,6 +18,7 @@ import AddProperty from "./pages/AddProperty";
 
 import Chat from "./pages/Chat";
 import ChatCenter from "./pages/ChatCenter";
+import Calls from "./pages/Calls";
 
 function MessageNotificationPopup({
   notification,
@@ -580,6 +581,15 @@ function AppContent() {
         <Route
           path="/chat"
           element={<ChatCenter />}
+        />
+
+        <Route
+          path="/calls"
+          element={
+            <ProtectedRoute>
+              <Calls />
+            </ProtectedRoute>
+          }
         />
 
         <Route

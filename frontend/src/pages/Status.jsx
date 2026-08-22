@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import ChatTabs from "../components/chat/ChatTabs";
 
 const API_URL =
   import.meta.env.VITE_API_URL ||
@@ -434,6 +435,8 @@ export default function Status() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <ChatTabs />
+
       <div className="mx-auto max-w-3xl px-4 py-6">
         <div className="mb-6 flex items-center justify-between">
           <div>
