@@ -67,6 +67,11 @@ export default function Status() {
   const [viewerIndex, setViewerIndex] =
     useState(0);
 
+  const [isPaused, setIsPaused] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  const videoRef = useRef(null);
+
   const fileInputRef = useRef(null);
 
   const loadStatuses = async () => {
@@ -382,6 +387,8 @@ export default function Status() {
 
     setViewer(normalizedGroup);
     setViewerIndex(safeIndex);
+    setProgress(0);
+    setIsPaused(false);
 
     if (
       !status.viewed &&
@@ -429,6 +436,8 @@ export default function Status() {
       const next = viewer.statuses[nextIndex];
 
       setViewerIndex(nextIndex);
+      setProgress(0);
+      setIsPaused(false);
 
       if (
         !next.viewed &&
@@ -463,6 +472,8 @@ export default function Status() {
       setViewerIndex(
         viewerIndex - 1
       );
+      setProgress(0);
+      setIsPaused(false);
     }
   };
 
@@ -470,60 +481,80 @@ export default function Status() {
     viewer?.statuses?.[viewerIndex];
 
   /*
-   * WhatsApp-style automatic status progression.
+   * WhatsApp-style status progression.
    *
-   * Images and text stay visible for 5 seconds.
-   * Videos are advanced by the video's ended event.
+   * Image and text statuses advance after 5 seconds.
+   * Pause freezes the timer.
+   * Videos advance when playback ends.
    */
   useEffect(() => {
     if (!viewer || !viewerStatus) {
       return;
     }
 
-    if (viewerStatus.media_type === "video") {
+    if (
+      String(viewerStatus.media_type).toLowerCase() ===
+      "video"
+    ) {
       return;
     }
 
-    const timer = setTimeout(() => {
-      nextStatus();
-    }, 5000);
+    if (isPaused) {
+      return;
+    }
+
+    const startedAt = Date.now();
+    const startingProgress = progress;
+    const duration = 5000;
+
+    const timer = setInterval(() => {
+      const elapsed = Date.now() - startedAt;
+
+      const nextProgress =
+        startingProgress +
+        (elapsed / duration) * 100;
+
+      if (nextProgress >= 100) {
+        setProgress(100);
+        clearInterval(timer);
+        nextStatus();
+        return;
+      }
+
+      setProgress(nextProgress);
+    }, 50);
 
     return () => {
-      clearTimeout(timer);
+      clearInterval(timer);
     };
   }, [
     viewer,
     viewerIndex,
     viewerStatus?.id,
+    isPaused,
   ]);
 
-  /*
-   * WhatsApp-style automatic progression.
-   *
-   * Image and text statuses advance after 5 seconds.
-   * Video statuses advance through the video's onEnded event.
-   */
   useEffect(() => {
-    if (!viewer || !viewerStatus) {
+    const video = videoRef.current;
+
+    if (!video) {
       return;
     }
 
-    if (viewerStatus.media_type === "video") {
-      return;
+    if (isPaused) {
+      video.pause();
+    } else {
+      video.play().catch(() => {
+        // Browser may block autoplay until user interaction.
+      });
     }
-
-    const timer = setTimeout(() => {
-      nextStatus();
-    }, 5000);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [viewer, viewerIndex, viewerStatus?.id]);
+  }, [isPaused, viewerStatus?.id]);
 
   const closeViewer = () => {
     setViewer(null);
     setViewerIndex(0);
+    setProgress(0);
+    setIsPaused(false);
     loadStatuses();
   };
 
@@ -787,12 +818,15 @@ export default function Status() {
                     className="h-1 flex-1 overflow-hidden rounded-full bg-white/30"
                   >
                     <div
-                      className={`h-full ${
-                        index <=
-                        viewerIndex
-                          ? "bg-white"
-                          : "bg-transparent"
-                      }`}
+                      className="h-full bg-white transition-[width] duration-75"
+                      style={{
+                        width:
+                          index < viewerIndex
+                            ? "100%"
+                            : index === viewerIndex
+                            ? `${progress}%`
+                            : "0%",
+                      }}
                     />
                   </div>
                 )
@@ -814,12 +848,25 @@ export default function Status() {
                 </div>
               </div>
 
-              <button
-                onClick={closeViewer}
-                className="rounded-full bg-white/10 px-3 py-2"
-              >
-                ✕
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() =>
+                    setIsPaused(
+                      (previous) => !previous
+                    )
+                  }
+                  className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold"
+                >
+                  {isPaused ? "▶ Play" : "⏸ Pause"}
+                </button>
+
+                <button
+                  onClick={closeViewer}
+                  className="rounded-full bg-white/10 px-3 py-2"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           </div>
 
@@ -856,12 +903,29 @@ export default function Status() {
               String(viewerStatus.media_type).toLowerCase() ===
                 "video" ? (
               <video
+                ref={videoRef}
                 key={viewerStatus.id}
                 src={viewerStatus.media_url}
-                autoPlay
+                autoPlay={!isPaused}
                 playsInline
                 controls
-                onEnded={nextStatus}
+                onPlay={() => setIsPaused(false)}
+                onPause={() => setIsPaused(true)}
+                onTimeUpdate={(event) => {
+                  const video = event.currentTarget;
+
+                  if (video.duration) {
+                    setProgress(
+                      (video.currentTime /
+                        video.duration) *
+                        100
+                    );
+                  }
+                }}
+                onEnded={() => {
+                  setProgress(100);
+                  nextStatus();
+                }}
                 className="max-h-[calc(100vh-120px)] max-w-full object-contain"
               />
             ) : (
