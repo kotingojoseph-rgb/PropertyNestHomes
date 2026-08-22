@@ -809,7 +809,7 @@ export default function Status() {
 
       {viewer && viewerStatus && (
         <div className="fixed inset-0 z-[60] bg-black">
-          <div className="absolute left-0 right-0 top-0 z-10 p-4">
+          <div className="absolute left-0 right-0 top-0 z-30 p-4">
             <div className="mb-3 flex gap-1">
               {viewer.statuses.map(
                 (status, index) => (
