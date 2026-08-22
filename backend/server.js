@@ -35,6 +35,7 @@ const messageRoutes = require("./routes/messageRoutes");
 const passwordRoutes = require("./routes/passwordRoutes");
 const twoFactorRoutes = require("./routes/twoFactorRoutes");
 const statusRoutes = require("./routes/statusRoutes");
+const callRoutes = require("./routes/callRoutes");
 
 const app = express();
 
@@ -121,6 +122,7 @@ app.use("/api/chat", messageRoutes);
 app.use("/api/password", passwordRoutes);
 app.use("/api/2fa", twoFactorRoutes);
 app.use("/api/status", statusRoutes);
+app.use("/api/calls", callRoutes);
 
 // Health check
 app.get("/", (req, res) => {

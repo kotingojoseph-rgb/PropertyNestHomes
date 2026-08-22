@@ -1,49 +1,92 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import socket from "../../socket";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "http://localhost:5000";
+
 const CALL_TIMEOUT = 30000;
 
 /*
- * WebRTC ICE configuration.
+ * ----------------------------------------------------------
+ * CLOUDFLARE TURN
+ * ----------------------------------------------------------
  *
- * STUN helps discover the public network address.
+ * The Cloudflare API token NEVER goes into the frontend.
  *
- * TURN is strongly recommended for users behind:
- * - mobile networks
- * - CGNAT
- * - strict Wi-Fi
- * - corporate networks
- * - symmetric NAT
- *
- * Add TURN values to your Vite environment later:
- *
- * VITE_TURN_URL
- * VITE_TURN_USERNAME
- * VITE_TURN_CREDENTIAL
+ * Frontend -> authenticated backend endpoint
+ * Backend -> Cloudflare TURN API
+ * Backend -> short-lived ICE credentials
+ * Frontend -> RTCPeerConnection
  */
 
-const RTC_CONFIG = {
+async function getTurnIceServers() {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    throw new Error("Authentication token is missing.");
+  }
+
+  const response = await fetch(
+    `${API_URL}/api/calls/turn-credentials`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+    }
+  );
+
+  let data = null;
+
+  try {
+    data = await response.json();
+  } catch {}
+
+  if (!response.ok) {
+    throw new Error(
+      data?.error ||
+        "Unable to obtain Cloudflare TURN credentials."
+    );
+  }
+
+  if (
+    !data?.iceServers ||
+    !Array.isArray(data.iceServers) ||
+    data.iceServers.length === 0
+  ) {
+    throw new Error(
+      "Cloudflare TURN returned an invalid ICE configuration."
+    );
+  }
+
+  console.log(
+    "✅ Cloudflare TURN credentials received:",
+    data.iceServers.length,
+    "ICE server entries"
+  );
+
+  return data.iceServers;
+}
+
+/*
+ * ----------------------------------------------------------
+ * BASE WEBRTC CONFIG
+ * ----------------------------------------------------------
+ *
+ * Cloudflare TURN credentials are added dynamically.
+ */
+
+const BASE_RTC_CONFIG = {
   iceServers: [
     {
       urls: [
         "stun:stun.l.google.com:19302",
         "stun:stun1.l.google.com:19302",
         "stun:stun.cloudflare.com:3478",
-        "stun:stun.nextcloud.com:443",
       ],
     },
-
-    ...(import.meta.env.VITE_TURN_URL
-      ? [
-          {
-            urls: import.meta.env.VITE_TURN_URL,
-            username:
-              import.meta.env.VITE_TURN_USERNAME || "",
-            credential:
-              import.meta.env.VITE_TURN_CREDENTIAL || "",
-          },
-        ]
-      : []),
   ],
 
   iceCandidatePoolSize: 10,
@@ -94,7 +137,6 @@ export default function VideoCall({
 
   /*
    * ICE candidates can arrive before the remote description.
-   * Store them temporarily and apply them after setRemoteDescription().
    */
   const pendingCandidates = useRef([]);
 
@@ -199,7 +241,7 @@ export default function VideoCall({
 
   /*
    * ----------------------------------------------------------
-   * PEER CONNECTION CLEANUP
+   * PEER CLEANUP
    * ----------------------------------------------------------
    */
 
@@ -216,7 +258,6 @@ export default function VideoCall({
     }
 
     peer.current = null;
-
     pendingCandidates.current = [];
 
     if (remoteVideo.current) {
@@ -226,7 +267,7 @@ export default function VideoCall({
 
   /*
    * ----------------------------------------------------------
-   * RESET
+   * RESET CALL
    * ----------------------------------------------------------
    */
 
@@ -270,27 +311,48 @@ export default function VideoCall({
    */
 
   const createPeer = useCallback(
-    (targetUserId) => {
+    (targetUserId, iceServers) => {
       if (peer.current) {
         return peer.current;
       }
 
+      if (
+        !Array.isArray(iceServers) ||
+        iceServers.length === 0
+      ) {
+        throw new Error(
+          "No Cloudflare TURN ICE servers were provided."
+        );
+      }
+
+      const rtcConfig = {
+        ...BASE_RTC_CONFIG,
+
+        iceServers: [
+          ...BASE_RTC_CONFIG.iceServers,
+          ...iceServers,
+        ],
+      };
+
       console.log(
-        "🧊 Creating RTCPeerConnection:",
-        RTC_CONFIG
+        "🧊 Creating RTCPeerConnection"
+      );
+
+      console.log(
+        "🧊 ICE server count:",
+        rtcConfig.iceServers.length
       );
 
       const connection =
-        new RTCPeerConnection(
-          RTC_CONFIG
-        );
+        new RTCPeerConnection(rtcConfig);
 
       /*
-       * Send ICE candidates to the other user.
+       * ------------------------------------------------------
+       * ICE CANDIDATES
+       * ------------------------------------------------------
        */
-      connection.onicecandidate = (
-        event
-      ) => {
+
+      connection.onicecandidate = (event) => {
         if (!event.candidate) {
           return;
         }
@@ -308,9 +370,7 @@ export default function VideoCall({
         );
 
         socket.emit("iceCandidate", {
-          targetUserId: Number(
-            targetUserId
-          ),
+          targetUserId: Number(targetUserId),
 
           candidate: event.candidate,
 
@@ -321,8 +381,11 @@ export default function VideoCall({
       };
 
       /*
-       * Useful diagnostics.
+       * ------------------------------------------------------
+       * ICE GATHERING
+       * ------------------------------------------------------
        */
+
       connection.onicegatheringstatechange =
         () => {
           console.log(
@@ -331,12 +394,27 @@ export default function VideoCall({
           );
         };
 
+      /*
+       * ------------------------------------------------------
+       * ICE CONNECTION
+       * ------------------------------------------------------
+       */
+
       connection.oniceconnectionstatechange =
         () => {
           console.log(
             "🧊 ICE connection:",
             connection.iceConnectionState
           );
+
+          if (
+            connection.iceConnectionState ===
+            "checking"
+          ) {
+            console.log(
+              "🔎 WebRTC checking ICE candidates..."
+            );
+          }
 
           if (
             connection.iceConnectionState ===
@@ -366,7 +444,7 @@ export default function VideoCall({
 
             if (mounted.current) {
               setError(
-                "Network connection failed. A TURN server may be required for this network."
+                "Network connection failed. Cloudflare TURN could not establish the connection."
               );
             }
           }
@@ -382,8 +460,11 @@ export default function VideoCall({
         };
 
       /*
-       * Receive remote video/audio.
+       * ------------------------------------------------------
+       * REMOTE MEDIA
+       * ------------------------------------------------------
        */
+
       connection.ontrack = (event) => {
         console.log(
           "🎥 Remote media received"
@@ -413,8 +494,11 @@ export default function VideoCall({
       };
 
       /*
-       * Overall connection state.
+       * ------------------------------------------------------
+       * CONNECTION STATE
+       * ------------------------------------------------------
        */
+
       connection.onconnectionstatechange =
         () => {
           console.log(
@@ -460,14 +544,8 @@ export default function VideoCall({
 
             if (mounted.current) {
               setError(
-                "The call could not establish a connection. Check the network connection or TURN configuration."
+                "The call could not establish a connection. Please check the network or TURN configuration."
               );
-
-              /*
-               * Do not immediately destroy everything.
-               * Keeping the peer alive briefly allows ICE
-               * recovery on some networks.
-               */
             }
           }
 
@@ -508,8 +586,7 @@ export default function VideoCall({
               .getSenders()
               .some(
                 (sender) =>
-                  sender.track ===
-                  track
+                  sender.track === track
               );
 
           if (!alreadyAdded) {
@@ -601,16 +678,47 @@ export default function VideoCall({
         }
       );
 
+      /*
+       * Get camera and microphone.
+       */
+
       const stream =
         await getStream();
 
+      /*
+       * Get short-lived Cloudflare TURN
+       * credentials from our backend.
+       */
+
+      console.log(
+        "☁️ Requesting Cloudflare TURN credentials..."
+      );
+
+      const iceServers =
+        await getTurnIceServers();
+
+      console.log(
+        "☁️ Cloudflare TURN ready"
+      );
+
+      /*
+       * Create peer using STUN + Cloudflare TURN.
+       */
+
       const connection =
-        createPeer(otherUserId);
+        createPeer(
+          otherUserId,
+          iceServers
+        );
 
       addLocalTracks(
         connection,
         stream
       );
+
+      /*
+       * Create offer.
+       */
 
       const offer =
         await connection.createOffer({
@@ -721,18 +829,47 @@ export default function VideoCall({
           incoming.from
         );
 
+        /*
+         * Get camera and microphone.
+         */
+
         const stream =
           await getStream();
 
+        /*
+         * Get fresh Cloudflare TURN
+         * credentials for this call.
+         */
+
+        console.log(
+          "☁️ Requesting Cloudflare TURN credentials..."
+        );
+
+        const iceServers =
+          await getTurnIceServers();
+
+        console.log(
+          "☁️ Cloudflare TURN ready"
+        );
+
+        /*
+         * Create peer using STUN + Cloudflare TURN.
+         */
+
         const connection =
           createPeer(
-            incoming.from
+            incoming.from,
+            iceServers
           );
 
         addLocalTracks(
           connection,
           stream
         );
+
+        /*
+         * Apply caller's offer.
+         */
 
         await connection.setRemoteDescription(
           new RTCSessionDescription(
@@ -744,9 +881,18 @@ export default function VideoCall({
           "✅ Remote offer applied"
         );
 
+        /*
+         * Apply ICE candidates that arrived
+         * before the remote description.
+         */
+
         await applyPendingCandidates(
           connection
         );
+
+        /*
+         * Create answer.
+         */
 
         const answer =
           await connection.createAnswer({
@@ -868,9 +1014,7 @@ export default function VideoCall({
   useEffect(() => {
     mounted.current = true;
 
-    const handleIncoming = (
-      data
-    ) => {
+    const handleIncoming = (data) => {
       if (
         Number(
           data?.conversationId
@@ -892,9 +1036,9 @@ export default function VideoCall({
       );
 
       /*
-       * If already in another call,
-       * reject the new call.
+       * Reject another call if already busy.
        */
+
       if (
         stateRef.current !== "idle"
       ) {
@@ -973,9 +1117,7 @@ export default function VideoCall({
         }
       };
 
-    const handleIce = async (
-      data
-    ) => {
+    const handleIce = async (data) => {
       if (
         Number(
           data?.conversationId
@@ -994,6 +1136,11 @@ export default function VideoCall({
             data.candidate
           );
 
+        /*
+         * If remote description already exists,
+         * apply candidate immediately.
+         */
+
         if (
           peer.current?.remoteDescription
         ) {
@@ -1005,6 +1152,11 @@ export default function VideoCall({
             "🧊 ICE candidate added"
           );
         } else {
+          /*
+           * Otherwise wait until the offer/answer
+           * has been applied.
+           */
+
           console.log(
             "🧊 Storing ICE candidate until remote description exists"
           );
@@ -1021,9 +1173,7 @@ export default function VideoCall({
       }
     };
 
-    const handleEnded = (
-      data
-    ) => {
+    const handleEnded = (data) => {
       if (
         Number(
           data?.conversationId
@@ -1039,9 +1189,7 @@ export default function VideoCall({
       resetCall(false);
     };
 
-    const handleError = (
-      data
-    ) => {
+    const handleError = (data) => {
       if (
         data?.conversationId &&
         Number(
