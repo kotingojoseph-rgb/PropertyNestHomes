@@ -10,21 +10,6 @@ const { Pool } = require("pg");
 const databaseUrl = new URL(process.env.DATABASE_URL);
 const databaseHost = databaseUrl.hostname;
 
-const endpointOption =
-  databaseUrl.searchParams.get("options") || "";
-
-const endpointMatch =
-  endpointOption.match(/endpoint=([^&]+)/);
-
-const endpointId =
-  endpointMatch?.[1];
-
-if (!endpointId) {
-  throw new Error(
-    "Neon endpoint ID is missing from DATABASE_URL options."
-  );
-}
-
 let pool = null;
 
 async function createPool() {
@@ -41,10 +26,6 @@ async function createPool() {
 
   console.log(
     `🔌 Neon PostgreSQL IPv4: ${ipv4}`
-  );
-
-  console.log(
-    `🔐 Neon endpoint: ${endpointId}`
   );
 
   pool = new Pool({
@@ -69,12 +50,6 @@ async function createPool() {
       decodeURIComponent(
         databaseUrl.password
       ),
-
-    /*
-     * Neon endpoint identification.
-     */
-    options:
-      `endpoint=${endpointId}`,
 
     /*
      * Keep the original Neon hostname
