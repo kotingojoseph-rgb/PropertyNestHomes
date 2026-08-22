@@ -345,15 +345,43 @@ export default function Status() {
     group,
     index = 0
   ) => {
-    const status = group.statuses[index];
+    if (!group?.statuses?.length) return;
+
+    const normalizedStatuses = group.statuses.map((status) => ({
+      ...status,
+      media_url:
+        status.media_url ||
+        status.url ||
+        "",
+      media_type:
+        status.media_type ||
+        (status.media_url ? "image" : "text"),
+    }));
+
+    const safeIndex = Math.max(
+      0,
+      Math.min(index, normalizedStatuses.length - 1)
+    );
+
+    const status = normalizedStatuses[safeIndex];
 
     if (!status) return;
 
-    setViewer({
+    const normalizedGroup = {
       ...group,
+      statuses: normalizedStatuses,
+    };
+
+    console.log("Opening status:", {
+      user: normalizedGroup.user,
+      index: safeIndex,
+      media_type: status.media_type,
+      media_url: status.media_url,
+      caption: status.caption,
     });
 
-    setViewerIndex(index);
+    setViewer(normalizedGroup);
+    setViewerIndex(safeIndex);
 
     if (
       !status.viewed &&
@@ -808,23 +836,33 @@ export default function Status() {
           />
 
           <div className="flex h-full items-center justify-center px-6">
-            {viewerStatus.media_type ===
-              "image" &&
-            viewerStatus.media_url ? (
+            {viewerStatus.media_url &&
+            String(viewerStatus.media_type).toLowerCase() ===
+              "image" ? (
               <img
+                key={viewerStatus.id}
                 src={viewerStatus.media_url}
                 alt="Status"
-                className="max-h-full max-w-full object-contain"
+                className="max-h-[calc(100vh-120px)] max-w-full object-contain"
+                onError={(event) => {
+                  console.error(
+                    "Status image failed to load:",
+                    viewerStatus.media_url
+                  );
+                  event.currentTarget.style.display = "none";
+                }}
               />
-            ) : viewerStatus.media_type ===
-                "video" &&
-              viewerStatus.media_url ? (
+            ) : viewerStatus.media_url &&
+              String(viewerStatus.media_type).toLowerCase() ===
+                "video" ? (
               <video
+                key={viewerStatus.id}
                 src={viewerStatus.media_url}
                 autoPlay
+                playsInline
                 controls
                 onEnded={nextStatus}
-                className="max-h-full max-w-full"
+                className="max-h-[calc(100vh-120px)] max-w-full object-contain"
               />
             ) : (
               <div className="w-full max-w-2xl text-center">
