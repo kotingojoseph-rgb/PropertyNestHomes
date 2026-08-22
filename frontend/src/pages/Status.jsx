@@ -396,20 +396,30 @@ export default function Status() {
   const nextStatus = async () => {
     if (!viewer) return;
 
-    if (
-      viewerIndex <
-      viewer.statuses.length - 1
-    ) {
-      const nextIndex =
-        viewerIndex + 1;
+    if (viewerIndex < viewer.statuses.length - 1) {
+      const nextIndex = viewerIndex + 1;
+      const next = viewer.statuses[nextIndex];
 
       setViewerIndex(nextIndex);
 
-      const status =
-        viewer.statuses[nextIndex];
+      if (
+        !next.viewed &&
+        Number(viewer.user?.id) !== Number(currentUser?.id)
+      ) {
+        await markViewed(next.id);
 
-      if (!status.viewed) {
-        await markViewed(status.id);
+        setViewer((previous) => {
+          if (!previous) return previous;
+
+          return {
+            ...previous,
+            statuses: previous.statuses.map((item) =>
+              item.id === next.id
+                ? { ...item, viewed: true }
+                : item
+            ),
+          };
+        });
       }
 
       return;
@@ -427,6 +437,58 @@ export default function Status() {
       );
     }
   };
+
+  /*
+   * WhatsApp-style automatic status progression.
+   *
+   * Images and text stay visible for 5 seconds.
+   * Videos are advanced by the video's ended event.
+   */
+  useEffect(() => {
+    if (!viewer || !viewerStatus) {
+      return;
+    }
+
+    if (viewerStatus.media_type === "video") {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      nextStatus();
+    }, 5000);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [
+    viewer,
+    viewerIndex,
+    viewerStatus?.id,
+  ]);
+
+  /*
+   * WhatsApp-style automatic progression.
+   *
+   * Image and text statuses advance after 5 seconds.
+   * Video statuses advance through the video's onEnded event.
+   */
+  useEffect(() => {
+    if (!viewer || !viewerStatus) {
+      return;
+    }
+
+    if (viewerStatus.media_type === "video") {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      nextStatus();
+    }, 5000);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [viewer, viewerIndex, viewerStatus?.id]);
 
   const closeViewer = () => {
     setViewer(null);
@@ -484,7 +546,20 @@ export default function Status() {
             </div>
           ) : (
             <div className="space-y-2">
-              {groups.map((group) => {
+              {[...groups]
+                .sort((a, b) => {
+                  const aMine =
+                    Number(a.user?.id) === Number(currentUser?.id);
+
+                  const bMine =
+                    Number(b.user?.id) === Number(currentUser?.id);
+
+                  if (aMine && !bMine) return -1;
+                  if (!aMine && bMine) return 1;
+
+                  return 0;
+                })
+                .map((group) => {
                 const user =
                   group.user;
 
@@ -748,6 +823,7 @@ export default function Status() {
                 src={viewerStatus.media_url}
                 autoPlay
                 controls
+                onEnded={nextStatus}
                 className="max-h-full max-w-full"
               />
             ) : (
