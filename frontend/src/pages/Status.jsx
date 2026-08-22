@@ -466,6 +466,9 @@ export default function Status() {
     }
   };
 
+  const viewerStatus =
+    viewer?.statuses?.[viewerIndex];
+
   /*
    * WhatsApp-style automatic status progression.
    *
@@ -523,9 +526,6 @@ export default function Status() {
     setViewerIndex(0);
     loadStatuses();
   };
-
-  const viewerStatus =
-    viewer?.statuses?.[viewerIndex];
 
   return (
     <div className="min-h-screen bg-slate-50">
