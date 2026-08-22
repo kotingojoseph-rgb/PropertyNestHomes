@@ -7,6 +7,10 @@ const API_URL =
 function getUserName(user) {
   if (!user) return "User";
 
+  if (user.full_name) {
+    return user.full_name;
+  }
+
   const name =
     `${user.first_name || ""} ${user.last_name || ""}`.trim();
 
@@ -348,7 +352,7 @@ export default function Status() {
 
     if (
       !status.viewed &&
-      status.user?.id !== currentUser?.id
+      Number(group.user?.id) !== Number(currentUser?.id)
     ) {
       await markViewed(status.id);
 
@@ -477,9 +481,19 @@ export default function Status() {
                 const user =
                   group.user;
 
+                const displayName =
+                  user.full_name ||
+                  `${user.first_name || ""} ${user.last_name || ""}`.trim() ||
+                  user.email ||
+                  "User";
+
                 const initials =
-                  `${user.first_name?.[0] || ""}${user.last_name?.[0] || ""}` ||
-                  "?";
+                  displayName
+                    .split(/\s+/)
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map((part) => part[0])
+                    .join("") || "?";
 
                 return (
                   <button

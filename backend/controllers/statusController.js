@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 const cloudinary = require("../config/cloudinary");
+const { getIO } = require("../socket");
 
 /*
  * Remove expired statuses before returning results.
@@ -171,20 +172,18 @@ async function createStatus(req, res) {
      * when available.
      */
     try {
-      const io = req.app.get("io");
+      const io = getIO();
 
-      if (io) {
-        io.emit("newStatus", {
-          statusId: status.id,
-          userId: status.user_id,
-          mediaType: status.media_type,
-          createdAt: status.created_at,
-        });
-      }
+      io.emit("newStatus", {
+        statusId: status.id,
+        userId: status.user_id,
+        mediaType: status.media_type,
+        createdAt: status.created_at,
+      });
     } catch (socketError) {
       console.error(
         "Status socket notification error:",
-        socketError
+        socketError.message
       );
     }
 
@@ -226,8 +225,7 @@ async function getStatuses(req, res) {
         s.created_at,
         s.expires_at,
 
-        u.first_name,
-        u.last_name,
+        u.full_name,
         u.email,
 
         CASE
@@ -259,8 +257,7 @@ async function getStatuses(req, res) {
         grouped[row.user_id] = {
           user: {
             id: row.user_id,
-            first_name: row.first_name,
-            last_name: row.last_name,
+            full_name: row.full_name,
             email: row.email,
           },
           statuses: [],
@@ -295,6 +292,8 @@ async function getStatuses(req, res) {
 
     return res.status(500).json({
       error: "Failed to load statuses",
+      details: error.message,
+      code: error.code,
     });
   }
 }
@@ -384,8 +383,7 @@ async function getStatusViewers(req, res) {
         s.created_at,
 
         u.id AS viewer_id,
-        u.first_name,
-        u.last_name,
+        u.full_name,
         u.email,
 
         sv.viewed_at
