@@ -42,3 +42,5 @@ backup_mobile_fix/
 
 # Local development backups
 backups/
+
+frontend/.env.production
