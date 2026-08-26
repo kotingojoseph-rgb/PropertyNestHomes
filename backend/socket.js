@@ -654,6 +654,37 @@ function initSocket(server) {
               targetRoom
             );
 
+
+console.log("========== CALL TARGET DEBUG ==========");
+console.log("Caller userId:", userId);
+console.log("Target userId:", targetUserId);
+console.log("Target room:", targetRoom);
+console.log(
+  "Target room exists:",
+  Boolean(targetSockets)
+);
+console.log(
+  "Target socket count:",
+  targetSockets?.size || 0
+);
+console.log(
+  "Target sockets:",
+  targetSockets
+    ? Array.from(targetSockets)
+    : []
+);
+console.log(
+  "Known userSockets:",
+  Array.from(userSockets.entries()).map(
+    ([id, sockets]) => ({
+      userId: id,
+      sockets: Array.from(sockets),
+    })
+  )
+);
+console.log("========================================");
+
+
           if (
             !targetSockets ||
             targetSockets.size === 0
