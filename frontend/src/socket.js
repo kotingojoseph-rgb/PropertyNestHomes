@@ -54,14 +54,36 @@ export function connectSocket() {
 
   if (!token) {
     console.warn("⚠️ Cannot connect socket: no authentication token");
-    return;
+    return Promise.reject(new Error("Authentication token is missing."));
   }
 
   socket.auth = { token };
 
-  if (!socket.connected) {
-    socket.connect();
+  if (socket.connected) {
+    return Promise.resolve();
   }
+
+  return new Promise((resolve, reject) => {
+    const cleanup = () => {
+      socket.off("connect", handleConnect);
+      socket.off("connect_error", handleError);
+    };
+
+    const handleConnect = () => {
+      cleanup();
+      resolve();
+    };
+
+    const handleError = (error) => {
+      cleanup();
+      reject(error);
+    };
+
+    socket.once("connect", handleConnect);
+    socket.once("connect_error", handleError);
+
+    socket.connect();
+  });
 }
 
 export function disconnectSocket() {

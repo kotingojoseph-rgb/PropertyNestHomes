@@ -456,17 +456,17 @@ export default function VoiceCall({
         return;
       }
 
-      if (!socket.connected) {
-        connectSocket();
-
-        setError(
-          "Connecting to the call server. Please try again."
-        );
-
-        return;
-      }
-
       try {
+        if (!socket.connected) {
+          console.log("🔌 Connecting to call server...");
+          await connectSocket();
+          console.log("✅ Call server connected");
+        }
+
+        if (!socket.connected) {
+          throw new Error("Unable to connect to the call server.");
+        }
+
         changeState("calling");
 
         console.log(
