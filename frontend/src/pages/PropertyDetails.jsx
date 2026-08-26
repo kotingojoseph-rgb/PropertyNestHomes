@@ -20,6 +20,67 @@ const [photoIndex, setPhotoIndex] = useState(0);
     fetchProperty();
   }, []);
 
+  useEffect(() => {
+    if (!property) return;
+
+    const locationText = [
+      property.city,
+      property.state_province,
+      property.country,
+    ]
+      .filter(Boolean)
+      .join(", ") || property.location || "Nigeria";
+
+    const title = `${property.title} | ${locationText} | PropertyNestHomes`;
+
+    const description = [
+      property.description,
+      property.property_type ? `Type: ${property.property_type}.` : "",
+      property.bedrooms ? `${property.bedrooms} bedrooms.` : "",
+      property.bathrooms ? `${property.bathrooms} bathrooms.` : "",
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .slice(0, 160);
+
+    document.title = title;
+
+    const setMeta = (attribute, key, value) => {
+      let element = document.head.querySelector(
+        `meta[${attribute}="${key}"]`
+      );
+
+      if (!element) {
+        element = document.createElement("meta");
+        element.setAttribute(attribute, key);
+        document.head.appendChild(element);
+      }
+
+      element.setAttribute("content", value);
+    };
+
+    const canonicalUrl =
+      `${window.location.origin}/property/${property.id}`;
+
+    let canonical =
+      document.head.querySelector('link[rel="canonical"]');
+
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.setAttribute("rel", "canonical");
+      document.head.appendChild(canonical);
+    }
+
+    canonical.setAttribute("href", canonicalUrl);
+
+    setMeta("name", "description", description);
+    setMeta("property", "og:title", title);
+    setMeta("property", "og:description", description);
+    setMeta("property", "og:url", canonicalUrl);
+    setMeta("name", "twitter:title", title);
+    setMeta("name", "twitter:description", description);
+  }, [property]);
+
   async function fetchProperty() {
     try {
       const res = await fetch(
