@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /chat
+Disallow: /calls
+Disallow: /add-property
+Disallow: /edit-property
+Disallow: /favorites
+Disallow: /api/
+
+Sitemap: https://propertynesthomes.com/sitemap.xml
