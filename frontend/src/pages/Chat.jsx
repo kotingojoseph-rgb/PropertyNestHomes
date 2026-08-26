@@ -5,6 +5,7 @@ import socket, { connectSocket } from "../socket";
 import MessageList from "../components/chat/MessageList";
 import MessageInput from "../components/chat/MessageInput";
 import VideoCall from "../components/chat/VideoCall";
+import VoiceCall from "../components/chat/VoiceCall";
 
 export default function Chat() {
   const { conversationId } = useParams();
@@ -641,6 +642,12 @@ export default function Chat() {
             )}
           </div>
         </div>
+
+        <VoiceCall
+          conversationId={conversationId}
+          otherUserId={chatUser.id}
+          otherUserName={chatUser.name}
+        />
 
         <VideoCall
           conversationId={conversationId}
