@@ -1,20 +1,71 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import socket, { connectSocket } from "../../socket";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "http://localhost:5000";
+
 const CALL_TIMEOUT = 30000;
 
-const RTC_CONFIG = {
-  iceServers: [
-    {
-      urls: [
-        "stun:stun.l.google.com:19302",
-        "stun:stun1.l.google.com:19302",
-        "stun:stun.cloudflare.com:3478",
-      ],
-    },
-  ],
-  iceCandidatePoolSize: 10,
-};
+const BASE_ICE_SERVERS = [
+  {
+    urls: [
+      "stun:stun.l.google.com:19302",
+      "stun:stun1.l.google.com:19302",
+      "stun:stun.cloudflare.com:3478",
+    ],
+  },
+];
+
+async function getIceServers() {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    throw new Error("Authentication token is missing.");
+  }
+
+  try {
+    const response = await fetch(
+      `${API_URL}/api/calls/turn-credentials`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      }
+    );
+
+    const data = await response.json().catch(() => null);
+
+    if (
+      response.ok &&
+      Array.isArray(data?.iceServers) &&
+      data.iceServers.length > 0
+    ) {
+      console.log(
+        "✅ TURN credentials received:",
+        data.iceServers.length
+      );
+
+      return [
+        ...BASE_ICE_SERVERS,
+        ...data.iceServers,
+      ];
+    }
+
+    console.warn(
+      "⚠️ TURN unavailable, using STUN:",
+      data?.error || response.status
+    );
+  } catch (error) {
+    console.warn(
+      "⚠️ TURN request failed, using STUN:",
+      error.message
+    );
+  }
+
+  return BASE_ICE_SERVERS;
+}
 
 export default function VoiceCall({
   conversationId,
@@ -22,27 +73,40 @@ export default function VoiceCall({
   otherUserName = "PropertyNestHomes User",
 }) {
   const peerRef = useRef(null);
-  const localStreamRef = useRef(null);
-  const pendingCandidatesRef = useRef([]);
-  const callTimerRef = useRef(null);
+  const streamRef = useRef(null);
+  const pendingIceRef = useRef([]);
+  const timeoutRef = useRef(null);
+  const timerRef = useRef(null);
   const mountedRef = useRef(false);
+  const stateRef = useRef("idle");
+  const remoteAudioRef = useRef(null);
 
-  const [callState, setCallState] = useState("idle");
+  const [state, setState] = useState("idle");
   const [incomingCall, setIncomingCall] = useState(null);
   const [muted, setMuted] = useState(false);
   const [error, setError] = useState("");
   const [seconds, setSeconds] = useState(0);
 
-  const stateRef = useRef("idle");
-
   useEffect(() => {
-    stateRef.current = callState;
-  }, [callState]);
+    stateRef.current = state;
+  }, [state]);
+
+  const changeState = useCallback((next) => {
+    stateRef.current = next;
+    setState(next);
+  }, []);
+
+  const clearCallTimeout = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
 
   const stopTimer = useCallback(() => {
-    if (callTimerRef.current) {
-      clearInterval(callTimerRef.current);
-      callTimerRef.current = null;
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
     }
   }, []);
 
@@ -50,30 +114,21 @@ export default function VoiceCall({
     stopTimer();
     setSeconds(0);
 
-    callTimerRef.current = setInterval(() => {
+    timerRef.current = setInterval(() => {
       setSeconds((value) => value + 1);
     }, 1000);
   }, [stopTimer]);
 
-  const formatTime = (value) => {
-    const minutes = Math.floor(value / 60);
-    const secs = value % 60;
+  const stopStream = useCallback(() => {
+    if (!streamRef.current) return;
 
-    return `${String(minutes).padStart(2, "0")}:${String(
-      secs
-    ).padStart(2, "0")}`;
-  };
-
-  const stopMicrophone = useCallback(() => {
-    if (!localStreamRef.current) return;
-
-    localStreamRef.current.getTracks().forEach((track) => {
+    streamRef.current.getTracks().forEach((track) => {
       try {
         track.stop();
       } catch {}
     });
 
-    localStreamRef.current = null;
+    streamRef.current = null;
   }, []);
 
   const closePeer = useCallback(() => {
@@ -82,18 +137,37 @@ export default function VoiceCall({
         peerRef.current.onicecandidate = null;
         peerRef.current.ontrack = null;
         peerRef.current.onconnectionstatechange = null;
+        peerRef.current.oniceconnectionstatechange = null;
         peerRef.current.close();
       } catch {}
     }
 
     peerRef.current = null;
-    pendingCandidatesRef.current = [];
+    pendingIceRef.current = [];
+
+    if (remoteAudioRef.current) {
+      remoteAudioRef.current.srcObject = null;
+    }
   }, []);
 
-  const resetCall = useCallback(
-    (notify = false, targetId = otherUserId) => {
-      stopTimer();
+  const cleanup = useCallback(() => {
+    clearCallTimeout();
+    stopTimer();
+    closePeer();
+    stopStream();
 
+    setIncomingCall(null);
+    setMuted(false);
+    setSeconds(0);
+  }, [
+    clearCallTimeout,
+    stopTimer,
+    closePeer,
+    stopStream,
+  ]);
+
+  const endCall = useCallback(
+    (notify = true, targetId = otherUserId) => {
       if (
         notify &&
         targetId &&
@@ -105,37 +179,31 @@ export default function VoiceCall({
         });
       }
 
-      closePeer();
-      stopMicrophone();
-
-      setIncomingCall(null);
-      setMuted(false);
-      setSeconds(0);
-      setCallState("idle");
+      cleanup();
+      changeState("idle");
     },
     [
-      conversationId,
       otherUserId,
-      stopTimer,
-      closePeer,
-      stopMicrophone,
+      conversationId,
+      cleanup,
+      changeState,
     ]
   );
 
   const getMicrophone = useCallback(async () => {
-    if (localStreamRef.current) {
-      return localStreamRef.current;
+    if (streamRef.current) {
+      return streamRef.current;
     }
 
     if (!window.isSecureContext) {
       throw new Error(
-        "Voice calls require a secure HTTPS connection."
+        "Microphone access requires HTTPS."
       );
     }
 
     if (!navigator.mediaDevices?.getUserMedia) {
       throw new Error(
-        "Your browser does not support microphone calls."
+        "This browser does not support microphone calls."
       );
     }
 
@@ -150,16 +218,25 @@ export default function VoiceCall({
           video: false,
         });
 
-      localStreamRef.current = stream;
+      streamRef.current = stream;
+
+      console.log(
+        "🎙️ Microphone acquired"
+      );
 
       return stream;
     } catch (err) {
+      console.error(
+        "Microphone error:",
+        err
+      );
+
       if (
         err.name === "NotAllowedError" ||
         err.name === "PermissionDeniedError"
       ) {
         throw new Error(
-          "Microphone permission was denied. Please allow microphone access and try again."
+          "Microphone permission was denied. Allow microphone access and try again."
         );
       }
 
@@ -168,59 +245,89 @@ export default function VoiceCall({
         err.name === "DevicesNotFoundError"
       ) {
         throw new Error(
-          "No microphone was found on this device."
-        );
-      }
-
-      if (
-        err.name === "NotReadableError" ||
-        err.name === "TrackStartError"
-      ) {
-        throw new Error(
-          "Your microphone is being used by another application."
+          "No microphone was found."
         );
       }
 
       throw new Error(
-        err.message || "Unable to access the microphone."
+        err.message ||
+          "Unable to access your microphone."
       );
     }
   }, []);
 
   const addLocalTracks = useCallback(
     (peer, stream) => {
-      stream.getTracks().forEach((track) => {
+      for (const track of stream.getTracks()) {
         const exists = peer
           .getSenders()
-          .some((sender) => sender.track === track);
+          .some(
+            (sender) =>
+              sender.track?.id === track.id
+          );
 
         if (!exists) {
           peer.addTrack(track, stream);
         }
-      });
+      }
+    },
+    []
+  );
+
+  const flushPendingIce = useCallback(
+    async (peer) => {
+      if (!peer.remoteDescription) {
+        return;
+      }
+
+      const pending =
+        pendingIceRef.current;
+
+      pendingIceRef.current = [];
+
+      for (const candidate of pending) {
+        try {
+          await peer.addIceCandidate(candidate);
+
+          console.log(
+            "🧊 Added queued ICE candidate"
+          );
+        } catch (err) {
+          console.warn(
+            "Could not add queued ICE:",
+            err
+          );
+        }
+      }
     },
     []
   );
 
   const createPeer = useCallback(
-    (targetUserId) => {
+    (targetUserId, iceServers) => {
       if (peerRef.current) {
         return peerRef.current;
       }
 
-      const peer = new RTCPeerConnection(
-        RTC_CONFIG
-      );
+      const peer =
+        new RTCPeerConnection({
+          iceServers,
+          iceCandidatePoolSize: 10,
+        });
 
       peer.onicecandidate = (event) => {
         if (!event.candidate) return;
 
         if (!socket.connected) {
           console.warn(
-            "Socket disconnected while sending ICE candidate."
+            "⚠️ Cannot send ICE: socket disconnected"
           );
           return;
         }
+
+        console.log(
+          "🧊 Sending ICE candidate"
+        );
 
         socket.emit("iceCandidate", {
           targetUserId: Number(targetUserId),
@@ -229,269 +336,355 @@ export default function VoiceCall({
         });
       };
 
+      peer.oniceconnectionstatechange =
+        () => {
+          console.log(
+            "🧊 ICE state:",
+            peer.iceConnectionState
+          );
+        };
+
       peer.ontrack = (event) => {
-        const stream = event.streams?.[0];
+        console.log(
+          "🔊 Remote audio track received"
+        );
+
+        const stream =
+          event.streams?.[0];
 
         if (!stream) return;
 
-        let audio = document.getElementById(
-          `voice-call-audio-${conversationId}`
-        );
+        if (!remoteAudioRef.current) {
+          const audio =
+            document.createElement("audio");
 
-        if (!audio) {
-          audio = document.createElement("audio");
-          audio.id = `voice-call-audio-${conversationId}`;
           audio.autoplay = true;
           audio.playsInline = true;
-          audio.style.display = "none";
+
           document.body.appendChild(audio);
+
+          remoteAudioRef.current = audio;
         }
 
-        audio.srcObject = stream;
+        remoteAudioRef.current.srcObject =
+          stream;
 
-        audio.play().catch((err) => {
-          console.warn(
-            "Remote audio autoplay blocked:",
-            err
-          );
-        });
+        remoteAudioRef.current
+          .play()
+          .then(() => {
+            console.log(
+              "🔊 Remote audio playing"
+            );
+          })
+          .catch((err) => {
+            console.warn(
+              "⚠️ Audio autoplay blocked:",
+              err.message
+            );
+          });
       };
 
       peer.onconnectionstatechange = () => {
         console.log(
-          "📞 Voice connection:",
+          "📡 WebRTC state:",
           peer.connectionState
         );
 
         if (
           peer.connectionState === "connected"
         ) {
+          clearCallTimeout();
           setError("");
-          setCallState("connected");
+          changeState("connected");
           startTimer();
         }
 
         if (
           peer.connectionState === "failed"
         ) {
+          clearCallTimeout();
+
           setError(
-            "The voice call could not connect. Please check your internet connection."
+            "Voice connection failed. Please check your internet connection."
           );
+
+          changeState("error");
         }
 
         if (
           peer.connectionState === "closed"
         ) {
-          resetCall(false);
+          cleanup();
+          changeState("idle");
         }
       };
 
       peerRef.current = peer;
 
+      console.log(
+        "🧊 RTCPeerConnection created with",
+        iceServers.length,
+        "ICE server entries"
+      );
+
       return peer;
     },
     [
       conversationId,
-      resetCall,
+      clearCallTimeout,
+      changeState,
       startTimer,
+      cleanup,
     ]
   );
 
-  const applyPendingCandidates = useCallback(
-    async (peer) => {
-      if (!peer.remoteDescription) return;
+  const startCall = useCallback(
+    async () => {
+      setError("");
 
-      const candidates =
-        pendingCandidatesRef.current;
+      if (!otherUserId) {
+        setError(
+          "The other user could not be identified."
+        );
+        return;
+      }
 
-      pendingCandidatesRef.current = [];
+      if (!conversationId) {
+        setError(
+          "The conversation could not be identified."
+        );
+        return;
+      }
 
-      for (const candidate of candidates) {
-        try {
-          await peer.addIceCandidate(candidate);
-        } catch (err) {
-          console.warn(
-            "Unable to add ICE candidate:",
-            err
-          );
-        }
+      if (!socket.connected) {
+        connectSocket();
+
+        setError(
+          "Connecting to the call server. Please try again."
+        );
+
+        return;
+      }
+
+      try {
+        changeState("calling");
+
+        console.log(
+          "📞 Starting voice call",
+          {
+            conversationId,
+            otherUserId,
+          }
+        );
+
+        const stream =
+          await getMicrophone();
+
+        const iceServers =
+          await getIceServers();
+
+        const peer = createPeer(
+          otherUserId,
+          iceServers
+        );
+
+        addLocalTracks(peer, stream);
+
+        const offer =
+          await peer.createOffer({
+            offerToReceiveAudio: true,
+            offerToReceiveVideo: false,
+          });
+
+        await peer.setLocalDescription(
+          offer
+        );
+
+        console.log(
+          "📤 Sending call offer"
+        );
+
+        socket.emit("callUser", {
+          userToCall: Number(otherUserId),
+          offer,
+          conversationId: Number(
+            conversationId
+          ),
+        });
+
+        clearCallTimeout();
+
+        timeoutRef.current =
+          setTimeout(() => {
+            if (
+              stateRef.current ===
+                "calling" ||
+              stateRef.current ===
+                "connecting"
+            ) {
+              setError(
+                "The call was not answered."
+              );
+
+              endCall(true);
+            }
+          }, CALL_TIMEOUT);
+      } catch (err) {
+        console.error(
+          "❌ Start voice call failed:",
+          err
+        );
+
+        cleanup();
+        changeState("error");
+
+        setError(
+          err.message ||
+            "Unable to start the voice call."
+        );
       }
     },
-    []
+    [
+      otherUserId,
+      conversationId,
+      changeState,
+      getMicrophone,
+      createPeer,
+      addLocalTracks,
+      clearCallTimeout,
+      cleanup,
+      endCall,
+    ]
   );
 
-  const startCall = useCallback(async () => {
-    setError("");
+  const answerCall = useCallback(
+    async () => {
+      if (!incomingCall) return;
 
-    if (!otherUserId) {
-      setError(
-        "The other user could not be identified."
-      );
-      return;
-    }
+      try {
+        setError("");
 
-    if (!conversationId) {
-      setError(
-        "The conversation could not be identified."
-      );
-      return;
-    }
+        changeState("connecting");
 
-    if (!socket.connected) {
-      connectSocket();
+        const callerId =
+          Number(incomingCall.from);
 
-      setError(
-        "Connecting to chat server. Please try again in a moment."
-      );
+        console.log(
+          "📞 Answering call from:",
+          callerId
+        );
 
-      return;
-    }
+        const stream =
+          await getMicrophone();
 
-    try {
-      setCallState("calling");
+        const iceServers =
+          await getIceServers();
 
-      const stream = await getMicrophone();
+        const peer = createPeer(
+          callerId,
+          iceServers
+        );
 
-      const peer = createPeer(otherUserId);
+        addLocalTracks(peer, stream);
 
-      addLocalTracks(peer, stream);
+        await peer.setRemoteDescription(
+          new RTCSessionDescription(
+            incomingCall.offer
+          )
+        );
 
-      const offer = await peer.createOffer({
-        offerToReceiveAudio: true,
-        offerToReceiveVideo: false,
-      });
+        console.log(
+          "📥 Remote offer applied"
+        );
 
-      await peer.setLocalDescription(offer);
+        await flushPendingIce(peer);
 
-      socket.emit("callUser", {
-        userToCall: Number(otherUserId),
-        offer,
-        conversationId: Number(conversationId),
-      });
+        const answer =
+          await peer.createAnswer({
+            offerToReceiveAudio: true,
+            offerToReceiveVideo: false,
+          });
 
-      console.log(
-        "📞 Voice call started:",
-        otherUserId
-      );
+        await peer.setLocalDescription(
+          answer
+        );
 
-      setTimeout(() => {
-        if (
-          stateRef.current === "calling"
-        ) {
-          setError(
-            "The call was not answered."
-          );
+        console.log(
+          "📤 Sending call answer"
+        );
 
-          resetCall(true);
-        }
-      }, CALL_TIMEOUT);
-    } catch (err) {
-      console.error(
-        "Voice call start error:",
-        err
-      );
+        socket.emit("answerCall", {
+          callerId,
+          answer,
+          conversationId: Number(
+            conversationId
+          ),
+        });
 
-      resetCall(false);
+        setIncomingCall(null);
+      } catch (err) {
+        console.error(
+          "❌ Answer voice call failed:",
+          err
+        );
 
-      setError(
-        err.message ||
-          "Unable to start voice call."
-      );
-    }
-  }, [
-    otherUserId,
-    conversationId,
-    getMicrophone,
-    createPeer,
-    addLocalTracks,
-    resetCall,
-  ]);
+        cleanup();
+        changeState("error");
 
-  const acceptCall = useCallback(async () => {
-    if (!incomingCall) return;
-
-    setError("");
-
-    try {
-      const callerId =
-        Number(incomingCall.from);
-
-      const stream = await getMicrophone();
-
-      const peer = createPeer(callerId);
-
-      addLocalTracks(peer, stream);
-
-      await peer.setRemoteDescription(
-        new RTCSessionDescription(
-          incomingCall.offer
-        )
-      );
-
-      await applyPendingCandidates(peer);
-
-      const answer =
-        await peer.createAnswer();
-
-      await peer.setLocalDescription(answer);
-
-      socket.emit("answerCall", {
-        callerId,
-        answer,
-        conversationId: Number(
-          conversationId
-        ),
-      });
-
-      setIncomingCall(null);
-      setCallState("connecting");
-    } catch (err) {
-      console.error(
-        "Accept voice call error:",
-        err
-      );
-
-      resetCall(false);
-
-      setError(
-        err.message ||
-          "Unable to answer the voice call."
-      );
-    }
-  }, [
-    incomingCall,
-    conversationId,
-    getMicrophone,
-    createPeer,
-    addLocalTracks,
-    applyPendingCandidates,
-    resetCall,
-  ]);
+        setError(
+          err.message ||
+            "Unable to answer the voice call."
+        );
+      }
+    },
+    [
+      incomingCall,
+      conversationId,
+      changeState,
+      getMicrophone,
+      createPeer,
+      addLocalTracks,
+      flushPendingIce,
+      cleanup,
+    ]
+  );
 
   const rejectCall = useCallback(() => {
     if (!incomingCall) return;
 
     socket.emit("endCall", {
-      targetUserId: Number(incomingCall.from),
-      conversationId: Number(conversationId),
+      targetUserId: Number(
+        incomingCall.from
+      ),
+      conversationId: Number(
+        conversationId
+      ),
     });
 
-    setIncomingCall(null);
-    setCallState("idle");
-  }, [incomingCall, conversationId]);
+    cleanup();
+    changeState("idle");
+  }, [
+    incomingCall,
+    conversationId,
+    cleanup,
+    changeState,
+  ]);
 
   const toggleMute = useCallback(() => {
-    const stream = localStreamRef.current;
-
-    if (!stream) return;
-
-    const track = stream.getAudioTracks()[0];
+    const track =
+      streamRef.current?.getAudioTracks()?.[0];
 
     if (!track) return;
 
     track.enabled = !track.enabled;
 
     setMuted(!track.enabled);
+
+    console.log(
+      track.enabled
+        ? "🎙️ Microphone unmuted"
+        : "🔇 Microphone muted"
+    );
   }, []);
 
   useEffect(() => {
@@ -509,6 +702,11 @@ export default function VoiceCall({
         return;
       }
 
+      console.log(
+        "📲 Incoming voice call:",
+        data
+      );
+
       if (stateRef.current !== "idle") {
         socket.emit("endCall", {
           targetUserId: Number(data.from),
@@ -520,86 +718,101 @@ export default function VoiceCall({
         return;
       }
 
-      console.log(
-        "📲 Incoming voice call:",
-        data
-      );
-
       setIncomingCall(data);
-      setCallState("incoming");
       setError("");
+      changeState("incoming");
     };
 
-    const handleCallAccepted = async (data) => {
-      if (
-        Number(data?.conversationId) !==
-        Number(conversationId)
-      ) {
-        return;
-      }
+    const handleCallAccepted =
+      async (data) => {
+        if (
+          Number(data?.conversationId) !==
+          Number(conversationId)
+        ) {
+          return;
+        }
 
-      if (!data?.answer || !peerRef.current) {
-        return;
-      }
+        if (
+          !data?.answer ||
+          !peerRef.current
+        ) {
+          return;
+        }
 
-      try {
-        await peerRef.current.setRemoteDescription(
-          new RTCSessionDescription(
-            data.answer
-          )
-        );
-
-        await applyPendingCandidates(
-          peerRef.current
-        );
-
-        setCallState("connecting");
-      } catch (err) {
-        console.error(
-          "Call accepted error:",
-          err
-        );
-
-        setError(
-          "Unable to establish the voice call."
-        );
-      }
-    };
-
-    const handleIceCandidate = async (data) => {
-      if (
-        Number(data?.conversationId) !==
-        Number(conversationId)
-      ) {
-        return;
-      }
-
-      if (!data?.candidate) return;
-
-      const candidate =
-        new RTCIceCandidate(
-          data.candidate
-        );
-
-      if (
-        peerRef.current?.remoteDescription
-      ) {
         try {
-          await peerRef.current.addIceCandidate(
-            candidate
+          console.log(
+            "📥 Call accepted; applying answer"
           );
+
+          await peerRef.current.setRemoteDescription(
+            new RTCSessionDescription(
+              data.answer
+            )
+          );
+
+          await flushPendingIce(
+            peerRef.current
+          );
+
+          changeState("connecting");
         } catch (err) {
-          console.warn(
-            "Unable to add ICE candidate:",
+          console.error(
+            "❌ Failed to apply answer:",
             err
           );
+
+          setError(
+            "Unable to establish the voice call."
+          );
+
+          cleanup();
+          changeState("error");
         }
-      } else {
-        pendingCandidatesRef.current.push(
-          candidate
-        );
-      }
-    };
+      };
+
+    const handleIceCandidate =
+      async (data) => {
+        if (
+          Number(data?.conversationId) !==
+          Number(conversationId)
+        ) {
+          return;
+        }
+
+        if (!data?.candidate) return;
+
+        const candidate =
+          new RTCIceCandidate(
+            data.candidate
+          );
+
+        if (
+          peerRef.current?.remoteDescription
+        ) {
+          try {
+            await peerRef.current.addIceCandidate(
+              candidate
+            );
+
+            console.log(
+              "🧊 Remote ICE candidate added"
+            );
+          } catch (err) {
+            console.warn(
+              "⚠️ Remote ICE candidate failed:",
+              err
+            );
+          }
+        } else {
+          console.log(
+            "🧊 Queueing ICE candidate"
+          );
+
+          pendingIceRef.current.push(
+            candidate
+          );
+        }
+      };
 
     const handleCallEnded = (data) => {
       if (
@@ -609,7 +822,13 @@ export default function VoiceCall({
         return;
       }
 
-      resetCall(false);
+      console.log(
+        "📴 Remote user ended call"
+      );
+
+      cleanup();
+      changeState("idle");
+      setError("");
     };
 
     const handleCallError = (data) => {
@@ -621,12 +840,18 @@ export default function VoiceCall({
         return;
       }
 
+      console.error(
+        "❌ Call error:",
+        data
+      );
+
+      cleanup();
+      changeState("error");
+
       setError(
         data?.message ||
           "The voice call could not be completed."
       );
-
-      resetCall(false);
     };
 
     socket.on(
@@ -686,37 +911,39 @@ export default function VoiceCall({
         handleCallError
       );
 
-      stopTimer();
-      closePeer();
-      stopMicrophone();
+      cleanup();
 
-      const audio =
-        document.getElementById(
-          `voice-call-audio-${conversationId}`
-        );
-
-      if (audio) {
-        audio.remove();
+      if (remoteAudioRef.current) {
+        remoteAudioRef.current.remove();
+        remoteAudioRef.current = null;
       }
     };
   }, [
     conversationId,
-    applyPendingCandidates,
-    resetCall,
-    closePeer,
-    stopMicrophone,
-    stopTimer,
+    changeState,
+    cleanup,
+    flushPendingIce,
   ]);
 
-  if (callState === "idle" && !error) {
+  const formatTime = (value) => {
+    const minutes = Math.floor(value / 60);
+    const secs = value % 60;
+
+    return `${String(minutes).padStart(
+      2,
+      "0"
+    )}:${String(secs).padStart(2, "0")}`;
+  };
+
+  if (state === "idle") {
     return (
       <button
         type="button"
         onClick={startCall}
         disabled={!otherUserId}
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl transition hover:bg-white/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-        aria-label={`Call ${otherUserName}`}
-        title={`Voice call ${otherUserName}`}
+        title="Voice call"
+        aria-label="Voice call"
       >
         📞
       </button>
@@ -725,100 +952,122 @@ export default function VoiceCall({
 
   return (
     <>
-      {callState !== "idle" && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-5">
-          <div className="w-full max-w-sm rounded-3xl bg-white p-7 text-center shadow-2xl">
-            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-[#075e54] text-4xl text-white">
-              📞
-            </div>
-
-            <h2 className="mt-5 text-xl font-bold text-gray-900">
-              {callState === "incoming"
-                ? "Incoming voice call"
-                : callState === "calling"
-                ? `Calling ${otherUserName}...`
-                : otherUserName}
-            </h2>
-
-            <p className="mt-2 text-sm text-gray-500">
-              {callState === "incoming"
-                ? "Someone is calling you"
-                : callState === "connected"
-                ? formatTime(seconds)
-                : "Connecting voice call..."}
-            </p>
-
-            {callState === "incoming" ? (
-              <div className="mt-7 flex justify-center gap-8">
-                <button
-                  type="button"
-                  onClick={rejectCall}
-                  className="flex h-16 w-16 items-center justify-center rounded-full bg-red-600 text-2xl text-white shadow-lg"
-                  aria-label="Decline call"
-                >
-                  ✕
-                </button>
-
-                <button
-                  type="button"
-                  onClick={acceptCall}
-                  className="flex h-16 w-16 items-center justify-center rounded-full bg-green-600 text-2xl text-white shadow-lg"
-                  aria-label="Answer call"
-                >
-                  📞
-                </button>
-              </div>
-            ) : (
-              <div className="mt-7 flex justify-center gap-5">
-                {callState === "connected" && (
-                  <button
-                    type="button"
-                    onClick={toggleMute}
-                    className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-200 text-2xl"
-                    aria-label={
-                      muted
-                        ? "Unmute microphone"
-                        : "Mute microphone"
-                    }
-                  >
-                    {muted ? "🔇" : "🎙️"}
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => resetCall(true)}
-                  className="flex h-16 w-16 items-center justify-center rounded-full bg-red-600 text-2xl text-white shadow-lg"
-                  aria-label="End call"
-                >
-                  📞
-                </button>
-              </div>
-            )}
-
-            {error && (
-              <p className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
-                {error}
-              </p>
-            )}
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-5">
+        <div className="w-full max-w-sm rounded-3xl bg-white p-7 text-center shadow-2xl">
+          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-[#075e54] text-4xl text-white">
+            📞
           </div>
-        </div>
-      )}
 
-      {callState === "idle" && error && (
-        <button
-          type="button"
-          onClick={() => {
-            setError("");
-            startCall();
-          }}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl"
-          title={error}
-          aria-label="Retry voice call"
-        >
-          📞
-        </button>
-      )}
+          <h2 className="mt-5 text-xl font-bold text-gray-900">
+            {state === "incoming"
+              ? "Incoming voice call"
+              : state === "calling"
+              ? `Calling ${otherUserName}...`
+              : state === "connected"
+              ? otherUserName
+              : "Voice call"}
+          </h2>
+
+          <p className="mt-2 text-sm text-gray-500">
+            {state === "incoming"
+              ? "Someone is calling you"
+              : state === "connected"
+              ? formatTime(seconds)
+              : state === "error"
+              ? "Call failed"
+              : "Connecting..."}
+          </p>
+
+          {state === "incoming" ? (
+            <div className="mt-7 flex justify-center gap-8">
+              <button
+                type="button"
+                onClick={rejectCall}
+                className="flex h-16 w-16 items-center justify-center rounded-full bg-red-600 text-2xl text-white shadow-lg"
+                aria-label="Decline call"
+              >
+                ✕
+              </button>
+
+              <button
+                type="button"
+                onClick={answerCall}
+                className="flex h-16 w-16 items-center justify-center rounded-full bg-green-600 text-2xl text-white shadow-lg"
+                aria-label="Answer call"
+              >
+                📞
+              </button>
+            </div>
+          ) : state === "error" ? (
+            <div className="mt-7 flex justify-center gap-5">
+              <button
+                type="button"
+                onClick={() => {
+                  cleanup();
+                  changeState("idle");
+                  setError("");
+                }}
+                className="rounded-xl bg-gray-200 px-5 py-3 text-sm font-semibold"
+              >
+                Close
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  cleanup();
+                  changeState("idle");
+                  setError("");
+
+                  setTimeout(
+                    () => startCall(),
+                    0
+                  );
+                }}
+                className="rounded-xl bg-[#075e54] px-5 py-3 text-sm font-semibold text-white"
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
+            <div className="mt-7 flex justify-center gap-5">
+              {state === "connected" && (
+                <button
+                  type="button"
+                  onClick={toggleMute}
+                  className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-200 text-2xl"
+                  aria-label={
+                    muted
+                      ? "Unmute microphone"
+                      : "Mute microphone"
+                  }
+                >
+                  {muted
+                    ? "🔇"
+                    : "🎙️"}
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() =>
+                  endCall(true)
+                }
+                className="flex h-16 w-16 items-center justify-center rounded-full bg-red-600 text-2xl text-white shadow-lg"
+                aria-label="End call"
+              >
+                📞
+              </button>
+            </div>
+          )}
+
+          {error && (
+            <p className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-sm leading-5 text-red-700">
+              {error}
+            </p>
+          )}
+        </div>
+      </div>
     </>
   );
 }
