@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const authMiddleware = require("../middleware/authMiddleware");
+const requireRoles = require("../middleware/roleMiddleware");
 const upload = require("../middleware/upload");
 const propertyValidation = require("../middleware/propertyValidation");
 
@@ -70,6 +71,7 @@ router.get(
 router.post(
   "/",
   authMiddleware,
+  requireRoles("seller", "landlord", "agent"),
   propertyValidation,
   createProperty
 );
