@@ -322,32 +322,36 @@ const updateProperty = async (req, res) => {
 };
 
 
-const deleteProperty = async (req,res)=>{
+const deleteProperty = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-  try{
-
-    const {id}=req.params;
-
-
-    await pool.query(
-      `DELETE FROM properties WHERE id=$1 AND owner_id=$2`,
-      [id,req.user.id]
+    const result = await pool.query(
+      `
+      DELETE FROM properties
+      WHERE id = $1
+      AND owner_id = $2
+      RETURNING id
+      `,
+      [id, req.user.id]
     );
 
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Property not found or you are not authorized to delete it",
+      });
+    }
 
     res.json({
-      message:"Property deleted successfully"
+      message: "Property deleted successfully",
     });
-
-
-  }catch(error){
+  } catch (error) {
+    console.error("deleteProperty error:", error);
 
     res.status(500).json({
-      error:error.message
+      error: error.message,
     });
-
   }
-
 };
 
 const uploadPropertyImage = async (req, res) => {
@@ -466,61 +470,88 @@ const getPropertyImages = async (req,res)=>{
 
 
 
-const setCoverImage = async(req,res)=>{
+const setCoverImage = async (req, res) => {
+  try {
+    const { id, imageId } = req.params;
 
-  try{
-
-    const {id,imageId}=req.params;
-
-
-    await pool.query(
+    // Check property ownership before changing any image.
+    const property = await pool.query(
       `
-      UPDATE property_images
-      SET is_cover=false
-      WHERE property_id=$1
+      SELECT owner_id
+      FROM properties
+      WHERE id = $1
       `,
       [id]
     );
 
+    if (property.rows.length === 0) {
+      return res.status(404).json({
+        message: "Property not found",
+      });
+    }
 
+    const isOwner =
+      Number(property.rows[0].owner_id) === Number(req.user.id);
+
+    const isAdmin =
+      String(req.user.role || "").trim().toLowerCase() === "admin";
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        error: "You are not authorized to change this property's cover image",
+      });
+    }
+
+    // Confirm the requested image belongs to this property.
+    const image = await pool.query(
+      `
+      SELECT id
+      FROM property_images
+      WHERE id = $1
+      AND property_id = $2
+      `,
+      [imageId, id]
+    );
+
+    if (image.rows.length === 0) {
+      return res.status(404).json({
+        message: "Image not found",
+      });
+    }
+
+    // Remove the current cover image.
+    await pool.query(
+      `
+      UPDATE property_images
+      SET is_cover = false
+      WHERE property_id = $1
+      `,
+      [id]
+    );
+
+    // Set the requested image as the new cover.
     const result = await pool.query(
       `
       UPDATE property_images
-      SET is_cover=true
-      WHERE id=$1
-      AND property_id=$2
+      SET is_cover = true
+      WHERE id = $1
+      AND property_id = $2
       RETURNING *
       `,
-      [
-        imageId,
-        id
-      ]
+      [imageId, id]
     );
 
-
-    if(result.rows.length===0){
-
-      return res.status(404).json({
-        message:"Image not found"
-      });
-
-    }
-
-
     res.json({
-      message:"Cover image updated",
-      image:result.rows[0]
+      message: "Cover image updated",
+      image: result.rows[0],
     });
-
-
-  }catch(error){
+  } catch (error) {
+    console.error("setCoverImage error:", error);
 
     res.status(500).json({
-      error:error.message
+      error: error.message,
     });
-
   }
-
 };
 const uploadPropertyDocument = async (req, res) => {
   try {
