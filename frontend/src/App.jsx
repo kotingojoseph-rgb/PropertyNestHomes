@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 
 import MainLayout from "./layout/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import RoleProtectedRoute from "./components/RoleProtectedRoute";
 import Status from "./pages/Status";
 import socket, { connectSocket } from "./socket";
 
@@ -602,9 +603,11 @@ function AppContent() {
         <Route
           path="/add-property"
           element={
-            <ProtectedRoute>
+            <RoleProtectedRoute
+              allowedRoles={["seller", "landlord", "agent"]}
+            >
               <AddProperty />
-            </ProtectedRoute>
+            </RoleProtectedRoute>
           }
         />
 
