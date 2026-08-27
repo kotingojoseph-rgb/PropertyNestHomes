@@ -18,7 +18,6 @@ const socket = io(API_URL, {
 
 socket.on("connect", () => {
   console.log("✅ Socket.IO connected:", socket.id);
-  console.log("🔐 Socket auth:", socket.auth ? "present" : "missing");
 });
 
 socket.on("incomingCall", (data) => {
@@ -47,34 +46,72 @@ socket.on("disconnect", (reason) => {
 
 socket.on("connect_error", (error) => {
   console.error("❌ Socket.IO connection error:", error.message);
+
+  /*
+   * The server rejected the JWT.
+   * Stop reconnecting with a bad token and clear
+   * the local authentication session.
+   */
+  if (
+    error.message === "Invalid or expired token" ||
+    error.message === "Authentication token required" ||
+    error.message === "Two-factor authentication required"
+  ) {
+    socket.disconnect();
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    console.warn(
+      "🔐 Invalid authentication session cleared. Please log in again."
+    );
+  }
 });
 
 export function connectSocket() {
   const token = localStorage.getItem("token");
 
   if (!token) {
-    console.warn("⚠️ Cannot connect socket: no authentication token");
-    return Promise.reject(new Error("Authentication token is missing."));
+    console.warn(
+      "⚠️ Cannot connect socket: no authentication token"
+    );
+
+    return Promise.reject(
+      new Error("Authentication token is missing.")
+    );
   }
 
-  socket.auth = { token };
+  /*
+   * Always take the latest token from localStorage.
+   */
+  socket.auth = {
+    token,
+  };
 
   if (socket.connected) {
     return Promise.resolve();
   }
 
   return new Promise((resolve, reject) => {
+    let settled = false;
+
     const cleanup = () => {
       socket.off("connect", handleConnect);
       socket.off("connect_error", handleError);
     };
 
     const handleConnect = () => {
+      if (settled) return;
+
+      settled = true;
       cleanup();
       resolve();
     };
 
     const handleError = (error) => {
+      if (settled) return;
+
+      settled = true;
       cleanup();
       reject(error);
     };
