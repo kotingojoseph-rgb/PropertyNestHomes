@@ -11,7 +11,34 @@ const register = async (req, res) => {
       phone,
       id_type,
       id_number,
+      role,
     } = req.body;
+
+    /*
+     * Public registration roles.
+     *
+     * "admin" is intentionally NOT allowed here.
+     * Admin accounts must be assigned through a protected
+     * administrative process.
+     */
+    const allowedRoles = [
+      "buyer",
+      "tenant",
+      "seller",
+      "landlord",
+      "agent",
+    ];
+
+    const normalizedRole = String(role || "buyer")
+      .trim()
+      .toLowerCase();
+
+    if (!allowedRoles.includes(normalizedRole)) {
+      return res.status(400).json({
+        error:
+          "Invalid account type. Choose buyer, tenant, seller, landlord, or agent.",
+      });
+    }
 
     // Basic validation
     if (!full_name || !email || !password) {
@@ -52,9 +79,10 @@ const register = async (req, res) => {
         password,
         phone,
         id_type,
-        id_number
+        id_number,
+        role
       )
-      VALUES ($1,$2,$3,$4,$5,$6)
+      VALUES ($1,$2,$3,$4,$5,$6,$7)
       RETURNING
         id,
         full_name,
@@ -68,6 +96,7 @@ const register = async (req, res) => {
         phone || null,
         id_type || null,
         id_number || null,
+        normalizedRole,
       ]
     );
 
