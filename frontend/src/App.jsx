@@ -604,7 +604,7 @@ function AppContent() {
           path="/add-property"
           element={
             <RoleProtectedRoute
-              allowedRoles={["seller", "landlord", "agent"]}
+              allowedRoles={["admin", "seller", "landlord", "agent"]}
             >
               <AddProperty />
             </RoleProtectedRoute>

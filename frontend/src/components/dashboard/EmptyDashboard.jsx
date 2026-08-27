@@ -17,7 +17,7 @@ export default function EmptyDashboard() {
     .trim()
     .toLowerCase();
 
-  const canAddProperty = ["seller", "landlord", "agent"].includes(userRole);
+  const canAddProperty = ["admin", "seller", "landlord", "agent"].includes(userRole);
 
   return (
     <div className="rounded-3xl border bg-white p-12 text-center shadow-md">

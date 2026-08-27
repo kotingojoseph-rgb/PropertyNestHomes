@@ -71,7 +71,7 @@ router.get(
 router.post(
   "/",
   authMiddleware,
-  requireRoles("seller", "landlord", "agent"),
+  requireRoles("admin", "seller", "landlord", "agent"),
   propertyValidation,
   createProperty
 );
