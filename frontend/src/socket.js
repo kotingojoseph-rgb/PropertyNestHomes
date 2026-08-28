@@ -14,6 +14,10 @@ const socket = io(API_URL, {
   reconnectionAttempts: Infinity,
   reconnectionDelay: 1000,
   reconnectionDelayMax: 5000,
+
+  // Create a fresh Engine.IO session after reconnects.
+  forceNew: true,
+  multiplex: false,
 });
 
 socket.on("connect", () => {
