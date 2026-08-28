@@ -9,13 +9,13 @@ if (!API_URL) {
 const socket = io(API_URL, {
   autoConnect: false,
   withCredentials: true,
-  transports: ["polling"],
+  transports: ["websocket"],
   reconnection: true,
   reconnectionAttempts: Infinity,
   reconnectionDelay: 1000,
   reconnectionDelayMax: 5000,
 
-  // Create a fresh Engine.IO session after reconnects.
+  // Use a single persistent WebSocket connection.
   forceNew: true,
   multiplex: false,
 });

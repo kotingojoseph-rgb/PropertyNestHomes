@@ -126,7 +126,7 @@ function initSocket(server) {
       credentials: true,
     },
 
-    transports: ["polling"],
+    transports: ["websocket"],
 
     pingInterval: 25000,
     pingTimeout: 20000,
