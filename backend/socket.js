@@ -192,6 +192,29 @@ function initSocket(server) {
     );
 
     /*
+     * Diagnose every server-side Socket.IO disconnect.
+     * This does not disconnect or reconnect anything.
+     */
+    socket.on("disconnect", (reason, details) => {
+      console.warn(
+        `🔴 Socket disconnected: user ${userId} (${socket.id})`,
+        {
+          reason,
+          details: details || null,
+          socketConnected: socket.connected,
+          transport: socket.conn?.transport?.name || "unknown",
+        }
+      );
+    });
+
+    socket.on("error", (error) => {
+      console.error(
+        `❌ Socket error: user ${userId} (${socket.id})`,
+        error
+      );
+    });
+
+    /*
      * Every user gets a private room.
      */
     socket.join(`user_${userId}`);
