@@ -614,107 +614,103 @@ function initSocket(server) {
         conversationId,
       }) => {
         try {
-          const targetUserId =
-            Number(userToCall);
+          const targetUserId = Number(userToCall);
+          const conversationNumber = Number(conversationId);
 
-          const allowed =
-            await verifyCallAccess(
-              conversationId,
-              targetUserId
-            );
+          const allowed = await verifyCallAccess(
+            conversationNumber,
+            targetUserId
+          );
 
           if (!allowed) {
             console.warn(
-              `⚠️ Call denied: user ${userId} -> user ${targetUserId}, conversation ${conversationId}`
+              `⚠️ Call denied: user ${userId} -> user ${targetUserId}, conversation ${conversationNumber}`
             );
 
             socket.emit("callError", {
               message:
                 "You are not authorized to call this user in this conversation.",
-              conversationId:
-                Number(conversationId),
+              conversationId: conversationNumber,
             });
 
             return;
           }
 
           if (!offer) {
+            console.warn(
+              `⚠️ Call rejected: no WebRTC offer from user ${userId}`
+            );
             return;
           }
 
+          const targetRoom = `user_${targetUserId}`;
+          const targetSockets =
+            io.sockets.adapter.rooms.get(targetRoom);
+
+          console.log("========== FINAL CALL ROUTING ==========");
+          console.log("Caller user:", userId);
+          console.log("Target user:", targetUserId);
+          console.log("Conversation:", conversationNumber);
+          console.log("Target room:", targetRoom);
           console.log(
-            `📞 CALL OFFER: ${userId} -> ${targetUserId} conversation ${conversationId}`
+            "Target room exists:",
+            Boolean(targetSockets)
           );
-
-          const targetSocketIds =
-            userSockets.get(targetUserId);
-
-          console.log("========== CALL PRESENCE CHECK ==========");
-          console.log("Caller:", userId);
-          console.log("Target:", targetUserId);
           console.log(
-            "Target socket IDs:",
-            targetSocketIds
-              ? Array.from(targetSocketIds)
+            "Target room socket count:",
+            targetSockets?.size || 0
+          );
+          console.log(
+            "Target room sockets:",
+            targetSockets
+              ? Array.from(targetSockets)
               : []
-          );
-          console.log(
-            "Target socket count:",
-            targetSocketIds?.size || 0
-          );
-          console.log(
-            "All connected users:",
-            Array.from(userSockets.entries()).map(
-              ([id, sockets]) => ({
-                userId: id,
-                socketCount: sockets.size,
-                sockets: Array.from(sockets),
-              })
-            )
           );
           console.log("========================================");
 
-          if (
-            !targetSocketIds ||
-            targetSocketIds.size === 0
-          ) {
+          /*
+           * The Socket.IO user room is authoritative.
+           *
+           * Every authenticated connection joins:
+           * user_<userId>
+           *
+           * Therefore we route calls through that room instead
+           * of relying exclusively on the separate userSockets Map.
+           */
+          if (!targetSockets || targetSockets.size === 0) {
             console.warn(
-              `⚠️ Call target ${targetUserId} is not connected`
+              `⚠️ Call target ${targetUserId} has no active Socket.IO connection`
             );
 
             socket.emit("callError", {
               message:
                 "The other user is currently offline.",
-              conversationId:
-                Number(conversationId),
+              conversationId: conversationNumber,
             });
 
             return;
           }
 
-          console.log(
-            `📞 Call target ${targetUserId} has ${targetSocketIds.size} active socket(s)`
+          io.to(targetRoom).emit(
+            "incomingCall",
+            {
+              from: userId,
+              callerName:
+                socket.user.full_name ||
+                socket.user.email ||
+                "PropertyNestHomes User",
+              offer,
+              conversationId: conversationNumber,
+            }
           );
 
-          for (const socketId of targetSocketIds) {
-            io.to(socketId).emit(
-              "incomingCall",
-              {
-                from: userId,
-                callerName:
-                  socket.user.full_name ||
-                  socket.user.email ||
-                  "PropertyNestHomes User",
-                offer,
-                conversationId:
-                  Number(conversationId),
-              }
-            );
-          }
+          console.log(
+            `📞 CALL OFFER DELIVERED: ${userId} -> ${targetUserId} (${targetSockets.size} socket(s))`
+          );
         } catch (error) {
           console.error(
             "callUser error:",
-            error.message
+            error
           );
 
           socket.emit("callError", {
