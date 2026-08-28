@@ -9,7 +9,7 @@ if (!API_URL) {
 const socket = io(API_URL, {
   autoConnect: false,
   withCredentials: true,
-  transports: ["polling"],
+  transports: ["polling", "websocket"],
   reconnection: true,
   reconnectionAttempts: Infinity,
   reconnectionDelay: 1000,
