@@ -24,11 +24,7 @@ export default function Dashboard() {
     .trim()
     .toLowerCase();
 
-  if (userRole === "investor") {
-    return <InvestorDashboard />;
-  }
-
-  return <PropertyDashboard />;
+  return <InvestorDashboard />;
 }
 
 function PropertyDashboard() {
