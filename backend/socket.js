@@ -646,48 +646,12 @@ function initSocket(server) {
             `📞 CALL OFFER: ${userId} -> ${targetUserId} conversation ${conversationId}`
           );
 
-          const targetRoom =
-            `user_${targetUserId}`;
-
-          const targetSockets =
-            io.sockets.adapter.rooms.get(
-              targetRoom
-            );
-
-
-console.log("========== CALL TARGET DEBUG ==========");
-console.log("Caller userId:", userId);
-console.log("Target userId:", targetUserId);
-console.log("Target room:", targetRoom);
-console.log(
-  "Target room exists:",
-  Boolean(targetSockets)
-);
-console.log(
-  "Target socket count:",
-  targetSockets?.size || 0
-);
-console.log(
-  "Target sockets:",
-  targetSockets
-    ? Array.from(targetSockets)
-    : []
-);
-console.log(
-  "Known userSockets:",
-  Array.from(userSockets.entries()).map(
-    ([id, sockets]) => ({
-      userId: id,
-      sockets: Array.from(sockets),
-    })
-  )
-);
-console.log("========================================");
-
+          const targetSocketIds =
+            userSockets.get(targetUserId);
 
           if (
-            !targetSockets ||
-            targetSockets.size === 0
+            !targetSocketIds ||
+            targetSocketIds.size === 0
           ) {
             console.warn(
               `⚠️ Call target ${targetUserId} is not connected`
@@ -703,19 +667,25 @@ console.log("========================================");
             return;
           }
 
-          io.to(targetRoom).emit(
-            "incomingCall",
-            {
-              from: userId,
-              callerName:
-                socket.user.full_name ||
-                socket.user.email ||
-                "PropertyNestHomes User",
-              offer,
-              conversationId:
-                Number(conversationId),
-            }
+          console.log(
+            `📞 Call target ${targetUserId} has ${targetSocketIds.size} active socket(s)`
           );
+
+          for (const socketId of targetSocketIds) {
+            io.to(socketId).emit(
+              "incomingCall",
+              {
+                from: userId,
+                callerName:
+                  socket.user.full_name ||
+                  socket.user.email ||
+                  "PropertyNestHomes User",
+                offer,
+                conversationId:
+                  Number(conversationId),
+              }
+            );
+          }
         } catch (error) {
           console.error(
             "callUser error:",
