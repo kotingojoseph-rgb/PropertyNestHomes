@@ -32,6 +32,12 @@ const ACCOUNT_TYPES = [
     description: "Manage properties and clients.",
     icon: "👔",
   },
+  {
+    value: "investor",
+    title: "Investor",
+    description: "Explore and manage real estate investment opportunities.",
+    icon: "📈",
+  },
 ];
 
 const initialForm = {
