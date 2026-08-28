@@ -649,6 +649,31 @@ function initSocket(server) {
           const targetSocketIds =
             userSockets.get(targetUserId);
 
+          console.log("========== CALL PRESENCE CHECK ==========");
+          console.log("Caller:", userId);
+          console.log("Target:", targetUserId);
+          console.log(
+            "Target socket IDs:",
+            targetSocketIds
+              ? Array.from(targetSocketIds)
+              : []
+          );
+          console.log(
+            "Target socket count:",
+            targetSocketIds?.size || 0
+          );
+          console.log(
+            "All connected users:",
+            Array.from(userSockets.entries()).map(
+              ([id, sockets]) => ({
+                userId: id,
+                socketCount: sockets.size,
+                sockets: Array.from(sockets),
+              })
+            )
+          );
+          console.log("========================================");
+
           if (
             !targetSocketIds ||
             targetSocketIds.size === 0
