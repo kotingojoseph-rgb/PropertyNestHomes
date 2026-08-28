@@ -5,8 +5,33 @@ import DashboardStats from "../components/dashboard/DashboardStats";
 import PropertyGrid from "../components/dashboard/PropertyGrid";
 import EmptyDashboard from "../components/dashboard/EmptyDashboard";
 import SuccessfulDealVideo from "../components/dashboard/SuccessfulDealVideo";
+import InvestorDashboard from "./InvestorDashboard";
 
 export default function Dashboard() {
+  let user = null;
+
+  try {
+    const storedUser = localStorage.getItem("user");
+
+    if (storedUser) {
+      user = JSON.parse(storedUser);
+    }
+  } catch (error) {
+    console.error("Unable to read stored user:", error);
+  }
+
+  const userRole = String(user?.role || "")
+    .trim()
+    .toLowerCase();
+
+  if (userRole === "investor") {
+    return <InvestorDashboard />;
+  }
+
+  return <PropertyDashboard />;
+}
+
+function PropertyDashboard() {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,25 +52,22 @@ export default function Dashboard() {
         }
       );
 
-           const data = await res.json();
+      const data = await res.json();
 
       if (Array.isArray(data)) {
         setProperties(data);
       } else {
         setProperties([]);
       }
-
     } catch (error) {
       console.error(error);
       setProperties([]);
+    } finally {
+      setLoading(false);
     }
-
-        setLoading(false);
   }
 
   async function handleDelete(id) {
-
-  
     if (!window.confirm("Delete this property?")) return;
 
     try {
@@ -79,14 +101,13 @@ export default function Dashboard() {
 
   return (
     <div className="mx-auto max-w-7xl p-8">
-
       <DashboardHeader />
 
       <DashboardStats
         totalProperties={properties.length}
       />
 
-<SuccessfulDealVideo />
+      <SuccessfulDealVideo />
 
       {properties.length === 0 ? (
         <EmptyDashboard />
@@ -96,7 +117,6 @@ export default function Dashboard() {
           onDelete={handleDelete}
         />
       )}
-
     </div>
   );
 }
