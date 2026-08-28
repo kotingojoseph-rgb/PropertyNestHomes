@@ -9,7 +9,7 @@ if (!API_URL) {
 const socket = io(API_URL, {
   autoConnect: false,
   withCredentials: true,
-  transports: ["polling", "websocket"],
+  transports: ["polling"],
   reconnection: true,
   reconnectionAttempts: Infinity,
   reconnectionDelay: 1000,
@@ -85,66 +85,81 @@ export function connectSocket() {
   }
 
   /*
-   * Always use the latest authentication token.
+   * Always refresh authentication before connecting.
    */
   socket.auth = {
     token,
   };
 
   /*
-   * Already connected — nothing else to do.
+   * The shared singleton is already connected.
    */
   if (socket.connected) {
     return Promise.resolve();
   }
 
   /*
-   * Another component is already connecting.
-   * Share that same promise instead of starting
-   * another Socket.IO connection attempt.
+   * A connection attempt is already running.
+   * Every caller shares the same Promise.
    */
   if (connectingPromise) {
     return connectingPromise;
   }
 
   connectingPromise = new Promise((resolve, reject) => {
-    const handleConnect = () => {
-      cleanup();
-      connectingPromise = null;
-
-      console.log(
-        "🔌 Shared Socket.IO connection established:",
-        socket.id
-      );
-
-      resolve();
-    };
-
-    const handleError = (error) => {
-      cleanup();
-      connectingPromise = null;
-
-      console.error(
-        "❌ Shared Socket.IO connection failed:",
-        error.message
-      );
-
-      reject(error);
-    };
+    let settled = false;
 
     const cleanup = () => {
       socket.off("connect", handleConnect);
       socket.off("connect_error", handleError);
     };
 
+    const handleConnect = () => {
+      if (settled) return;
+
+      settled = true;
+      cleanup();
+
+      console.log(
+        "🔌 Shared Socket.IO connection established:",
+        socket.id
+      );
+
+      connectingPromise = null;
+      resolve();
+    };
+
+    const handleError = (error) => {
+      if (settled) return;
+
+      settled = true;
+      cleanup();
+
+      console.error(
+        "❌ Shared Socket.IO connection failed:",
+        error.message
+      );
+
+      connectingPromise = null;
+      reject(error);
+    };
+
     socket.once("connect", handleConnect);
     socket.once("connect_error", handleError);
 
-    console.log(
-      "🔌 Starting shared Socket.IO connection..."
-    );
+    /*
+     * IMPORTANT:
+     * Do not create another Socket.IO client.
+     * Do not force a new connection.
+     * Do not disconnect the singleton from React components.
+     */
+    if (!socket.connected) {
+      console.log(
+        "🔌 Starting shared Socket.IO connection..."
+      );
 
-    socket.connect();
+      socket.connect();
+    }
   });
 
   return connectingPromise;
