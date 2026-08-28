@@ -9,15 +9,12 @@ if (!API_URL) {
 const socket = io(API_URL, {
   autoConnect: false,
   withCredentials: true,
-  transports: ["websocket"],
+  transports: ["polling", "websocket"],
   reconnection: true,
   reconnectionAttempts: Infinity,
   reconnectionDelay: 1000,
   reconnectionDelayMax: 5000,
 
-  // Use a single persistent WebSocket connection.
-  forceNew: true,
-  multiplex: false,
 });
 
 socket.on("connect", () => {
@@ -72,6 +69,8 @@ socket.on("connect_error", (error) => {
   }
 });
 
+let connectingPromise = null;
+
 export function connectSocket() {
   const token = localStorage.getItem("token");
 
@@ -86,45 +85,69 @@ export function connectSocket() {
   }
 
   /*
-   * Always take the latest token from localStorage.
+   * Always use the latest authentication token.
    */
   socket.auth = {
     token,
   };
 
+  /*
+   * Already connected — nothing else to do.
+   */
   if (socket.connected) {
     return Promise.resolve();
   }
 
-  return new Promise((resolve, reject) => {
-    let settled = false;
+  /*
+   * Another component is already connecting.
+   * Share that same promise instead of starting
+   * another Socket.IO connection attempt.
+   */
+  if (connectingPromise) {
+    return connectingPromise;
+  }
+
+  connectingPromise = new Promise((resolve, reject) => {
+    const handleConnect = () => {
+      cleanup();
+      connectingPromise = null;
+
+      console.log(
+        "🔌 Shared Socket.IO connection established:",
+        socket.id
+      );
+
+      resolve();
+    };
+
+    const handleError = (error) => {
+      cleanup();
+      connectingPromise = null;
+
+      console.error(
+        "❌ Shared Socket.IO connection failed:",
+        error.message
+      );
+
+      reject(error);
+    };
 
     const cleanup = () => {
       socket.off("connect", handleConnect);
       socket.off("connect_error", handleError);
     };
 
-    const handleConnect = () => {
-      if (settled) return;
-
-      settled = true;
-      cleanup();
-      resolve();
-    };
-
-    const handleError = (error) => {
-      if (settled) return;
-
-      settled = true;
-      cleanup();
-      reject(error);
-    };
-
     socket.once("connect", handleConnect);
     socket.once("connect_error", handleError);
 
+    console.log(
+      "🔌 Starting shared Socket.IO connection..."
+    );
+
     socket.connect();
   });
+
+  return connectingPromise;
 }
 
 export function disconnectSocket() {
