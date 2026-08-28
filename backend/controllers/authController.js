@@ -27,6 +27,7 @@ const register = async (req, res) => {
       "seller",
       "landlord",
       "agent",
+      "investor",
     ];
 
     const normalizedRole = String(role || "buyer")
@@ -36,7 +37,7 @@ const register = async (req, res) => {
     if (!allowedRoles.includes(normalizedRole)) {
       return res.status(400).json({
         error:
-          "Invalid account type. Choose buyer, tenant, seller, landlord, or agent.",
+          "Invalid account type. Choose buyer, tenant, seller, landlord, agent, or investor.",
       });
     }
 
