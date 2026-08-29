@@ -808,7 +808,7 @@ exports.getInvestments = async (req, res) => {
     const result = await pool.query(`
       SELECT
         i.*,
-        u.name AS investor_name,
+        u.full_name AS investor_name,
         u.email AS investor_email,
         u.role AS investor_role,
         p.title AS property_title,
