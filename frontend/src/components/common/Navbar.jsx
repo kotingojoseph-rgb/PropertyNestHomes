@@ -23,6 +23,7 @@ export default function Navbar() {
     {name:"Home",path:"/"},
     {name:"Buy",path:"/buy"},
     {name:"Chat",path:"/chat"},
+    {name:"Invest",path:"/investments"},
     {name:"About",path:"/about"},
     {name:"Contact",path:"/contact"}
 ];
@@ -114,6 +115,36 @@ className="hover:text-green-600 transition"
 token ?
 
 <>
+
+{(() => {
+  try {
+    const storedUser = localStorage.getItem("user");
+    const currentUser = storedUser
+      ? JSON.parse(storedUser)
+      : null;
+
+    if (
+      String(currentUser?.role || "")
+        .trim()
+        .toLowerCase() !== "admin"
+    ) {
+      return null;
+    }
+
+    return (
+      <Link
+        to="/admin/investments"
+        className="rounded-lg bg-purple-600 px-4 py-2 text-white"
+      >
+        Admin Investments
+      </Link>
+    );
+  } catch {
+    return null;
+  }
+})()}
+
+
 
 <Link
 to="/dashboard"
@@ -220,6 +251,35 @@ hover:bg-gray-50
 token ?
 
 <>
+
+{(() => {
+  try {
+    const storedUser = localStorage.getItem("user");
+    const currentUser = storedUser
+      ? JSON.parse(storedUser)
+      : null;
+
+    if (
+      String(currentUser?.role || "")
+        .trim()
+        .toLowerCase() !== "admin"
+    ) {
+      return null;
+    }
+
+    return (
+      <Link
+        to="/admin/investments"
+        onClick={()=>setMenuOpen(false)}
+        className="block px-5 py-3 font-semibold text-purple-700"
+      >
+        Admin Investments
+      </Link>
+    );
+  } catch {
+    return null;
+  }
+})()}
 
 <Link
 to="/dashboard"

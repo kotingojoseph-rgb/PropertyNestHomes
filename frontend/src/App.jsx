@@ -21,6 +21,7 @@ import Chat from "./pages/Chat";
 import ChatCenter from "./pages/ChatCenter";
 import Calls from "./pages/Calls";
 import InvestorDashboard from "./pages/InvestorDashboard";
+import AdminInvestments from "./pages/AdminInvestments";
 
 function MessageNotificationPopup({
   notification,
@@ -618,6 +619,15 @@ function AppContent() {
             <ProtectedRoute>
               <InvestorDashboard />
             </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/investments"
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AdminInvestments />
+            </RoleProtectedRoute>
           }
         />
 

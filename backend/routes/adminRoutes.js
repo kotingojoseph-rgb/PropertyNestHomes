@@ -14,6 +14,9 @@ const {
   getPendingProperties,
   approveProperty,
   rejectProperty,
+  getInvestments,
+  approveInvestment,
+  rejectInvestment,
 } = require("../controllers/adminController");
 
 // Protect every admin endpoint.
@@ -54,5 +57,22 @@ router.get("/properties/pending", getPendingProperties);
 router.patch("/properties/:id/approve", approveProperty);
 
 router.patch("/properties/:id/reject", rejectProperty);
+
+// =========================
+// INVESTMENT MANAGEMENT
+// =========================
+
+router.get("/investments", getInvestments);
+
+router.patch(
+  "/investments/:id/approve",
+  approveInvestment
+);
+
+router.patch(
+  "/investments/:id/reject",
+  rejectInvestment
+);
+
 
 module.exports = router;

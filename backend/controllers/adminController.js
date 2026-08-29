@@ -796,3 +796,120 @@ exports.rejectProperty = async (req, res) => {
 };
 
     
+
+
+// ============================================================
+// INVESTMENT MANAGEMENT
+// ============================================================
+
+// Get all investment requests for the admin dashboard
+exports.getInvestments = async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        i.*,
+        u.name AS investor_name,
+        u.email AS investor_email,
+        u.role AS investor_role,
+        p.title AS property_title,
+        p.price AS property_price,
+        p.currency AS property_currency,
+        p.city,
+        p.state_province,
+        p.country
+      FROM investments i
+      JOIN users u
+        ON u.id = i.investor_id
+      JOIN properties p
+        ON p.id = i.property_id
+      ORDER BY i.created_at DESC
+    `);
+
+    return res.json(result.rows);
+  } catch (error) {
+    console.error("Get admin investments error:", error);
+
+    return res.status(500).json({
+      error: error.message || "Unable to load investments.",
+    });
+  }
+};
+
+
+// Approve a pending investment request
+exports.approveInvestment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `
+      UPDATE investments
+      SET
+        status = 'approved',
+        approved_at = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1
+        AND status = 'pending'
+      RETURNING *
+      `,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Pending investment request not found.",
+      });
+    }
+
+    return res.json({
+      message: "Investment approved successfully.",
+      investment: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Approve investment error:", error);
+
+    return res.status(500).json({
+      error: error.message || "Unable to approve investment.",
+    });
+  }
+};
+
+
+// Reject a pending investment request
+exports.rejectInvestment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body || {};
+
+    const result = await pool.query(
+      `
+      UPDATE investments
+      SET
+        status = 'rejected',
+        notes = COALESCE($1, notes),
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $2
+        AND status = 'pending'
+      RETURNING *
+      `,
+      [reason || null, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Pending investment request not found.",
+      });
+    }
+
+    return res.json({
+      message: "Investment rejected successfully.",
+      investment: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Reject investment error:", error);
+
+    return res.status(500).json({
+      error: error.message || "Unable to reject investment.",
+    });
+  }
+};
