@@ -5,6 +5,7 @@ import DashboardStats from "../components/dashboard/DashboardStats";
 import PropertyGrid from "../components/dashboard/PropertyGrid";
 import EmptyDashboard from "../components/dashboard/EmptyDashboard";
 import SuccessfulDealVideo from "../components/dashboard/SuccessfulDealVideo";
+import InvestorDashboard from "./InvestorDashboard";
 
 export default function Dashboard() {
   let user = null;
@@ -22,6 +23,10 @@ export default function Dashboard() {
   const userRole = String(user?.role || "")
     .trim()
     .toLowerCase();
+
+  if (userRole === "investor") {
+    return <InvestorDashboard />;
+  }
 
   return <PropertyDashboard />;
 }

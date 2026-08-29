@@ -20,7 +20,6 @@ import AddProperty from "./pages/AddProperty";
 import Chat from "./pages/Chat";
 import ChatCenter from "./pages/ChatCenter";
 import Calls from "./pages/Calls";
-import InvestorDashboard from "./pages/InvestorDashboard";
 
 function MessageNotificationPopup({
   notification,
@@ -609,15 +608,6 @@ function AppContent() {
             >
               <AddProperty />
             </RoleProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/investments"
-          element={
-            <ProtectedRoute>
-              <InvestorDashboard />
-            </ProtectedRoute>
           }
         />
 
