@@ -1015,6 +1015,11 @@ export default function VideoCall({
     mounted.current = true;
 
     const handleIncoming = (data) => {
+      // Voice calls belong to VoiceCall.jsx.
+      if (data?.callType === "voice") {
+        return;
+      }
+
       if (
         Number(
           data?.conversationId
@@ -1070,6 +1075,11 @@ export default function VideoCall({
 
     const handleAccepted =
       async (data) => {
+        // Voice calls are handled exclusively by VoiceCall.jsx.
+        if (data?.callType === "voice") {
+          return;
+        }
+
         if (
           Number(
             data?.conversationId

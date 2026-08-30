@@ -635,6 +635,7 @@ function initSocket(server) {
         userToCall,
         offer,
         conversationId,
+        callType = "video",
       }) => {
         try {
           const targetUserId = Number(userToCall);
@@ -724,6 +725,7 @@ function initSocket(server) {
                 "PropertyNestHomes User",
               offer,
               conversationId: conversationNumber,
+              callType,
             }
           );
 
@@ -752,6 +754,7 @@ function initSocket(server) {
         callerId,
         answer,
         conversationId,
+        callType = "video",
       }) => {
         try {
           const target =
@@ -778,6 +781,7 @@ function initSocket(server) {
               answer,
               conversationId:
                 Number(conversationId),
+              callType,
             });
         } catch (error) {
           console.error(
