@@ -722,16 +722,6 @@ export default function MessageInput({
         className="hidden"
       />
 
-
-
-      <input
-        ref={imageInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleImageSelect}
-        className="hidden"
-      />
-
       {cameraOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black p-4">
           <div className="flex w-full max-w-lg flex-col overflow-hidden rounded-3xl bg-black shadow-2xl">
