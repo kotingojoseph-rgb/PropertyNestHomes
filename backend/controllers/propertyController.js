@@ -112,7 +112,7 @@ const getAllProperties = async (req, res) => {
         p.*,
         pi.image_url AS cover_image
       FROM properties p
-      INNER JOIN property_images pi
+      LEFT JOIN property_images pi
         ON pi.property_id = p.id
        AND pi.is_cover = true
       ${whereClause}
