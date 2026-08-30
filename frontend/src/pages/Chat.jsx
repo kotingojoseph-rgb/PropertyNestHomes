@@ -337,6 +337,39 @@ export default function Chat() {
       );
     };
 
+    const handleMessageDeleted = ({
+      messageId,
+      message,
+      messageType,
+      mediaType,
+      deletedAt,
+      deletedBy,
+    }) => {
+      setMessages((previous) =>
+        previous.map((item) =>
+          Number(item.id) === Number(messageId)
+            ? {
+                ...item,
+                message:
+                  message || "This message was deleted",
+                message_type:
+                  messageType || "deleted",
+                media_type:
+                  mediaType || "deleted",
+                deleted_at:
+                  deletedAt || new Date().toISOString(),
+                deleted_by:
+                  deletedBy || null,
+                audio_url: null,
+                video_url: null,
+                image_url: null,
+                document_url: null,
+              }
+            : item
+        )
+      );
+    };
+
     const handleStatusUpdate = ({
       messageId,
       status,
@@ -439,6 +472,7 @@ export default function Chat() {
     socket.on("disconnect", handleDisconnect);
     socket.on("connect_error", handleConnectError);
     socket.on("newMessage", handleNewMessage);
+    socket.on("messageDeleted", handleMessageDeleted);
     socket.on(
       "messageStatusUpdate",
       handleStatusUpdate
@@ -479,6 +513,7 @@ export default function Chat() {
         handleConnectError
       );
       socket.off("newMessage", handleNewMessage);
+      socket.off("messageDeleted", handleMessageDeleted);
       socket.off(
         "messageStatusUpdate",
         handleStatusUpdate

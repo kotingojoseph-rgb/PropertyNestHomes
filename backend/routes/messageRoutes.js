@@ -15,6 +15,7 @@ const {
   getConversationDetails,
   uploadChatMedia,
   getPeople,
+  deleteMessage,
 } = require("../controllers/messageController");
 
 // People / friends-style user list
@@ -49,6 +50,13 @@ router.post(
   "/messages",
   authMiddleware,
   sendMessage
+);
+
+// Delete own message
+router.delete(
+  "/messages/:message_id",
+  authMiddleware,
+  deleteMessage
 );
 
 // WhatsApp-style message reactions

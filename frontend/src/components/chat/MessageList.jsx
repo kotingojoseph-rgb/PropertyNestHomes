@@ -223,6 +223,11 @@ export default function MessageList({
             const mine =
               Number(msg.sender_id) === Number(currentUserId);
 
+            const isDeleted =
+              Boolean(msg.deleted_at) ||
+              msg.message_type === "deleted" ||
+              msg.media_type === "deleted";
+
             const key =
               msg.id ??
               `${msg.created_at}-${msg.sender_id}-${msg.message}`;
@@ -380,7 +385,13 @@ export default function MessageList({
                       />
                     ) : (
                       <div className="whitespace-pre-wrap break-words text-[14px] leading-5">
-                        {msg.message}
+                        {isDeleted ? (
+                          <span className="italic text-gray-500">
+                            This message was deleted
+                          </span>
+                        ) : (
+                          msg.message
+                        )}
                       </div>
                     )}
 

@@ -862,6 +862,141 @@ exports.removeMessageReaction = async (req, res) => {
 
 
 // ============================================================
+// DELETE MESSAGE
+// ============================================================
+//
+// Soft-delete a message so replies/history remain intact.
+// Only the original sender may delete their message.
+// ============================================================
+
+exports.deleteMessage = async (req, res) => {
+  try {
+    const messageId = Number(req.params.message_id);
+    const userId = Number(req.user.id);
+
+    if (!Number.isInteger(messageId) || messageId <= 0) {
+      return res.status(400).json({
+        error: "Invalid message_id",
+      });
+    }
+
+    // Find the message and verify that the authenticated user
+    // is the original sender and belongs to the conversation.
+    const messageResult = await pool.query(
+      `
+      SELECT
+        m.id,
+        m.conversation_id,
+        m.sender_id,
+        m.deleted_at
+      FROM messages m
+      JOIN conversations c
+        ON c.id = m.conversation_id
+      WHERE m.id = $1
+      AND m.sender_id = $2
+      AND (
+        c.buyer_id = $2
+        OR c.seller_id = $2
+      )
+      LIMIT 1
+      `,
+      [messageId, userId]
+    );
+
+    if (messageResult.rows.length === 0) {
+      return res.status(404).json({
+        error: "Message not found or you are not allowed to delete it.",
+      });
+    }
+
+    const existingMessage = messageResult.rows[0];
+    const conversationId = Number(
+      existingMessage.conversation_id
+    );
+
+    if (existingMessage.deleted_at) {
+      return res.status(409).json({
+        error: "Message has already been deleted.",
+      });
+    }
+
+    // Soft delete. Keep the row so replies and conversation history
+    // remain structurally valid.
+    const result = await pool.query(
+      `
+      UPDATE messages
+      SET
+        message = 'This message was deleted',
+        message_type = 'deleted',
+        media_type = 'deleted',
+        deleted_at = CURRENT_TIMESTAMP,
+        deleted_by = $2,
+        audio_url = NULL,
+        video_url = NULL,
+        image_url = NULL,
+        document_url = NULL
+      WHERE id = $1
+      AND sender_id = $2
+      AND deleted_at IS NULL
+      RETURNING
+        id,
+        conversation_id,
+        sender_id,
+        message,
+        message_type,
+        media_type,
+        deleted_at,
+        deleted_by,
+        created_at
+      `,
+      [messageId, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(409).json({
+        error: "Message could not be deleted.",
+      });
+    }
+
+    const deletedMessage = result.rows[0];
+
+    const payload = {
+      messageId: Number(deletedMessage.id),
+      conversationId,
+      deletedAt: deletedMessage.deleted_at,
+      deletedBy: Number(deletedMessage.deleted_by),
+      message: deletedMessage.message,
+      messageType: deletedMessage.message_type,
+      mediaType: deletedMessage.media_type,
+    };
+
+    // Immediately notify everyone currently inside this conversation.
+    const io = getIO();
+
+    io
+      .to(`conversation_${conversationId}`)
+      .emit("messageDeleted", payload);
+
+    return res.json({
+      success: true,
+      ...payload,
+    });
+  } catch (error) {
+    console.error(
+      "Delete message error:",
+      error
+    );
+
+    return res.status(500).json({
+      error:
+        error.message ||
+        "Could not delete message.",
+    });
+  }
+};
+
+
+// ============================================================
 // GET CONVERSATION MESSAGES
 // ============================================================
 

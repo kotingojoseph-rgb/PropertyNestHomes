@@ -235,7 +235,26 @@ async function runChatMigrations() {
       ON messages(media_type)
     `);
 
+      // Message deletion support
+      await pool.query(`
+        ALTER TABLE messages
+        ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL
+      `);
+
+      await pool.query(`
+        ALTER TABLE messages
+        ADD COLUMN IF NOT EXISTS deleted_by INTEGER NULL
+          REFERENCES users(id)
+          ON DELETE SET NULL
+      `);
+
+      await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_messages_deleted_at
+        ON messages(deleted_at)
+      `);
+
     console.log("✅ Chat database migration completed");
+
   } catch (error) {
     console.error("❌ Chat database migration failed:", error);
     throw error;

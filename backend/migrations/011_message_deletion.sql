@@ -1,0 +1,14 @@
+BEGIN;
+
+ALTER TABLE messages
+ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP NULL;
+
+ALTER TABLE messages
+ADD COLUMN IF NOT EXISTS deleted_by INTEGER NULL
+    REFERENCES users(id)
+    ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_messages_deleted_at
+ON messages(deleted_at);
+
+COMMIT;
