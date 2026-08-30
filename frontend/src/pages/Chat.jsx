@@ -105,6 +105,69 @@ export default function Chat() {
     }
   }
 
+
+  async function deleteMessage(message) {
+    if (!message?.id || !conversationId || !token) return;
+
+    if (!window.confirm("Delete this message?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/chat/messages/${message.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "Could not delete message."
+        );
+      }
+
+      setMessages((previous) =>
+        previous.map((item) =>
+          Number(item.id) === Number(message.id)
+            ? {
+                ...item,
+                message:
+                  data.message ||
+                  "This message was deleted",
+                message_type:
+                  data.messageType || "deleted",
+                media_type:
+                  data.mediaType || "deleted",
+                deleted_at:
+                  data.deletedAt ||
+                  new Date().toISOString(),
+                deleted_by:
+                  data.deletedBy || currentUserId,
+                audio_url: null,
+                video_url: null,
+                image_url: null,
+                document_url: null,
+              }
+            : item
+        )
+      );
+
+      setError("");
+    } catch (err) {
+      console.error("Delete message error:", err);
+
+      setError(
+        err.message || "Could not delete message."
+      );
+    }
+  }
+
   useEffect(() => {
     if (!token) {
       setCurrentUserId(null);
@@ -796,6 +859,7 @@ export default function Chat() {
             setReplyingTo(message);
           }}
           onReact={reactToMessage}
+          onDelete={deleteMessage}
         />
 
         <MessageInput

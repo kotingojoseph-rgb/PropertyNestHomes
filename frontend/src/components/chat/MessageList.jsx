@@ -46,6 +46,7 @@ export default function MessageList({
   otherUserName = "User",
   onReply,
   onReact,
+  onDelete,
 }) {
   const bottomRef = useRef(null);
   const containerRef = useRef(null);
@@ -340,6 +341,23 @@ export default function MessageList({
                     >
                       ↩
                     </button>
+
+                    {/* Delete own message */}
+                    {mine && !isDeleted && (
+                      <button
+                        type="button"
+                        onClick={() => onDelete?.(msg)}
+                        className={`absolute top-1/2 z-10 hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white text-sm text-gray-500 shadow-md ring-1 ring-black/5 transition hover:bg-gray-50 hover:text-red-600 sm:flex ${
+                          mine
+                            ? "-left-18"
+                            : "-right-18"
+                        }`}
+                        title="Delete message"
+                        aria-label="Delete message"
+                      >
+                        🗑
+                      </button>
+                    )}
 
                     {/* Quoted message */}
                     {replyTarget && (
