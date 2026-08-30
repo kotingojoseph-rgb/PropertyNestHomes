@@ -23,7 +23,6 @@ export default function MessageInput({
   const timerRef = useRef(null);
   const inputRef = useRef(null);
   const imageInputRef = useRef(null);
-  const cameraInputRef = useRef(null);
   const cameraVideoRef = useRef(null);
   const cameraStreamRef = useRef(null);
   const previewUrlRef = useRef(null);
@@ -723,15 +722,7 @@ export default function MessageInput({
         className="hidden"
       />
 
-      <input
-          id="chat-camera-input"
-          ref={cameraInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handleImageSelect}
-          className="hidden"
-        />
+
 
       {cameraOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black p-4">
@@ -813,18 +804,16 @@ export default function MessageInput({
             </>
           ) : (
             <>
-                <label
-                    htmlFor="chat-camera-input"
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base text-gray-500 active:bg-gray-100 sm:h-10 sm:w-10 sm:text-lg ${
-                      disabled || uploading
-                        ? "pointer-events-none opacity-40"
-                        : "cursor-pointer"
-                    }`}
-                    aria-label="Take photo"
-                    title="Take photo"
+                <button
+                    type="button"
+                    onClick={openCamera}
+                    disabled={disabled || uploading}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
+                    aria-label="Take photo with camera"
+                    title="Take photo with camera"
                   >
                     📷
-                  </label>
+                  </button>
 
 <button
                 type="button"
