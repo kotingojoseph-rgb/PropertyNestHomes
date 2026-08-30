@@ -6,6 +6,41 @@ const requireRoles = require("../middleware/roleMiddleware");
 const upload = require("../middleware/upload");
 const propertyValidation = require("../middleware/propertyValidation");
 
+const verifyPropertyOwner = async (req, res, next) => {
+  try {
+    const pool = require("../config/db");
+
+    const result = await pool.query(
+      `SELECT owner_id FROM properties WHERE id = $1`,
+      [req.params.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Property not found",
+      });
+    }
+
+    const ownerId = Number(result.rows[0].owner_id);
+    const userId = Number(req.user.id);
+    const isAdmin = String(req.user.role || "").toLowerCase() === "admin";
+
+    if (!isAdmin && ownerId !== userId) {
+      return res.status(403).json({
+        message: "You are not authorized to upload files for this property",
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error("verifyPropertyOwner error:", error);
+
+    return res.status(500).json({
+      message: "Unable to verify property ownership",
+    });
+  }
+};
+
 const {
   createProperty,
   getAllProperties,
@@ -17,9 +52,8 @@ const {
   getPropertyImages,
   setCoverImage,
   uploadPropertyDocument,
-  getPropertyDocuments
+  getPropertyDocuments,
 } = require("../controllers/propertyController");
-
 
 // =========================
 // PRIVATE ROUTES
@@ -30,7 +64,6 @@ router.get(
   authMiddleware,
   getPropertyDocuments
 );
-
 
 // =========================
 // PUBLIC ROUTES
@@ -46,7 +79,6 @@ router.get(
   getPropertyImages
 );
 
-
 // =========================
 // MY PROPERTIES
 // =========================
@@ -57,12 +89,10 @@ router.get(
   getMyProperties
 );
 
-
 router.get(
   "/:id",
   getPropertyById
 );
-
 
 // =========================
 // PROTECTED PROPERTY ACTIONS
@@ -71,7 +101,6 @@ router.get(
 router.post(
   "/",
   authMiddleware,
-  requireRoles("admin", "seller", "landlord", "agent"),
   propertyValidation,
   createProperty
 );
@@ -89,7 +118,6 @@ router.delete(
   deleteProperty
 );
 
-
 // =========================
 // PROPERTY IMAGES
 // =========================
@@ -97,7 +125,8 @@ router.delete(
 router.post(
   "/:id/images",
   authMiddleware,
-  upload.array("images", 10),
+  verifyPropertyOwner,
+  ...upload.array("images", 10),
   uploadPropertyImage
 );
 
@@ -107,7 +136,6 @@ router.patch(
   setCoverImage
 );
 
-
 // =========================
 // PROPERTY DOCUMENTS
 // =========================
@@ -115,9 +143,9 @@ router.patch(
 router.post(
   "/:id/documents",
   authMiddleware,
-  upload.single("document"),
+  verifyPropertyOwner,
+  ...upload.single("document"),
   uploadPropertyDocument
 );
-
 
 module.exports = router;

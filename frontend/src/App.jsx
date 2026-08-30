@@ -605,11 +605,9 @@ function AppContent() {
         <Route
           path="/add-property"
           element={
-            <RoleProtectedRoute
-              allowedRoles={["admin", "seller", "landlord", "agent"]}
-            >
+            <ProtectedRoute>
               <AddProperty />
-            </RoleProtectedRoute>
+            </ProtectedRoute>
           }
         />
 

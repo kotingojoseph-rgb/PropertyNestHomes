@@ -17,7 +17,7 @@ export default function DashboardHeader() {
     .trim()
     .toLowerCase();
 
-  const canAddProperty = ["admin", "seller", "landlord", "agent"].includes(userRole);
+  const canAddProperty = Boolean(user);
 
   return (
     <div className="mb-5 rounded-2xl bg-gradient-to-r from-green-600 to-green-500 p-4 text-white shadow-lg sm:mb-8 sm:rounded-3xl sm:p-6 md:p-8">

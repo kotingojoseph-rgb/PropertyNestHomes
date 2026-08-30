@@ -28,6 +28,7 @@ const adminRoutes = require("./routes/adminRoutes");
 
 const adRoutes = require("./routes/adRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const investmentRoutes = require("./routes/investmentRoutes");
 const promotionRoutes = require("./routes/promotionRoutes");
 const webhookRoutes = require("./routes/webhookRoutes");
 
@@ -116,6 +117,7 @@ app.use("/api/admin", adminRoutes);
 
 app.use("/api/ads", adRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/investments", investmentRoutes);
 app.use("/api/promotions", promotionRoutes);
 
 app.use("/api/chat", messageRoutes);
