@@ -19,6 +19,9 @@ const createProperty = async (req, res) => {
       property_registration_id
     } = req.body;
 
+    const normalizedPropertyRegistrationId =
+      String(property_registration_id || "").trim();
+
 
     const owner_id = req.user.id;
 
@@ -71,7 +74,7 @@ const createProperty = async (req, res) => {
         bathrooms,
         property_type,
         owner_id,
-        property_registration_id
+        normalizedPropertyRegistrationId
       ]
     );
 
@@ -109,7 +112,7 @@ const getAllProperties = async (req, res) => {
         p.*,
         pi.image_url AS cover_image
       FROM properties p
-      LEFT JOIN property_images pi
+      INNER JOIN property_images pi
         ON pi.property_id = p.id
        AND pi.is_cover = true
       ${whereClause}
@@ -191,7 +194,7 @@ const getMyProperties = async (req,res)=>{
       `
       SELECT
         p.*,
-        pi.image_url
+        pi.image_url AS cover_image
       FROM properties p
 
       LEFT JOIN property_images pi
@@ -383,9 +386,15 @@ const uploadPropertyImage = async (req, res) => {
     }
 
 
-    if (property.rows[0].owner_id !== req.user.id) {
+    const isOwner =
+      Number(property.rows[0].owner_id) === Number(req.user.id);
+
+    const isAdmin =
+      String(req.user.role || "").trim().toLowerCase() === "admin";
+
+    if (!isOwner && !isAdmin) {
       return res.status(403).json({
-        message:"Not authorized"
+        message: "Not authorized",
       });
     }
 
@@ -579,9 +588,15 @@ const uploadPropertyDocument = async (req, res) => {
     }
 
 
-    if (property.rows[0].owner_id !== req.user.id) {
+    const isOwner =
+      Number(property.rows[0].owner_id) === Number(req.user.id);
+
+    const isAdmin =
+      String(req.user.role || "").trim().toLowerCase() === "admin";
+
+    if (!isOwner && !isAdmin) {
       return res.status(403).json({
-        message: "You are not authorized to upload documents for this property"
+        message: "You are not authorized to upload documents for this property",
       });
     }
 
