@@ -9,6 +9,7 @@ module.exports = (req, res, next) => {
     bedrooms,
     bathrooms,
     property_type,
+    property_registration_id,
   } = req.body;
 
   // Title
@@ -58,6 +59,23 @@ module.exports = (req, res, next) => {
   if (!country || !city || !currency) {
     return res.status(400).json({
       error: "Country, city and currency are required.",
+    });
+  }
+
+  // Property Registration ID
+  if (
+    !property_registration_id ||
+    typeof property_registration_id !== "string" ||
+    !property_registration_id.trim()
+  ) {
+    return res.status(400).json({
+      error: "Property Registration ID is required.",
+    });
+  }
+
+  if (property_registration_id.trim().length > 255) {
+    return res.status(400).json({
+      error: "Property Registration ID must be 255 characters or fewer.",
     });
   }
 

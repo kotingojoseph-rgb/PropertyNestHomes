@@ -5,6 +5,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 const {
   initializePayment,
+  initializeInvestmentPayment,
   verifyPayment,
   getPayments,
   getRevenue,
@@ -14,6 +15,12 @@ router.post(
   "/initialize",
   authMiddleware,
   initializePayment
+);
+
+router.post(
+  "/investment/initialize",
+  authMiddleware,
+  initializeInvestmentPayment
 );
 
 router.get(

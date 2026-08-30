@@ -1,37 +1,66 @@
 const pool = require("../config/db");
 
-const WALLET_ID = 1;
-const CURRENCY = "NGN";
-
-/**
- * Get the platform wallet.
- */
-async function getWallet(client = pool) {
-  const result = await client.query(
-    `SELECT *
-     FROM platform_wallet
-     WHERE id = $1
-     AND currency = $2`,
-    [WALLET_ID, CURRENCY]
-  );
-
-  if (result.rows.length === 0) {
-    throw new Error("Platform wallet not found");
-  }
-
-  return result.rows[0];
+function normalizeCurrency(currency) {
+  return String(currency || "NGN").trim().toUpperCase();
 }
 
 /**
- * Credit the platform wallet.
+ * Get/create a platform wallet for a currency.
  *
- * This must be called inside an existing transaction when the
- * credit needs to be atomic with another database operation.
+ * Each currency has its own independent wallet balance.
+ * NGN, USD, EUR, etc. must never be mixed in the same balance.
+ */
+async function getWallet(client = pool, currency = "NGN") {
+  const normalizedCurrency = normalizeCurrency(currency);
+
+  const existing = await client.query(
+    `
+    SELECT *
+    FROM platform_wallet
+    WHERE currency = $1
+    `,
+    [normalizedCurrency]
+  );
+
+  if (existing.rows.length > 0) {
+    return existing.rows[0];
+  }
+
+  const created = await client.query(
+    `
+    INSERT INTO platform_wallet
+    (
+      currency,
+      available_balance,
+      pending_balance,
+      total_earned,
+      total_withdrawn
+    )
+    VALUES
+    ($1, 0, 0, 0, 0)
+    ON CONFLICT (currency)
+    DO UPDATE SET currency = EXCLUDED.currency
+    RETURNING *
+    `,
+    [normalizedCurrency]
+  );
+
+  return created.rows[0];
+}
+
+
+/**
+ * Credit the platform wallet in the specified currency.
+ *
+ * IMPORTANT:
+ * USD must only increase the USD wallet.
+ * NGN must only increase the NGN wallet.
  */
 async function creditWallet(
   client,
   {
     amount,
+    currency = "NGN",
     transactionType,
     reference = null,
     sourceType = null,
@@ -45,53 +74,72 @@ async function creditWallet(
     throw new Error("Invalid credit amount");
   }
 
+  const normalizedCurrency = normalizeCurrency(currency);
+
+  const wallet = await getWallet(client, normalizedCurrency);
+
+  /*
+   * Lock this currency's wallet row.
+   */
   const walletResult = await client.query(
-    `SELECT *
-     FROM platform_wallet
-     WHERE id = $1
-     AND currency = $2
-     FOR UPDATE`,
-    [WALLET_ID, CURRENCY]
+    `
+    SELECT *
+    FROM platform_wallet
+    WHERE id = $1
+    FOR UPDATE
+    `,
+    [wallet.id]
   );
 
   if (walletResult.rows.length === 0) {
-    throw new Error("Platform wallet not found");
+    throw new Error(
+      `Platform wallet not found for ${normalizedCurrency}`
+    );
   }
 
-  const wallet = walletResult.rows[0];
+  const lockedWallet = walletResult.rows[0];
 
-  const before = Number(wallet.available_balance);
+  const before = Number(lockedWallet.available_balance);
   const after = before + numericAmount;
 
   const updated = await client.query(
-    `UPDATE platform_wallet
-     SET available_balance = $1,
-         total_earned = total_earned + $2,
-         updated_at = CURRENT_TIMESTAMP
-     WHERE id = $3
-     RETURNING *`,
-    [after, numericAmount, WALLET_ID]
+    `
+    UPDATE platform_wallet
+    SET
+      available_balance = $1,
+      total_earned = total_earned + $2,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = $3
+    RETURNING *
+    `,
+    [
+      after,
+      numericAmount,
+      lockedWallet.id,
+    ]
   );
 
   const ledger = await client.query(
-    `INSERT INTO platform_wallet_transactions
-     (
-       wallet_id,
-       transaction_type,
-       amount,
-       balance_before,
-       balance_after,
-       reference,
-       source_type,
-       source_id,
-       description,
-       status
-     )
-     VALUES
-     ($1,$2,$3,$4,$5,$6,$7,$8,$9,'completed')
-     RETURNING *`,
+    `
+    INSERT INTO platform_wallet_transactions
+    (
+      wallet_id,
+      transaction_type,
+      amount,
+      balance_before,
+      balance_after,
+      reference,
+      source_type,
+      source_id,
+      description,
+      status
+    )
+    VALUES
+    ($1,$2,$3,$4,$5,$6,$7,$8,$9,'completed')
+    RETURNING *
+    `,
     [
-      WALLET_ID,
+      lockedWallet.id,
       transactionType,
       numericAmount,
       before,
@@ -109,71 +157,98 @@ async function creditWallet(
   };
 }
 
+
 /**
- * Reserve money for a withdrawal.
+ * Reserve money for withdrawal.
  *
- * We move the amount from available_balance to pending_balance.
- * Money is NOT counted as withdrawn until Paystack confirms success.
+ * Withdrawal must happen in the same currency as the wallet.
  */
-async function reserveForWithdrawal(client, amount, reference, description) {
+async function reserveForWithdrawal(
+  client,
+  amount,
+  reference,
+  description,
+  currency = "NGN"
+) {
   const numericAmount = Number(amount);
 
   if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
     throw new Error("Invalid withdrawal amount");
   }
 
+  const normalizedCurrency = normalizeCurrency(currency);
+
+  const wallet = await getWallet(client, normalizedCurrency);
+
   const walletResult = await client.query(
-    `SELECT *
-     FROM platform_wallet
-     WHERE id = $1
-     AND currency = $2
-     FOR UPDATE`,
-    [WALLET_ID, CURRENCY]
+    `
+    SELECT *
+    FROM platform_wallet
+    WHERE id = $1
+    FOR UPDATE
+    `,
+    [wallet.id]
   );
 
   if (walletResult.rows.length === 0) {
-    throw new Error("Platform wallet not found");
+    throw new Error(
+      `Platform wallet not found for ${normalizedCurrency}`
+    );
   }
 
-  const wallet = walletResult.rows[0];
-  const available = Number(wallet.available_balance);
+  const lockedWallet = walletResult.rows[0];
+
+  const available = Number(
+    lockedWallet.available_balance
+  );
 
   if (numericAmount > available) {
-    throw new Error("Insufficient wallet balance");
+    throw new Error(
+      `Insufficient ${normalizedCurrency} wallet balance`
+    );
   }
 
   const before = available;
   const after = available - numericAmount;
 
   const updated = await client.query(
-    `UPDATE platform_wallet
-     SET available_balance = $1,
-         pending_balance = pending_balance + $2,
-         updated_at = CURRENT_TIMESTAMP
-     WHERE id = $3
-     RETURNING *`,
-    [after, numericAmount, WALLET_ID]
+    `
+    UPDATE platform_wallet
+    SET
+      available_balance = $1,
+      pending_balance = pending_balance + $2,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = $3
+    RETURNING *
+    `,
+    [
+      after,
+      numericAmount,
+      lockedWallet.id,
+    ]
   );
 
   const ledger = await client.query(
-    `INSERT INTO platform_wallet_transactions
-     (
-       wallet_id,
-       transaction_type,
-       amount,
-       balance_before,
-       balance_after,
-       reference,
-       source_type,
-       source_id,
-       description,
-       status
-     )
-     VALUES
-     ($1,'withdrawal_reserve',$2,$3,$4,$5,'withdrawal',NULL,$6,'completed')
-     RETURNING *`,
+    `
+    INSERT INTO platform_wallet_transactions
+    (
+      wallet_id,
+      transaction_type,
+      amount,
+      balance_before,
+      balance_after,
+      reference,
+      source_type,
+      source_id,
+      description,
+      status
+    )
+    VALUES
+    ($1,'withdrawal_reserve',$2,$3,$4,$5,'withdrawal',NULL,$6,'completed')
+    RETURNING *
+    `,
     [
-      WALLET_ID,
+      lockedWallet.id,
       numericAmount,
       before,
       after,
@@ -188,68 +263,99 @@ async function reserveForWithdrawal(client, amount, reference, description) {
   };
 }
 
+
 /**
  * Release a failed/reversed withdrawal reservation.
  */
-async function releaseWithdrawal(client, amount, reference, description) {
+async function releaseWithdrawal(
+  client,
+  amount,
+  reference,
+  description,
+  currency = "NGN"
+) {
   const numericAmount = Number(amount);
 
   if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
     throw new Error("Invalid release amount");
   }
 
+  const normalizedCurrency = normalizeCurrency(currency);
+
+  const wallet = await getWallet(client, normalizedCurrency);
+
   const walletResult = await client.query(
-    `SELECT *
-     FROM platform_wallet
-     WHERE id = $1
-     AND currency = $2
-     FOR UPDATE`,
-    [WALLET_ID, CURRENCY]
+    `
+    SELECT *
+    FROM platform_wallet
+    WHERE id = $1
+    FOR UPDATE
+    `,
+    [wallet.id]
   );
 
   if (walletResult.rows.length === 0) {
-    throw new Error("Platform wallet not found");
+    throw new Error(
+      `Platform wallet not found for ${normalizedCurrency}`
+    );
   }
 
-  const wallet = walletResult.rows[0];
-  const pending = Number(wallet.pending_balance);
+  const lockedWallet = walletResult.rows[0];
+
+  const pending = Number(
+    lockedWallet.pending_balance
+  );
 
   if (numericAmount > pending) {
-    throw new Error("Withdrawal release exceeds pending balance");
+    throw new Error(
+      `Withdrawal release exceeds ${normalizedCurrency} pending balance`
+    );
   }
 
-  const before = Number(wallet.available_balance);
+  const before = Number(
+    lockedWallet.available_balance
+  );
+
   const after = before + numericAmount;
 
   const updated = await client.query(
-    `UPDATE platform_wallet
-     SET available_balance = $1,
-         pending_balance = pending_balance - $2,
-         updated_at = CURRENT_TIMESTAMP
-     WHERE id = $3
-     RETURNING *`,
-    [after, numericAmount, WALLET_ID]
+    `
+    UPDATE platform_wallet
+    SET
+      available_balance = $1,
+      pending_balance = pending_balance - $2,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = $3
+    RETURNING *
+    `,
+    [
+      after,
+      numericAmount,
+      lockedWallet.id,
+    ]
   );
 
   const ledger = await client.query(
-    `INSERT INTO platform_wallet_transactions
-     (
-       wallet_id,
-       transaction_type,
-       amount,
-       balance_before,
-       balance_after,
-       reference,
-       source_type,
-       source_id,
-       description,
-       status
-     )
-     VALUES
-     ($1,'withdrawal_release',$2,$3,$4,$5,'withdrawal',NULL,$6,'completed')
-     RETURNING *`,
+    `
+    INSERT INTO platform_wallet_transactions
+    (
+      wallet_id,
+      transaction_type,
+      amount,
+      balance_before,
+      balance_after,
+      reference,
+      source_type,
+      source_id,
+      description,
+      status
+    )
+    VALUES
+    ($1,'withdrawal_release',$2,$3,$4,$5,'withdrawal',NULL,$6,'completed')
+    RETURNING *
+    `,
     [
-      WALLET_ID,
+      lockedWallet.id,
       numericAmount,
       before,
       after,
@@ -264,71 +370,105 @@ async function releaseWithdrawal(client, amount, reference, description) {
   };
 }
 
+
 /**
- * Finalize a successful withdrawal.
- *
- * Money leaves pending_balance and becomes total_withdrawn.
+ * Mark a withdrawal as successfully completed.
  */
-async function completeWithdrawal(client, amount, reference, description) {
+async function completeWithdrawal(
+  client,
+  amount,
+  reference,
+  description,
+  currency = "NGN"
+) {
   const numericAmount = Number(amount);
 
   if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
-    throw new Error("Invalid completion amount");
+    throw new Error("Invalid withdrawal amount");
   }
 
+  const normalizedCurrency = normalizeCurrency(currency);
+
+  const wallet = await getWallet(client, normalizedCurrency);
+
   const walletResult = await client.query(
-    `SELECT *
-     FROM platform_wallet
-     WHERE id = $1
-     AND currency = $2
-     FOR UPDATE`,
-    [WALLET_ID, CURRENCY]
+    `
+    SELECT *
+    FROM platform_wallet
+    WHERE id = $1
+    FOR UPDATE
+    `,
+    [wallet.id]
   );
 
   if (walletResult.rows.length === 0) {
-    throw new Error("Platform wallet not found");
+    throw new Error(
+      `Platform wallet not found for ${normalizedCurrency}`
+    );
   }
 
-  const wallet = walletResult.rows[0];
-  const pending = Number(wallet.pending_balance);
+  const lockedWallet = walletResult.rows[0];
+
+  const pending = Number(
+    lockedWallet.pending_balance
+  );
 
   if (numericAmount > pending) {
-    throw new Error("Withdrawal completion exceeds pending balance");
+    throw new Error(
+      `Withdrawal completion exceeds ${normalizedCurrency} pending balance`
+    );
   }
 
-  const before = Number(wallet.available_balance);
-
   const updated = await client.query(
-    `UPDATE platform_wallet
-     SET pending_balance = pending_balance - $1,
-         total_withdrawn = total_withdrawn + $1,
-         updated_at = CURRENT_TIMESTAMP
-     WHERE id = $2
-     RETURNING *`,
-    [numericAmount, WALLET_ID]
+    `
+    UPDATE platform_wallet
+    SET
+      pending_balance = pending_balance - $1,
+      total_withdrawn = total_withdrawn + $1,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = $2
+    RETURNING *
+    `,
+    [
+      numericAmount,
+      lockedWallet.id,
+    ]
   );
 
   const ledger = await client.query(
-    `INSERT INTO platform_wallet_transactions
-     (
-       wallet_id,
-       transaction_type,
-       amount,
-       balance_before,
-       balance_after,
-       reference,
-       source_type,
-       source_id,
-       description,
-       status
-     )
-     VALUES
-     ($1,'withdrawal_completed',$2,$3,$3,$4,'withdrawal',NULL,$5,'completed')
-     RETURNING *`,
+    `
+    INSERT INTO platform_wallet_transactions
+    (
+      wallet_id,
+      transaction_type,
+      amount,
+      balance_before,
+      balance_after,
+      reference,
+      source_type,
+      source_id,
+      description,
+      status
+    )
+    VALUES
+    (
+      $1,
+      'withdrawal_completed',
+      $2,
+      $3,
+      $3,
+      $4,
+      'withdrawal',
+      NULL,
+      $5,
+      'completed'
+    )
+    RETURNING *
+    `,
     [
-      WALLET_ID,
+      lockedWallet.id,
       numericAmount,
-      before,
+      Number(lockedWallet.available_balance),
       reference,
       description || "Withdrawal completed",
     ]
@@ -340,227 +480,12 @@ async function completeWithdrawal(client, amount, reference, description) {
   };
 }
 
-async function getTransactions(limit = 100, offset = 0) {
-  const safeLimit = Math.min(Math.max(Number(limit) || 100, 1), 500);
-  const safeOffset = Math.max(Number(offset) || 0, 0);
-
-  const result = await pool.query(
-    `SELECT *
-     FROM platform_wallet_transactions
-     WHERE wallet_id = $1
-     ORDER BY created_at DESC
-     LIMIT $2 OFFSET $3`,
-    [WALLET_ID, safeLimit, safeOffset]
-  );
-
-  return result.rows;
-}
-
-/**
- * Handle a reversed withdrawal.
- *
- * If the withdrawal is still pending/processing:
- *   pending_balance -> available_balance
- *
- * If it was already completed:
- *   total_withdrawn -> available_balance
- *
- * This keeps the internal wallet accounting correct if Paystack
- * reverses a previously successful transfer.
- */
-async function reverseWithdrawal(
-  client,
-  amount,
-  reference,
-  description,
-  withdrawalStatus = "processing"
-) {
-  const numericAmount = Number(amount);
-
-  if (
-    !Number.isFinite(numericAmount) ||
-    numericAmount <= 0
-  ) {
-    throw new Error("Invalid reversal amount");
-  }
-
-  const walletResult = await client.query(
-    `SELECT *
-     FROM platform_wallet
-     WHERE id = $1
-     AND currency = $2
-     FOR UPDATE`,
-    [WALLET_ID, CURRENCY]
-  );
-
-  if (walletResult.rows.length === 0) {
-    throw new Error("Platform wallet not found");
-  }
-
-  const wallet = walletResult.rows[0];
-
-  /*
-   * The withdrawal has not completed yet.
-   * Return the reserved amount from pending_balance
-   * back to available_balance.
-   */
-  if (
-    withdrawalStatus === "pending" ||
-    withdrawalStatus === "processing"
-  ) {
-    const pending = Number(wallet.pending_balance);
-
-    if (numericAmount > pending) {
-      throw new Error(
-        "Withdrawal reversal exceeds pending balance"
-      );
-    }
-
-    const before = Number(wallet.available_balance);
-    const after = before + numericAmount;
-
-    const updated = await client.query(
-      `UPDATE platform_wallet
-       SET
-         available_balance = $1,
-         pending_balance = pending_balance - $2,
-         updated_at = CURRENT_TIMESTAMP
-       WHERE id = $3
-       RETURNING *`,
-      [after, numericAmount, WALLET_ID]
-    );
-
-    const ledger = await client.query(
-      `INSERT INTO platform_wallet_transactions
-       (
-         wallet_id,
-         transaction_type,
-         amount,
-         balance_before,
-         balance_after,
-         reference,
-         source_type,
-         source_id,
-         description,
-         status
-       )
-       VALUES
-       (
-         $1,
-         'withdrawal_reversed',
-         $2,
-         $3,
-         $4,
-         $5,
-         'withdrawal',
-         NULL,
-         $6,
-         'completed'
-       )
-       RETURNING *`,
-      [
-        WALLET_ID,
-        numericAmount,
-        before,
-        after,
-        reference,
-        description || "Pending withdrawal reversed",
-      ]
-    );
-
-    return {
-      wallet: updated.rows[0],
-      transaction: ledger.rows[0],
-      mode: "pending_reversal",
-    };
-  }
-
-  /*
-   * The withdrawal had already completed.
-   * Return the reversed amount from total_withdrawn
-   * to available_balance.
-   */
-  if (withdrawalStatus === "completed") {
-    const totalWithdrawn = Number(wallet.total_withdrawn);
-
-    if (numericAmount > totalWithdrawn) {
-      throw new Error(
-        "Withdrawal reversal exceeds wallet withdrawal history"
-      );
-    }
-
-    const before = Number(wallet.available_balance);
-    const after = before + numericAmount;
-
-    const updated = await client.query(
-      `UPDATE platform_wallet
-       SET
-         available_balance = $1,
-         total_withdrawn = total_withdrawn - $2,
-         updated_at = CURRENT_TIMESTAMP
-       WHERE id = $3
-       RETURNING *`,
-      [after, numericAmount, WALLET_ID]
-    );
-
-    const ledger = await client.query(
-      `INSERT INTO platform_wallet_transactions
-       (
-         wallet_id,
-         transaction_type,
-         amount,
-         balance_before,
-         balance_after,
-         reference,
-         source_type,
-         source_id,
-         description,
-         status
-       )
-       VALUES
-       (
-         $1,
-         'withdrawal_reversed',
-         $2,
-         $3,
-         $4,
-         $5,
-         'withdrawal',
-         NULL,
-         $6,
-         'completed'
-       )
-       RETURNING *`,
-      [
-        WALLET_ID,
-        numericAmount,
-        before,
-        after,
-        reference,
-        description || "Completed withdrawal reversed",
-      ]
-    );
-
-    return {
-      wallet: updated.rows[0],
-      transaction: ledger.rows[0],
-      mode: "completed_reversal",
-    };
-  }
-
-  throw new Error(
-    `Cannot reverse withdrawal from status: ${withdrawalStatus}`
-  );
-}
 
 module.exports = {
-  WALLET_ID,
-  CURRENCY,
   getWallet,
   creditWallet,
   reserveForWithdrawal,
   releaseWithdrawal,
   completeWithdrawal,
-  reverseWithdrawal,
-  getTransactions,
+  normalizeCurrency,
 };

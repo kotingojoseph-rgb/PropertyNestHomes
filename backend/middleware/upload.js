@@ -2,11 +2,17 @@ const multer = require("multer");
 const cloudinary = require("../config/cloudinary");
 const { Readable } = require("stream");
 
-const ALLOWED_TYPES = new Set([
+const IMAGE_TYPES = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
+]);
+
+const DOCUMENT_TYPES = new Set([
   "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
 ]);
 
 const upload = multer({
@@ -16,26 +22,35 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024,
     files: 10,
   },
+});
 
-  fileFilter: (req, file, cb) => {
-    const mimetype = String(file.mimetype || "")
-      .toLowerCase()
-      .split(";")[0]
-      .trim();
+function normalizeMimeType(mimetype) {
+  return String(mimetype || "")
+    .toLowerCase()
+    .split(";")[0]
+    .trim();
+}
 
-    if (!ALLOWED_TYPES.has(mimetype)) {
+function createFileFilter(allowedTypes) {
+  return (req, file, cb) => {
+    const mimetype = normalizeMimeType(file.mimetype);
+
+    if (!allowedTypes.has(mimetype)) {
       return cb(
-        new Error(`Unsupported file type: ${file.mimetype || "unknown"}`)
+        new Error(
+          `Unsupported file type: ${file.mimetype || "unknown"}`
+        )
       );
     }
 
     cb(null, true);
-  },
-});
+  };
+}
 
 function uploadToCloudinary(file) {
   return new Promise((resolve, reject) => {
-    const isPdf = file.mimetype === "application/pdf";
+    const mimetype = normalizeMimeType(file.mimetype);
+    const isPdf = mimetype === "application/pdf";
 
     const stream = cloudinary.uploader.upload_stream(
       {
@@ -57,8 +72,17 @@ function uploadToCloudinary(file) {
 
 const middleware = {
   array(fieldName, maxCount) {
+    const imageUpload = multer({
+      storage: multer.memoryStorage(),
+      limits: {
+        fileSize: 10 * 1024 * 1024,
+        files: maxCount,
+      },
+      fileFilter: createFileFilter(IMAGE_TYPES),
+    });
+
     return [
-      upload.array(fieldName, maxCount),
+      imageUpload.array(fieldName, maxCount),
 
       async (req, res, next) => {
         try {
@@ -91,8 +115,17 @@ const middleware = {
   },
 
   single(fieldName) {
+    const documentUpload = multer({
+      storage: multer.memoryStorage(),
+      limits: {
+        fileSize: 10 * 1024 * 1024,
+        files: 1,
+      },
+      fileFilter: createFileFilter(DOCUMENT_TYPES),
+    });
+
     return [
-      upload.single(fieldName),
+      documentUpload.single(fieldName),
 
       async (req, res, next) => {
         try {

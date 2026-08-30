@@ -14,6 +14,7 @@ export default function MessageInput({
   const [pendingVoice, setPendingVoice] = useState(null);
   const [pendingImage, setPendingImage] = useState(null);
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
@@ -812,18 +813,66 @@ export default function MessageInput({
             </>
           ) : (
             <>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={openCamera}
-                  disabled={disabled || uploading}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
-                  aria-label="Take or choose photo"
-                  title="Take or choose photo"
-                >
-                  📷
-                </button>
-              </div>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setPhotoMenuOpen((open) => !open)}
+                    disabled={disabled || uploading}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
+                    aria-label="Take or choose photo"
+                    title="Take or choose photo"
+                  >
+                    📷
+                  </button>
+
+                  {photoMenuOpen && (
+                    <div className="absolute bottom-11 left-0 z-[150] w-64 overflow-hidden rounded-2xl border border-gray-200 bg-white p-1.5 shadow-xl sm:bottom-12">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPhotoMenuOpen(false);
+                          openCamera();
+                        }}
+                        disabled={disabled || uploading}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left hover:bg-gray-100 active:bg-gray-100 disabled:opacity-50"
+                      >
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xl">
+                          📷
+                        </span>
+                        <span>
+                          <span className="block text-sm font-semibold text-gray-800">
+                            Take photo
+                          </span>
+                          <span className="block text-xs text-gray-500">
+                            Use your camera
+                          </span>
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPhotoMenuOpen(false);
+                          imageInputRef.current?.click();
+                        }}
+                        disabled={disabled || uploading}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left hover:bg-gray-100 active:bg-gray-100 disabled:opacity-50"
+                      >
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xl">
+                          🖼️
+                        </span>
+                        <span>
+                          <span className="block text-sm font-semibold text-gray-800">
+                            Choose from device
+                          </span>
+                          <span className="block text-xs text-gray-500">
+                            Select an existing photo
+                          </span>
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
 
               <button
                 type="button"

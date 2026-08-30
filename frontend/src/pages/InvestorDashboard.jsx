@@ -581,17 +581,36 @@ export default function InvestorDashboard() {
             {investments.map((investment) => (
               <div
                 key={investment.id}
-                className="min-w-0 rounded-2xl bg-white p-4 shadow sm:p-5"
+                className="min-w-0 overflow-hidden rounded-2xl bg-white shadow sm:p-0"
               >
-                <div className="flex min-w-0 flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <Link
-                      to={`/property/${investment.property_id}`}
-                      className="break-words text-base font-bold text-gray-900 hover:text-green-600 sm:text-lg"
-                    >
-                      {investment.property_title ||
-                        "Investment Property"}
-                    </Link>
+                <div className="flex min-w-0 flex-col gap-4 md:flex-row md:items-stretch md:justify-between">
+                  <div className="min-w-0 flex-1">
+                    {getPropertyImage(investment) ? (
+                      <img
+                        src={getPropertyImage(investment)}
+                        alt={
+                          investment.property_title ||
+                          "Investment Property"
+                        }
+                        className="h-44 w-full object-cover sm:h-52 md:h-full md:min-h-52"
+                        onError={(event) => {
+                          event.currentTarget.style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <div className="flex h-44 w-full items-center justify-center bg-gray-100 text-sm text-gray-500 sm:h-52 md:min-h-52">
+                        Property image unavailable
+                      </div>
+                    )}
+
+                    <div className="p-4 sm:p-5">
+                      <Link
+                        to={`/property/${investment.property_id}`}
+                        className="break-words text-base font-bold text-gray-900 hover:text-green-600 sm:text-lg"
+                      >
+                        {investment.property_title ||
+                          "Investment Property"}
+                      </Link>
 
                     <p className="mt-1 text-sm text-gray-500">
                       📍{" "}
@@ -608,15 +627,16 @@ export default function InvestorDashboard() {
                       Investment amount
                     </p>
 
-                    <p className="break-words text-lg font-bold text-green-700 sm:text-xl">
-                      {formatMoney(
-                        investment.amount,
-                        investment.currency || "NGN"
-                      )}
-                    </p>
+                      <p className="break-words text-lg font-bold text-green-700 sm:text-xl">
+                        {formatMoney(
+                          investment.amount,
+                          investment.currency || "NGN"
+                        )}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="flex w-full flex-col items-stretch gap-3 md:w-auto md:items-end">
+                  <div className="flex w-full flex-col items-stretch gap-3 p-4 md:w-auto md:items-end md:p-5">
                     <span
                       className={`w-fit rounded-full px-3 py-1 text-xs font-semibold capitalize sm:text-sm ${getStatusClasses(
                         investment.status

@@ -399,9 +399,24 @@ const uploadPropertyImage = async (req, res) => {
     }
 
 
-for (let i = 0; i < req.files.length; i++) {
+// Check whether this property already has a cover image.
+const existingCover = await pool.query(
+  `
+  SELECT id
+  FROM property_images
+  WHERE property_id = $1
+    AND is_cover = true
+  LIMIT 1
+  `,
+  [id]
+);
 
-  const file = req.files[i];
+let hasCover = existingCover.rows.length > 0;
+
+for (const file of req.files) {
+  // Only the first uploaded image becomes the cover when
+  // the property does not already have one.
+  const makeCover = !hasCover;
 
   await pool.query(
     `
@@ -412,15 +427,18 @@ for (let i = 0; i < req.files.length; i++) {
       is_cover
     )
     VALUES
-    ($1,$2,$3)
+    ($1, $2, $3)
     `,
     [
       id,
       file.path,
-      i === 0
+      makeCover
     ]
   );
 
+  if (makeCover) {
+    hasCover = true;
+  }
 }
 
 
