@@ -13,6 +13,7 @@ export default function MessageInput({
   const [seconds, setSeconds] = useState(0);
   const [pendingVoice, setPendingVoice] = useState(null);
   const [pendingImage, setPendingImage] = useState(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
@@ -23,6 +24,8 @@ export default function MessageInput({
   const inputRef = useRef(null);
   const imageInputRef = useRef(null);
   const cameraInputRef = useRef(null);
+  const cameraVideoRef = useRef(null);
+  const cameraStreamRef = useRef(null);
   const previewUrlRef = useRef(null);
   const imagePreviewUrlRef = useRef(null);
   const typingTimerRef = useRef(null);
@@ -308,6 +311,120 @@ export default function MessageInput({
   }
 
 
+  async function openCamera() {
+    setError("");
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError("Camera is not supported by this browser.");
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      });
+
+      cameraStreamRef.current = stream;
+      setCameraOpen(true);
+
+      requestAnimationFrame(() => {
+        if (cameraVideoRef.current) {
+          cameraVideoRef.current.srcObject = stream;
+          cameraVideoRef.current.play().catch(() => {});
+        }
+      });
+    } catch (err) {
+      console.error("Camera error:", err);
+
+      if (
+        err.name === "NotAllowedError" ||
+        err.name === "PermissionDeniedError"
+      ) {
+        setError("Camera permission was denied. Allow camera access and try again.");
+      } else if (
+        err.name === "NotFoundError" ||
+        err.name === "DevicesNotFoundError"
+      ) {
+        setError("No camera was found on this device.");
+      } else {
+        setError(err.message || "Unable to open the camera.");
+      }
+    }
+  }
+
+  function closeCamera() {
+    if (cameraStreamRef.current) {
+      cameraStreamRef.current.getTracks().forEach((track) => track.stop());
+      cameraStreamRef.current = null;
+    }
+
+    if (cameraVideoRef.current) {
+      cameraVideoRef.current.srcObject = null;
+    }
+
+    setCameraOpen(false);
+  }
+
+  function takePhoto() {
+    const video = cameraVideoRef.current;
+
+    if (!video || !video.videoWidth || !video.videoHeight) {
+      setError("Camera is not ready yet. Please wait a moment.");
+      return;
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      setError("Unable to capture the photo.");
+      return;
+    }
+
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          setError("Unable to capture the photo.");
+          return;
+        }
+
+        const file = new File(
+          [blob],
+          `camera-${Date.now()}.jpg`,
+          { type: "image/jpeg" }
+        );
+
+        closeCamera();
+
+        if (imagePreviewUrlRef.current) {
+          URL.revokeObjectURL(imagePreviewUrlRef.current);
+        }
+
+        const previewUrl = URL.createObjectURL(file);
+        imagePreviewUrlRef.current = previewUrl;
+
+        setPendingImage({
+          file,
+          previewUrl,
+        });
+
+        setError("");
+      },
+      "image/jpeg",
+      0.9
+    );
+  }
+
   function handleImageSelect(event) {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -467,6 +584,15 @@ export default function MessageInput({
 
   useEffect(() => {
     return () => {
+      if (cameraStreamRef.current) {
+        cameraStreamRef.current.getTracks().forEach((track) => track.stop());
+        cameraStreamRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
       clearTimer();
       clearTimeout(typingTimerRef.current);
 
@@ -606,6 +732,50 @@ export default function MessageInput({
         className="hidden"
       />
 
+      {cameraOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black p-4">
+          <div className="flex w-full max-w-lg flex-col overflow-hidden rounded-3xl bg-black shadow-2xl">
+            <div className="relative aspect-[3/4] w-full overflow-hidden bg-black sm:aspect-video">
+              <video
+                ref={cameraVideoRef}
+                autoPlay
+                playsInline
+                muted
+                className="h-full w-full object-cover"
+              />
+
+              <button
+                type="button"
+                onClick={closeCamera}
+                className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-xl text-white"
+                aria-label="Close camera"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="flex items-center justify-center gap-5 px-5 py-5">
+              <button
+                type="button"
+                onClick={closeCamera}
+                className="rounded-full bg-white/15 px-5 py-3 font-semibold text-white"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={takePhoto}
+                className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-2xl shadow-lg"
+                aria-label="Take photo"
+              >
+                📷
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <form
         onSubmit={sendText}
         className="mx-auto flex w-full min-w-0 max-w-3xl items-end gap-1 sm:gap-2"
@@ -645,16 +815,7 @@ export default function MessageInput({
               <div className="relative">
                 <button
                   type="button"
-                  onClick={() => {
-                    const useCamera =
-                      window.matchMedia("(max-width: 768px)").matches;
-
-                    if (useCamera) {
-                      cameraInputRef.current?.click();
-                    } else {
-                      imageInputRef.current?.click();
-                    }
-                  }}
+                  onClick={openCamera}
                   disabled={disabled || uploading}
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
                   aria-label="Take or choose photo"
