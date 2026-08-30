@@ -390,11 +390,20 @@ export default function InvestorDashboard() {
   }
 
   function getPropertyImage(property) {
-    const coverImage = String(property?.cover_image || "").trim();
+    const candidates = [
+      property?.cover_image,
+      property?.image,
+    ];
 
-    return /^https?:\/\//i.test(coverImage)
-      ? coverImage
-      : null;
+    for (const candidate of candidates) {
+      const url = String(candidate || "").trim();
+
+      if (/^https?:\/\//i.test(url)) {
+        return url;
+      }
+    }
+
+    return null;
   }
 
   function formatMoney(amount, currency = "NGN") {
