@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import propertyFallback from "../assets/images/property.jpg";
 
 export default function InvestorDashboard() {
   const [properties, setProperties] = useState([]);
@@ -391,14 +390,11 @@ export default function InvestorDashboard() {
   }
 
   function getPropertyImage(property) {
-    return (
-      property.cover_image ||
-      property.image_url ||
-      property.image ||
-      property.photo_url ||
-      property.images?.[0] ||
-      propertyFallback
-    );
+    const coverImage = String(property?.cover_image || "").trim();
+
+    return /^https?:\/\//i.test(coverImage)
+      ? coverImage
+      : null;
   }
 
   function formatMoney(amount, currency = "NGN") {
@@ -707,14 +703,20 @@ export default function InvestorDashboard() {
                 to={`/property/${property.id}`}
                 className="overflow-hidden rounded-2xl bg-white shadow transition hover:-translate-y-1 hover:shadow-lg"
               >
-                <img
-                  src={getPropertyImage(property)}
-                  alt={getPropertyTitle(property)}
-                  className="h-44 w-full object-cover sm:h-48"
-                  onError={(event) => {
-                    event.currentTarget.src = propertyFallback;
-                  }}
-                />
+                {getPropertyImage(property) ? (
+                  <img
+                    src={getPropertyImage(property)}
+                    alt={getPropertyTitle(property)}
+                    className="h-44 w-full object-cover sm:h-48"
+                    onError={(event) => {
+                      event.currentTarget.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <div className="flex h-44 w-full items-center justify-center bg-gray-100 text-sm text-gray-500 sm:h-48">
+                    Property image unavailable
+                  </div>
+                )}
 
                 <div className="min-w-0 p-4 sm:p-5">
                   <h3 className="break-words text-base font-bold text-gray-900 sm:text-lg">
