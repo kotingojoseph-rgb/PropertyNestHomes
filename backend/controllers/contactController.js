@@ -1,4 +1,6 @@
-const { transporter } = require("../utils/email");
+const { Resend } = require("resend");
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 function escapeHtml(value) {
   return String(value)
@@ -62,10 +64,10 @@ async function submitContactMessage(req, res) {
     const safeEmail = escapeHtml(email);
     const safeMessage = escapeHtml(message);
 
-    await transporter.sendMail({
-      from: `"PropertyNestHomes Website" <${recipient}>`,
+    await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || "PropertyNestHomes <onboarding@resend.dev>",
       to: recipient,
-      replyTo: email,
+      reply_to: email,
       subject: `New PropertyNestHomes contact message from ${name}`,
       text: [
         "New PropertyNestHomes contact message",
