@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import propertyFallback from "../assets/images/property.jpg";
 
 export default function InvestorDashboard() {
   const [properties, setProperties] = useState([]);
@@ -51,13 +52,19 @@ export default function InvestorDashboard() {
         throw new Error(data?.error || "Unable to load properties.");
       }
 
-      if (Array.isArray(data)) {
-        setProperties(data);
-      } else if (Array.isArray(data?.properties)) {
-        setProperties(data.properties);
-      } else {
-        setProperties([]);
-      }
+      const propertyList = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.properties)
+          ? data.properties
+          : [];
+
+      const verifiedProperties = propertyList.filter(
+        (property) =>
+          String(property?.verification_status || "").toLowerCase() ===
+          "verified"
+      );
+
+      setProperties(verifiedProperties);
     } catch (error) {
       console.error(
         "Unable to load investment opportunities:",
@@ -390,7 +397,7 @@ export default function InvestorDashboard() {
       property.image ||
       property.photo_url ||
       property.images?.[0] ||
-      "/property.jpg"
+      propertyFallback
     );
   }
 
@@ -443,35 +450,37 @@ export default function InvestorDashboard() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl p-6 md:p-8">
-      <div className="mb-8 rounded-2xl bg-gradient-to-r from-green-700 to-green-500 p-6 text-white shadow-lg">
+    <div className="mx-auto w-full max-w-7xl min-w-0 p-1 sm:p-4 md:p-8">
+      <div className="mb-5 rounded-2xl bg-gradient-to-r from-green-700 to-green-500 p-4 text-white shadow-lg sm:mb-8 sm:p-6">
         <p className="text-sm font-medium uppercase tracking-wide text-green-100">
-          Investment Dashboard
+          Investment Center
         </p>
 
         <h1 className="mt-2 text-3xl font-bold md:text-4xl">
-          Discover your next real estate opportunity
+          Discover and invest in verified real estate opportunities
         </h1>
 
-        <p className="mt-3 max-w-2xl text-green-50">
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-green-50 sm:text-base">
           Explore verified properties, submit investment requests,
-          and track your investment portfolio.
+          pay securely, and track your investment portfolio.
+          You can invest using your existing PropertyNestHomes account —
+          no separate investor account is required.
         </p>
       </div>
 
       {error && (
-        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-700 sm:mb-6">
           {error}
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <div className="rounded-2xl bg-white p-6 shadow">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+        <div className="min-w-0 rounded-2xl bg-white p-4 shadow sm:p-5 md:p-6">
           <div className="text-sm text-gray-500">
             Available Opportunities
           </div>
 
-          <div className="mt-2 text-3xl font-bold text-gray-900">
+          <div className="mt-2 break-words text-2xl font-bold text-gray-900 sm:text-3xl">
             {loading ? "..." : properties.length}
           </div>
 
@@ -480,12 +489,12 @@ export default function InvestorDashboard() {
           </p>
         </div>
 
-        <div className="rounded-2xl bg-white p-6 shadow">
+        <div className="min-w-0 rounded-2xl bg-white p-4 shadow sm:p-5 md:p-6">
           <div className="text-sm text-gray-500">
             Active Investments
           </div>
 
-          <div className="mt-2 text-3xl font-bold text-gray-900">
+          <div className="mt-2 break-words text-2xl font-bold text-gray-900 sm:text-3xl">
             {portfolioLoading
               ? "..."
               : summary.active_investments}
@@ -496,12 +505,12 @@ export default function InvestorDashboard() {
           </p>
         </div>
 
-        <div className="rounded-2xl bg-white p-6 shadow">
+        <div className="min-w-0 rounded-2xl bg-white p-4 shadow sm:p-5 md:p-6">
           <div className="text-sm text-gray-500">
             Total Invested
           </div>
 
-          <div className="mt-2 text-3xl font-bold text-green-700">
+          <div className="mt-2 break-words text-2xl font-bold text-green-700 sm:text-3xl">
             {portfolioLoading
               ? "..."
               : formatMoney(summary.total_invested)}
@@ -512,12 +521,12 @@ export default function InvestorDashboard() {
           </p>
         </div>
 
-        <div className="rounded-2xl bg-white p-6 shadow">
+        <div className="min-w-0 rounded-2xl bg-white p-4 shadow sm:p-5 md:p-6">
           <div className="text-sm text-gray-500">
             Pending Investment
           </div>
 
-          <div className="mt-2 text-3xl font-bold text-yellow-600">
+          <div className="mt-2 break-words text-2xl font-bold text-yellow-600 sm:text-3xl">
             {portfolioLoading
               ? "..."
               : formatMoney(summary.total_pending)}
@@ -529,27 +538,27 @@ export default function InvestorDashboard() {
         </div>
       </div>
 
-      <div className="mt-10">
-        <div className="mb-5 flex items-center justify-between">
+      <div className="mt-8 sm:mt-10">
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
               My Investments
             </h2>
 
-            <p className="mt-1 text-gray-500">
+            <p className="mt-1 text-sm leading-6 text-gray-500 sm:text-base">
               Track your investment requests and their status.
             </p>
           </div>
         </div>
 
         {portfolioLoading ? (
-          <div className="rounded-2xl bg-white p-10 text-center shadow">
+          <div className="rounded-2xl bg-white p-6 text-center shadow sm:p-10">
             <p className="text-gray-500">
               Loading your investment portfolio...
             </p>
           </div>
         ) : investments.length === 0 ? (
-          <div className="rounded-2xl bg-white p-10 text-center shadow">
+          <div className="rounded-2xl bg-white p-6 text-center shadow sm:p-10">
             <div className="text-4xl">📊</div>
 
             <h3 className="mt-3 text-xl font-bold text-gray-900">
@@ -558,7 +567,8 @@ export default function InvestorDashboard() {
 
             <p className="mt-2 text-gray-500">
               Browse verified properties below and submit your
-              first investment request.
+              first investment request. Your existing account can be
+              used to invest — no separate investor registration is needed.
             </p>
           </div>
         ) : (
@@ -566,13 +576,13 @@ export default function InvestorDashboard() {
             {investments.map((investment) => (
               <div
                 key={investment.id}
-                className="rounded-2xl bg-white p-5 shadow"
+                className="min-w-0 rounded-2xl bg-white p-4 shadow sm:p-5"
               >
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex min-w-0 flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div>
                     <Link
                       to={`/property/${investment.property_id}`}
-                      className="text-lg font-bold text-gray-900 hover:text-green-600"
+                      className="break-words text-base font-bold text-gray-900 hover:text-green-600 sm:text-lg"
                     >
                       {investment.property_title ||
                         "Investment Property"}
@@ -593,7 +603,7 @@ export default function InvestorDashboard() {
                       Investment amount
                     </p>
 
-                    <p className="text-xl font-bold text-green-700">
+                    <p className="break-words text-lg font-bold text-green-700 sm:text-xl">
                       {formatMoney(
                         investment.amount,
                         investment.currency || "NGN"
@@ -601,9 +611,9 @@ export default function InvestorDashboard() {
                     </p>
                   </div>
 
-                  <div className="flex flex-col items-start gap-3 md:items-end">
+                  <div className="flex w-full flex-col items-stretch gap-3 md:w-auto md:items-end">
                     <span
-                      className={`rounded-full px-3 py-1 text-sm font-semibold capitalize ${getStatusClasses(
+                      className={`w-fit rounded-full px-3 py-1 text-xs font-semibold capitalize sm:text-sm ${getStatusClasses(
                         investment.status
                       )}`}
                     >
@@ -612,7 +622,7 @@ export default function InvestorDashboard() {
 
                     {(investment.status === "pending" ||
                       investment.status === "approved") && (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:flex-wrap md:w-auto">
                         <button
                           type="button"
                           onClick={() =>
@@ -621,7 +631,7 @@ export default function InvestorDashboard() {
                           disabled={
                             payingInvestmentId === investment.id
                           }
-                          className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="min-h-11 w-full rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                         >
                           {payingInvestmentId === investment.id
                             ? "Opening Paystack..."
@@ -634,7 +644,7 @@ export default function InvestorDashboard() {
                             onClick={() =>
                               cancelInvestment(investment.id)
                             }
-                            className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                            className="min-h-11 w-full rounded-lg border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 sm:w-auto"
                           >
                             Cancel Request
                           </button>
@@ -649,14 +659,14 @@ export default function InvestorDashboard() {
         )}
       </div>
 
-      <div className="mt-10">
-        <div className="mb-5 flex items-center justify-between">
+      <div className="mt-8 sm:mt-10">
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
               Investment Opportunities
             </h2>
 
-            <p className="mt-1 text-gray-500">
+            <p className="mt-1 text-sm leading-6 text-gray-500 sm:text-base">
               Browse properties currently available on
               PropertyNestHomes.
             </p>
@@ -664,20 +674,20 @@ export default function InvestorDashboard() {
 
           <Link
             to="/buy"
-            className="rounded-lg bg-green-600 px-4 py-2 font-medium text-white hover:bg-green-700"
+            className="flex min-h-11 w-full items-center justify-center rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700 sm:w-auto"
           >
             Browse All
           </Link>
         </div>
 
         {loading ? (
-          <div className="rounded-2xl bg-white p-10 text-center shadow">
+          <div className="rounded-2xl bg-white p-6 text-center shadow sm:p-10">
             <p className="text-gray-500">
               Loading investment opportunities...
             </p>
           </div>
         ) : properties.length === 0 ? (
-          <div className="rounded-2xl bg-white p-10 text-center shadow">
+          <div className="rounded-2xl bg-white p-6 text-center shadow sm:p-10">
             <div className="text-4xl">🏠</div>
 
             <h3 className="mt-3 text-xl font-bold text-gray-900">
@@ -690,7 +700,7 @@ export default function InvestorDashboard() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid min-w-0 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {properties.slice(0, 6).map((property) => (
               <Link
                 key={property.id}
@@ -700,14 +710,14 @@ export default function InvestorDashboard() {
                 <img
                   src={getPropertyImage(property)}
                   alt={getPropertyTitle(property)}
-                  className="h-48 w-full object-cover"
+                  className="h-44 w-full object-cover sm:h-48"
                   onError={(event) => {
-                    event.currentTarget.src = "/property.jpg";
+                    event.currentTarget.src = propertyFallback;
                   }}
                 />
 
-                <div className="p-5">
-                  <h3 className="text-lg font-bold text-gray-900">
+                <div className="min-w-0 p-4 sm:p-5">
+                  <h3 className="break-words text-base font-bold text-gray-900 sm:text-lg">
                     {getPropertyTitle(property)}
                   </h3>
 
@@ -715,8 +725,8 @@ export default function InvestorDashboard() {
                     📍 {getPropertyLocation(property)}
                   </p>
 
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="font-bold text-green-700">
+                  <div className="mt-4 flex min-w-0 flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="break-words font-bold text-green-700">
                       {getPropertyPrice(property)}
                     </span>
 
@@ -731,12 +741,12 @@ export default function InvestorDashboard() {
         )}
       </div>
 
-      <div className="mt-10 rounded-2xl border border-green-100 bg-green-50 p-6">
+      <div className="mt-8 rounded-2xl border border-green-100 bg-green-50 p-4 sm:mt-10 sm:p-6">
         <h2 className="text-xl font-bold text-gray-900">
           Investment Features
         </h2>
 
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
+        <div className="mt-4 grid gap-3 sm:gap-4 md:grid-cols-3">
           <div className="rounded-xl bg-white p-4">
             <div className="text-2xl">📊</div>
             <h3 className="mt-2 font-bold">
