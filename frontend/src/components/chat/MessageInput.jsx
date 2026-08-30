@@ -724,6 +724,14 @@ export default function MessageInput({
 
 
 
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageSelect}
+        className="hidden"
+      />
+
       {cameraOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black p-4">
           <div className="flex w-full max-w-lg flex-col overflow-hidden rounded-3xl bg-black shadow-2xl">
@@ -814,6 +822,17 @@ export default function MessageInput({
                   >
                     📷
                   </button>
+
+                <button
+                  type="button"
+                  onClick={() => imageInputRef.current?.click()}
+                  disabled={disabled || uploading}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
+                  aria-label="Choose photo from device"
+                  title="Choose photo from device"
+                >
+                  🖼️
+                </button>
 
 <button
                 type="button"
