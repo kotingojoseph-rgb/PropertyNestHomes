@@ -831,7 +831,7 @@ export default function MessageInput({
                         type="button"
                         onClick={() => {
                           setPhotoMenuOpen(false);
-                          openCamera();
+                          cameraInputRef.current?.click();
                         }}
                         disabled={disabled || uploading}
                         className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left hover:bg-gray-100 active:bg-gray-100 disabled:opacity-50"
