@@ -47,9 +47,9 @@ export default function FeaturedProperties() {
 
   if (loading) {
     return (
-      <section className="bg-gray-100 py-14">
+      <section className="bg-gray-100 py-10 sm:py-14">
         <div className="text-center">
-          <h2 className="text-3xl font-bold">
+          <h2 className="text-2xl font-bold sm:text-3xl">
             Featured Properties
           </h2>
 
@@ -63,7 +63,7 @@ export default function FeaturedProperties() {
 
   if (error) {
     return (
-      <section className="bg-gray-100 py-14">
+      <section className="bg-gray-100 py-10 sm:py-14">
         <div className="text-center text-red-600">
           {error}
         </div>
@@ -72,18 +72,18 @@ export default function FeaturedProperties() {
   }
 
   return (
-    <section className="bg-gray-100 py-14 sm:py-20">
-      <div className="mx-auto max-w-7xl px-4">
-        <div className="mb-10 text-center">
+    <section className="bg-gray-100 py-10 sm:py-14 lg:py-20">
+      <div className="mx-auto w-full max-w-7xl px-3 sm:px-4">
+        <div className="mb-7 text-center sm:mb-10">
           <p className="mb-2 text-sm font-bold uppercase tracking-widest text-green-600">
             Discover Your Next Home
           </p>
 
-          <h2 className="text-3xl font-extrabold sm:text-5xl">
+          <h2 className="text-3xl font-extrabold leading-tight sm:text-4xl lg:text-5xl">
             Featured Properties
           </h2>
 
-          <p className="mt-4 text-gray-600">
+          <p className="mt-3 text-sm leading-6 text-gray-600 sm:mt-4 sm:text-base">
             Explore verified homes and investment opportunities.
           </p>
         </div>
@@ -93,7 +93,7 @@ export default function FeaturedProperties() {
             No featured properties available.
           </p>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid min-w-0 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {properties.map((property, index) => (
               <PropertyCard
                 key={property.id}
@@ -116,20 +116,7 @@ export default function FeaturedProperties() {
         <div className="mt-10 text-center">
           <Link
             to="/buy"
-            className="
-              inline-flex
-              items-center
-              rounded-xl
-              bg-green-600
-              px-7
-              py-3
-              font-bold
-              text-white
-              shadow-lg
-              transition
-              hover:-translate-y-0.5
-              hover:bg-green-700
-            "
+            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-green-600 px-5 py-3 text-sm font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-green-700 sm:px-7 sm:text-base"
           >
             View All Properties →
           </Link>

@@ -69,41 +69,41 @@ setFilteredProperties(data);
 
 
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="min-h-screen w-full bg-gray-100">
 
 
       <section className="bg-white border-b">
 
-        <div className="max-w-7xl mx-auto px-6 py-16">
+        <div className="mx-auto w-full max-w-7xl px-3 py-8 sm:px-6 sm:py-12 lg:py-16">
 
 
-          <h1 className="text-5xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold leading-tight text-gray-900 sm:text-4xl lg:text-5xl">
             Find Your Dream Property
           </h1>
 
 
-          <p className="mt-5 max-w-3xl text-lg text-gray-600">
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-600 sm:mt-5 sm:text-base lg:text-lg">
             Explore premium homes, apartments, villas, duplexes,
             and investment properties worldwide.
           </p>
 
 
 
-          <div className="mt-10 grid md:grid-cols-3 gap-5">
+          <div className="mt-6 grid gap-3 sm:mt-8 sm:gap-4 md:grid-cols-3">
 
 
             <input
               placeholder="Search by city, country, or property..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="rounded-xl border p-4"
+              className="min-h-12 w-full rounded-xl border px-4 py-3 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 sm:text-base"
             />
 
 
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="rounded-xl border p-4"
+              className="min-h-12 w-full rounded-xl border px-4 py-3 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 sm:text-base"
             >
 
               <option value="">
@@ -121,7 +121,7 @@ setFilteredProperties(data);
             </select>
 
 
-            <div className="rounded-xl bg-green-600 p-4 text-center text-white font-bold">
+            <div className="flex min-h-12 items-center justify-center rounded-xl bg-green-600 px-4 py-3 text-center text-sm font-bold text-white sm:text-base">
 
               {filteredProperties.length} Properties Available
 
@@ -138,7 +138,7 @@ setFilteredProperties(data);
 
 
 
-      <section className="max-w-7xl mx-auto px-6 py-12">
+      <section className="mx-auto w-full max-w-7xl px-3 py-7 sm:px-6 sm:py-10 lg:py-12">
 
 
         {loading ? (
@@ -150,9 +150,9 @@ setFilteredProperties(data);
 
         ) : filteredProperties.length === 0 ? (
 
-          <div className="rounded-2xl bg-white p-10 text-center shadow">
+          <div className="rounded-2xl bg-white p-6 text-center shadow sm:p-10">
 
-            <h2 className="text-2xl font-bold">
+            <h2 className="text-xl font-bold sm:text-2xl">
               No properties found
             </h2>
 
@@ -165,7 +165,7 @@ setFilteredProperties(data);
 
         ) : (
 
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid min-w-0 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
 
 
             {filteredProperties.map((property) => (

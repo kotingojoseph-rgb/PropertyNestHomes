@@ -2,93 +2,80 @@ import { Link } from "react-router-dom";
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-white mt-16">
-
-      <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-3">
-
+    <footer className="mt-10 w-full overflow-hidden bg-gray-900 text-white sm:mt-16">
+      <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-9 sm:gap-10 sm:px-6 sm:py-12 md:grid-cols-3 lg:px-8">
         {/* Company */}
-        <div>
-          <h2 className="mb-4 text-2xl font-bold">
+        <div className="min-w-0">
+          <h2 className="mb-3 text-xl font-bold sm:mb-4 sm:text-2xl">
             🏡 PropertyNestHomes
           </h2>
 
-          <p className="text-gray-300">
+          <p className="max-w-md text-sm leading-6 text-gray-300 sm:text-base">
             Helping buyers, sellers, and investors discover
             exceptional properties worldwide.
           </p>
         </div>
 
-
         {/* Quick Links */}
-        <div>
-          <h3 className="mb-4 text-xl font-semibold">
+        <div className="min-w-0">
+          <h3 className="mb-3 text-lg font-semibold sm:mb-4 sm:text-xl">
             Quick Links
           </h3>
 
-          <div className="flex flex-col gap-3 text-gray-300">
-
-            <Link to="/">
+          <div className="flex flex-col gap-2.5 text-sm text-gray-300 sm:gap-3 sm:text-base">
+            <Link to="/" className="w-fit hover:text-white">
               Home
             </Link>
 
-            <Link to="/buy">
+            <Link to="/buy" className="w-fit hover:text-white">
               Buy
             </Link>
 
-            <Link to="/about">
+            <Link to="/about" className="w-fit hover:text-white">
               About
             </Link>
 
-            <Link to="/contact">
+            <Link to="/contact" className="w-fit hover:text-white">
               Contact
             </Link>
-
           </div>
         </div>
 
-
-                {/* Contact */}
-        <div>
-          <h3 className="mb-4 text-xl font-semibold">
+        {/* Contact */}
+        <div className="min-w-0">
+          <h3 className="mb-3 text-lg font-semibold sm:mb-4 sm:text-xl">
             Contact
           </h3>
 
-          <p className="text-gray-300">
-            📧{" "}
-            <a
-              href="mailto:Propertynesthomes.app@gmail.com"
-              className="text-blue-400 hover:underline"
-            >
-              Propertynesthomes.app@gmail.com
-            </a>
-          </p>
+          <div className="space-y-2 text-sm leading-6 text-gray-300 sm:text-base">
+            <p className="break-words">
+              📧{" "}
+              <a
+                href="mailto:Propertynesthomes.app@gmail.com"
+                className="break-all text-blue-400 hover:underline"
+              >
+                Propertynesthomes.app@gmail.com
+              </a>
+            </p>
 
-          <p className="mt-2 text-gray-300">
-            📞{" "}
-            <a
-              href="tel:+2349068936306"
-              className="text-blue-400 hover:underline"
-            >
-              +234 906 893 6306
-            </a>
-          </p>
+            <p>
+              📞{" "}
+              <a
+                href="tel:+2349068936306"
+                className="text-blue-400 hover:underline"
+              >
+                +234 906 893 6306
+              </a>
+            </p>
 
-          <p className="mt-2 text-gray-300">
-            📍 Lagos, Nigeria
-          </p>
-                </div>
-
+            <p>📍 Lagos, Nigeria</p>
+          </div>
+        </div>
       </div>
 
-      <div className="border-t border-gray-700 py-5 text-center text-gray-400">
-
-
-     
-
+      <div className="border-t border-gray-700 px-4 py-4 text-center text-xs leading-5 text-gray-400 sm:px-6 sm:py-5 sm:text-sm">
         © 2026 PropertyNestHomes. All Rights Reserved.
-
       </div>
-
     </footer>
   );
 }

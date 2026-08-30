@@ -20,14 +20,14 @@ export default function DashboardHeader() {
   const canAddProperty = ["admin", "seller", "landlord", "agent"].includes(userRole);
 
   return (
-    <div className="mb-10 rounded-3xl bg-gradient-to-r from-green-600 to-green-500 p-8 text-white shadow-lg">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+    <div className="mb-5 rounded-2xl bg-gradient-to-r from-green-600 to-green-500 p-4 text-white shadow-lg sm:mb-8 sm:rounded-3xl sm:p-6 md:p-8">
+      <div className="flex flex-col gap-4 sm:gap-6 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-4xl font-bold">
+          <h1 className="text-2xl font-bold leading-tight sm:text-3xl md:text-4xl">
             My Properties
           </h1>
 
-          <p className="mt-3 text-green-100 text-lg">
+          <p className="mt-3 text-sm leading-6 text-green-100 sm:text-base lg:text-lg">
             Manage, update, and monitor all your property listings from one place.
           </p>
         </div>
@@ -35,7 +35,7 @@ export default function DashboardHeader() {
         {canAddProperty && (
           <Link
             to="/add-property"
-            className="inline-flex items-center justify-center rounded-xl bg-white px-6 py-3 font-bold text-green-700 hover:bg-gray-100 transition"
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-bold text-green-700 transition hover:bg-gray-100 sm:w-auto sm:px-6 sm:text-base"
           >
             + Add Property
           </Link>

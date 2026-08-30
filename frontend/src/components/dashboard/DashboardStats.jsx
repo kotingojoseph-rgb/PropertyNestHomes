@@ -23,28 +23,28 @@ export default function DashboardStats({ totalProperties }) {
   ];
 
   return (
-    <div className="grid gap-6 mb-10 md:grid-cols-4">
+    <div className="mb-6 grid grid-cols-2 gap-3 sm:mb-8 sm:gap-4 md:mb-10 md:grid-cols-4">
 
       {stats.map((stat) => (
         <div
           key={stat.title}
-          className="rounded-2xl bg-white p-6 shadow-md border hover:shadow-lg transition"
+          className="min-w-0 rounded-2xl border bg-white p-4 shadow-md transition hover:shadow-lg sm:p-5 md:p-6"
         >
 
-          <div className="flex items-center justify-between">
+          <div className="flex min-w-0 items-start justify-between gap-2">
 
-            <h2 className="text-sm font-semibold text-gray-500 uppercase">
+            <h2 className="min-w-0 text-[10px] font-semibold uppercase leading-tight text-gray-500 sm:text-xs sm:text-sm">
               {stat.title}
             </h2>
 
-            <span className="text-3xl">
+            <span className="shrink-0 text-2xl sm:text-3xl">
               {stat.icon}
             </span>
 
           </div>
 
 
-          <p className="mt-5 text-4xl font-bold text-gray-900">
+          <p className="mt-3 text-2xl font-bold text-gray-900 sm:mt-5 sm:text-3xl md:text-4xl">
             {stat.value}
           </p>
 
