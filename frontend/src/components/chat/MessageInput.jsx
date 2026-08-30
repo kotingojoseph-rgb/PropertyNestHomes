@@ -22,6 +22,7 @@ export default function MessageInput({
   const timerRef = useRef(null);
   const inputRef = useRef(null);
   const imageInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
   const previewUrlRef = useRef(null);
   const imagePreviewUrlRef = useRef(null);
   const typingTimerRef = useRef(null);
@@ -596,6 +597,15 @@ export default function MessageInput({
         className="hidden"
       />
 
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleImageSelect}
+        className="hidden"
+      />
+
       <form
         onSubmit={sendText}
         className="mx-auto flex w-full min-w-0 max-w-3xl items-end gap-1 sm:gap-2"
@@ -632,16 +642,27 @@ export default function MessageInput({
             </>
           ) : (
             <>
-              <button
-                type="button"
-                onClick={() => imageInputRef.current?.click()}
-                disabled={disabled || uploading}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
-                aria-label="Send image"
-                title="Send image"
-              >
-                📷
-              </button>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const useCamera =
+                      window.matchMedia("(max-width: 768px)").matches;
+
+                    if (useCamera) {
+                      cameraInputRef.current?.click();
+                    } else {
+                      imageInputRef.current?.click();
+                    }
+                  }}
+                  disabled={disabled || uploading}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
+                  aria-label="Take or choose photo"
+                  title="Take or choose photo"
+                >
+                  📷
+                </button>
+              </div>
 
               <button
                 type="button"
