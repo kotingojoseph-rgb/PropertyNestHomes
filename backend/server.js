@@ -41,6 +41,8 @@ const contactRoutes = require("./routes/contactRoutes");
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 app.disable("x-powered-by");
 
 // Security headers
