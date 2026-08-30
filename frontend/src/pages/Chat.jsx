@@ -40,26 +40,45 @@ export default function Chat() {
       return;
     }
 
+    const reactions = Array.isArray(message.reactions)
+      ? message.reactions
+      : [];
+
+    const myReaction = reactions.find(
+      (item) =>
+        Number(item.user_id) === Number(currentUserId)
+    );
+
+    const removing =
+      myReaction?.reaction === reaction;
+
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/chat/messages/${message.id}/reaction`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            reaction,
-          }),
-        }
-      );
+      const url =
+        `${import.meta.env.VITE_API_URL}/api/chat/messages/${message.id}/reaction`;
+
+      const response = await fetch(url, {
+        method: removing ? "DELETE" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        ...(removing
+          ? {}
+          : {
+              body: JSON.stringify({
+                reaction,
+              }),
+            }),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data.error || "Could not react to message."
+          data.error ||
+            (removing
+              ? "Could not remove reaction."
+              : "Could not react to message.")
         );
       }
 
@@ -75,13 +94,13 @@ export default function Chat() {
       );
     } catch (err) {
       console.error(
-        "React to message error:",
+        "Message reaction error:",
         err
       );
 
       setError(
         err.message ||
-          "Could not react to message."
+          "Could not update message reaction."
       );
     }
   }
