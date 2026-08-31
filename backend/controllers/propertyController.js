@@ -142,14 +142,18 @@ const getPropertyById = async (req, res) => {
 
     const result = await pool.query(
       `
-      SELECT 
+      SELECT
         properties.*,
         users.full_name AS owner_name,
         users.email AS owner_email,
-        users.phone AS owner_phone
+        users.phone AS owner_phone,
+        pi.image_url AS cover_image
       FROM properties
       JOIN users
       ON properties.owner_id = users.id
+      LEFT JOIN property_images pi
+      ON pi.property_id = properties.id
+      AND pi.is_cover = true
       WHERE properties.id = $1
       AND properties.verification_status = 'verified'
       `,
@@ -476,7 +480,7 @@ const getPropertyImages = async (req,res)=>{
         uploaded_at
       FROM property_images
       WHERE property_id=$1
-      ORDER BY uploaded_at ASC
+      ORDER BY is_cover DESC, uploaded_at ASC
       `,
       [id]
     );
