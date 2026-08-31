@@ -148,7 +148,7 @@ export default function Register() {
       <div className="mx-auto w-full max-w-3xl">
 
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">
+          <h1 className="break-words text-3xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-4xl">
             Create your PropertyNestHomes account
           </h1>
 
@@ -157,7 +157,7 @@ export default function Register() {
           </p>
         </div>
 
-        <div className="rounded-3xl bg-white p-6 shadow-xl sm:p-8">
+        <div className="min-w-0 rounded-3xl bg-white p-4 shadow-xl sm:p-8">
 
           <form onSubmit={handleSubmit} className="space-y-7">
 
@@ -186,9 +186,9 @@ export default function Register() {
                           : "border-gray-200 bg-white hover:border-green-300 hover:bg-gray-50"
                       }`}
                     >
-                      <div className="flex items-start gap-3">
+                      <div className="flex min-w-0 items-start gap-3">
 
-                        <span className="text-3xl">
+                        <span className="shrink-0 text-3xl">
                           {account.icon}
                         </span>
 
@@ -197,7 +197,7 @@ export default function Register() {
                             {account.title}
                           </div>
 
-                          <div className="mt-1 text-sm leading-5 text-gray-600">
+                          <div className="mt-1 break-words text-sm leading-5 text-gray-600">
                             {account.description}
                           </div>
                         </div>

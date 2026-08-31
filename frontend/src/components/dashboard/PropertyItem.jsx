@@ -66,7 +66,7 @@ export default function PropertyItem({
           {property?.title || "Untitled Property"}
         </h3>
 
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 break-words text-sm leading-5 text-gray-500">
           {[
             property?.city,
             property?.state_province,
@@ -81,11 +81,11 @@ export default function PropertyItem({
           {Number(property?.price || 0).toLocaleString()}
         </p>
 
-        <div className="mt-4 grid grid-cols-3 gap-2 sm:mt-5 sm:flex sm:flex-wrap">
+        <div className="mt-4 grid min-w-0 grid-cols-3 gap-2 sm:mt-5 sm:flex sm:flex-wrap">
           <button
             type="button"
             onClick={() => onView?.(property)}
-            className="min-h-11 rounded-lg bg-gray-900 px-2 py-2 text-xs font-semibold text-white transition hover:bg-gray-800 sm:px-3"
+            className="min-h-11 min-w-0 rounded-lg bg-gray-900 px-1.5 py-2 text-xs font-semibold text-white transition hover:bg-gray-800 sm:px-3"
           >
             View
           </button>
@@ -93,7 +93,7 @@ export default function PropertyItem({
           <button
             type="button"
             onClick={() => onEdit?.(property)}
-            className="min-h-11 rounded-lg bg-blue-600 px-2 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 sm:px-3"
+            className="min-h-11 min-w-0 rounded-lg bg-blue-600 px-1.5 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 sm:px-3"
           >
             Edit
           </button>
@@ -101,7 +101,7 @@ export default function PropertyItem({
           <button
             type="button"
             onClick={() => onDelete?.(property.id)}
-            className="min-h-11 rounded-lg bg-red-600 px-2 py-2 text-xs font-semibold text-white transition hover:bg-red-700 sm:px-3"
+            className="min-h-11 min-w-0 rounded-lg bg-red-600 px-1.5 py-2 text-xs font-semibold text-white transition hover:bg-red-700 sm:px-3"
           >
             Delete
           </button>

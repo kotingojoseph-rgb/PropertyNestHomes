@@ -20,16 +20,16 @@ export default function EmptyDashboard() {
   const canAddProperty = Boolean(user);
 
   return (
-    <div className="rounded-3xl border bg-white p-12 text-center shadow-md">
-      <div className="text-6xl mb-6">
+    <div className="min-w-0 rounded-3xl border bg-white p-6 text-center shadow-md sm:p-12">
+      <div className="mb-6 text-5xl sm:text-6xl">
         🏡
       </div>
 
-      <h2 className="text-3xl font-bold text-gray-900">
+      <h2 className="break-words text-2xl font-bold text-gray-900 sm:text-3xl">
         No Properties Yet
       </h2>
 
-      <p className="mt-4 text-lg text-gray-500">
+      <p className="mt-4 break-words text-base text-gray-500 sm:text-lg">
         {canAddProperty
           ? "Start building your portfolio by adding your first property listing."
           : "You don't have any property listings yet."}
