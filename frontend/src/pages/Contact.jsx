@@ -102,9 +102,9 @@ export default function Contact() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-16">
+    <div className="mx-auto w-full max-w-6xl min-w-0 px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-3xl text-center">
-        <h1 className="mb-6 text-4xl font-bold text-blue-900 md:text-5xl">
+        <h1 className="mb-6 w-full min-w-0 break-words text-2xl font-bold leading-tight text-blue-900 sm:text-4xl md:text-5xl">
           Contact PropertyNestHomes
         </h1>
 
@@ -116,7 +116,7 @@ export default function Contact() {
       </div>
 
       <div className="grid gap-8 md:grid-cols-2">
-        <div className="rounded-xl border bg-white p-8 shadow-sm">
+        <div className="min-w-0 rounded-xl border bg-white p-5 shadow-sm sm:p-8">
           <h2 className="mb-6 text-2xl font-bold text-gray-900">
             Contact Information
           </h2>
@@ -148,7 +148,7 @@ export default function Contact() {
           </div>
         </div>
 
-        <div className="rounded-xl border bg-white p-8 shadow-sm">
+        <div className="min-w-0 rounded-xl border bg-white p-5 shadow-sm sm:p-8">
           <h2 className="mb-6 text-2xl font-bold text-gray-900">
             Send Us a Message
           </h2>
