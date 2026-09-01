@@ -133,6 +133,11 @@ export default function VideoCall({
   const remoteVideo = useRef(null);
 
   const peer = useRef(null);
+
+  // One unique ID identifies one complete WebRTC call.
+  // It prevents stale SDP/ICE from an earlier call from
+  // being applied to a newer call.
+  const callIdRef = useRef(null);
   const localStream = useRef(null);
 
   /*
@@ -287,6 +292,7 @@ export default function VideoCall({
           targetUserId: Number(target),
           conversationId: Number(conversationId),
           callType: "video",
+          callId: callIdRef.current,
         });
       }
 
@@ -294,6 +300,7 @@ export default function VideoCall({
       stopStream();
 
       setIncoming(null);
+      callIdRef.current = null;
       setState("idle");
     },
     [
@@ -378,6 +385,8 @@ export default function VideoCall({
           conversationId: Number(
             conversationId
           ),
+
+          callId: callIdRef.current,
         });
       };
 
@@ -669,11 +678,16 @@ export default function VideoCall({
     }
 
     try {
+      // Create a brand-new ID for every call attempt.
+      const callId = crypto.randomUUID();
+      callIdRef.current = callId;
+
       setState("calling");
 
       console.log(
         "📞 Starting call:",
         {
+          callId,
           conversationId,
           otherUserId,
         }
@@ -748,6 +762,8 @@ export default function VideoCall({
         ),
 
         callType: "video",
+
+        callId,
       });
 
       clearTimer();
@@ -924,6 +940,10 @@ export default function VideoCall({
           ),
 
           callType: "video",
+
+          callId:
+            incoming.callId ||
+            callIdRef.current,
         });
 
         setIncoming(null);
@@ -973,6 +993,10 @@ export default function VideoCall({
         ),
 
         callType: "video",
+
+        callId:
+          incoming.callId ||
+          callIdRef.current,
       });
     }
 
@@ -1004,6 +1028,8 @@ export default function VideoCall({
         ),
 
         callType: "video",
+
+        callId: callIdRef.current,
       });
     }
 
@@ -1066,10 +1092,17 @@ export default function VideoCall({
           ),
 
           callType: "video",
+
+          callId:
+            data.callId || null,
         });
 
         return;
       }
+
+      // Preserve the caller's call ID for the entire
+      // answering/signaling lifecycle.
+      callIdRef.current = data.callId || null;
 
       setIncoming({
         from: Number(data.from),
@@ -1079,6 +1112,8 @@ export default function VideoCall({
           "PropertyNestHomes User",
 
         offer: data.offer,
+
+        callId: data.callId || null,
       });
 
       setState("incoming");
@@ -1106,9 +1141,23 @@ export default function VideoCall({
           return;
         }
 
+        // Ignore an answer belonging to an older/newer call.
+        if (
+          data.callId &&
+          callIdRef.current &&
+          data.callId !== callIdRef.current
+        ) {
+          console.warn(
+            "⚠️ Ignoring stale call answer:",
+            data.callId
+          );
+          return;
+        }
+
         try {
           console.log(
-            "📲 CALL ANSWER RECEIVED"
+            "📲 CALL ANSWER RECEIVED:",
+            data.callId
           );
 
           await peer.current.setRemoteDescription(
@@ -1148,6 +1197,19 @@ export default function VideoCall({
       }
 
       if (!data?.candidate) {
+        return;
+      }
+
+      // Ignore ICE from another call.
+      if (
+        data.callId &&
+        callIdRef.current &&
+        data.callId !== callIdRef.current
+      ) {
+        console.warn(
+          "⚠️ Ignoring stale ICE candidate:",
+          data.callId
+        );
         return;
       }
 
@@ -1203,8 +1265,21 @@ export default function VideoCall({
         return;
       }
 
+      if (
+        data?.callId &&
+        callIdRef.current &&
+        data.callId !== callIdRef.current
+      ) {
+        console.warn(
+          "⚠️ Ignoring stale callEnded:",
+          data.callId
+        );
+        return;
+      }
+
       console.log(
-        "📴 Remote call ended"
+        "📴 Remote call ended:",
+        data?.callId
       );
 
       resetCall(false);

@@ -583,6 +583,10 @@ function initSocket(server) {
      * =========================
      * WEBRTC CALL SIGNALING
      * =========================
+     *
+     * Every call gets a unique callId.
+     * This prevents stale ICE/SDP from an older call
+     * from being mixed with a new call.
      */
 
     async function verifyCallAccess(
@@ -636,10 +640,20 @@ function initSocket(server) {
         offer,
         conversationId,
         callType = "video",
+        callId,
       }) => {
         try {
           const targetUserId = Number(userToCall);
           const conversationNumber = Number(conversationId);
+
+          if (!callId || !offer) {
+            socket.emit("callError", {
+              message: "Invalid call request.",
+              conversationId: conversationNumber,
+              callId: callId || null,
+            });
+            return;
+          }
 
           const allowed = await verifyCallAccess(
             conversationNumber,
@@ -655,29 +669,25 @@ function initSocket(server) {
               message:
                 "You are not authorized to call this user in this conversation.",
               conversationId: conversationNumber,
+              callId,
             });
 
             return;
           }
 
-          if (!offer) {
-            console.warn(
-              `⚠️ Call rejected: no WebRTC offer from user ${userId}`
-            );
-            return;
-          }
+          const targetRoom =
+            `user_${targetUserId}`;
 
-          const targetRoom = `user_${targetUserId}`;
           const targetSockets =
             io.sockets.adapter.rooms.get(targetRoom);
 
-          // Fallback: find every active socket authenticated as the
-          // target user. This prevents false "offline" errors when
-          // the user's room was not registered correctly.
-          const targetUserSockets = Array.from(io.sockets.sockets.values())
-            .filter(
+          const targetUserSockets =
+            Array.from(
+              io.sockets.sockets.values()
+            ).filter(
               (targetSocket) =>
-                Number(targetSocket.user?.id) === Number(targetUserId)
+                Number(targetSocket.user?.id) ===
+                targetUserId
             );
 
           const activeTargetSockets =
@@ -685,72 +695,62 @@ function initSocket(server) {
               ? targetUserSockets
               : targetSockets
                 ? Array.from(targetSockets)
-                    .map((id) => io.sockets.sockets.get(id))
+                    .map((id) =>
+                      io.sockets.sockets.get(id)
+                    )
                     .filter(Boolean)
                 : [];
 
-          console.log("========== FINAL CALL ROUTING ==========");
-          console.log("Caller user:", userId);
-          console.log("Target user:", targetUserId);
-          console.log("Conversation:", conversationNumber);
-          console.log("Target room:", targetRoom);
           console.log(
-            "Target room exists:",
-            Boolean(targetSockets)
+            "========== WEBRTC CALL OFFER =========="
           );
+          console.log({
+            callId,
+            caller: userId,
+            target: targetUserId,
+            conversationId: conversationNumber,
+            targetSockets:
+              activeTargetSockets.length,
+          });
           console.log(
-            "Target room socket count:",
-            targetSockets?.size || 0
+            "======================================="
           );
-          console.log(
-            "Target room sockets:",
-            targetSockets
-              ? Array.from(targetSockets)
-              : []
-          );
-          console.log("========================================");
 
-          /*
-           * The Socket.IO user room is authoritative.
-           *
-           * Every authenticated connection joins:
-           * user_<userId>
-           *
-           * Therefore we route calls through that room instead
-           * of relying exclusively on the separate userSockets Map.
-           */
           if (activeTargetSockets.length === 0) {
-            console.warn(
-              `⚠️ Call target ${targetUserId} has no active Socket.IO connection`
-            );
-
             socket.emit("callError", {
               message:
                 "The other user is currently offline.",
               conversationId: conversationNumber,
+              callId,
             });
 
             return;
           }
 
           const incomingCall = {
+            callId,
             from: userId,
             callerName:
               socket.user.full_name ||
               socket.user.email ||
               "PropertyNestHomes User",
             offer,
-            conversationId: conversationNumber,
+            conversationId:
+              conversationNumber,
             callType,
           };
 
-          // Send directly to every authenticated connection of the target.
-          activeTargetSockets.forEach((targetSocket) => {
-            targetSocket.emit("incomingCall", incomingCall);
-          });
+          activeTargetSockets.forEach(
+            (targetSocket) => {
+              targetSocket.emit(
+                "incomingCall",
+                incomingCall
+              );
+            }
+          );
 
           console.log(
-            `📞 CALL OFFER DELIVERED: ${userId} -> ${targetUserId} (${targetSockets.size} socket(s))`
+            `📞 CALL OFFER DELIVERED: ${callId}`
           );
         } catch (error) {
           console.error(
@@ -763,6 +763,7 @@ function initSocket(server) {
               "Unable to send the call.",
             conversationId:
               Number(conversationId),
+            callId: callId || null,
           });
         }
       }
@@ -775,32 +776,41 @@ function initSocket(server) {
         answer,
         conversationId,
         callType = "video",
+        callId,
       }) => {
         try {
           const target =
             Number(callerId);
 
+          const conversationNumber =
+            Number(conversationId);
+
           const allowed =
             await verifyCallAccess(
-              conversationId,
+              conversationNumber,
               target
             );
 
-          if (!allowed || !answer) {
+          if (
+            !allowed ||
+            !answer ||
+            !callId
+          ) {
             return;
           }
 
           console.log(
-            `📲 CALL ANSWER: ${userId} -> ${target} conversation ${conversationId}`
+            `📲 CALL ANSWER: ${callId} ${userId} -> ${target}`
           );
 
           io
             .to(`user_${target}`)
             .emit("callAccepted", {
+              callId,
               from: userId,
               answer,
               conversationId:
-                Number(conversationId),
+                conversationNumber,
               callType,
             });
         } catch (error) {
@@ -818,28 +828,37 @@ function initSocket(server) {
         targetUserId,
         candidate,
         conversationId,
+        callId,
       }) => {
         try {
           const target =
             Number(targetUserId);
 
+          const conversationNumber =
+            Number(conversationId);
+
           const allowed =
             await verifyCallAccess(
-              conversationId,
+              conversationNumber,
               target
             );
 
-          if (!allowed || !candidate) {
+          if (
+            !allowed ||
+            !candidate ||
+            !callId
+          ) {
             return;
           }
 
           io
             .to(`user_${target}`)
             .emit("iceCandidate", {
+              callId,
               from: userId,
               candidate,
               conversationId:
-                Number(conversationId),
+                conversationNumber,
             });
         } catch (error) {
           console.error(
@@ -856,14 +875,18 @@ function initSocket(server) {
         targetUserId,
         conversationId,
         callType = "video",
+        callId,
       }) => {
         try {
           const target =
             Number(targetUserId);
 
+          const conversationNumber =
+            Number(conversationId);
+
           const allowed =
             await verifyCallAccess(
-              conversationId,
+              conversationNumber,
               target
             );
 
@@ -872,15 +895,16 @@ function initSocket(server) {
           }
 
           console.log(
-            `📴 CALL END: ${userId} -> ${target} conversation ${conversationId}`
+            `📴 CALL END: ${callId || "unknown"} ${userId} -> ${target}`
           );
 
           io
             .to(`user_${target}`)
             .emit("callEnded", {
+              callId: callId || null,
               from: userId,
               conversationId:
-                Number(conversationId),
+                conversationNumber,
               callType,
             });
         } catch (error) {
