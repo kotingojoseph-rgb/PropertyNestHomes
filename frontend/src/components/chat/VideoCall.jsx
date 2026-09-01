@@ -151,6 +151,7 @@ export default function VideoCall({
   const stateRef = useRef("idle");
 
   const [state, setState] = useState("idle");
+  const [showEnded, setShowEnded] = useState(false);
   const [incoming, setIncoming] = useState(null);
   const [error, setError] = useState("");
 
@@ -302,6 +303,7 @@ export default function VideoCall({
       setIncoming(null);
       callIdRef.current = null;
       setState("idle");
+      setShowEnded(false);
     },
     [
       clearTimer,
@@ -1278,11 +1280,18 @@ export default function VideoCall({
       }
 
       console.log(
-        "📴 Remote call ended:",
+        "📴 VIDEO CALL ENDED:",
         data?.callId
       );
 
       resetCall(false);
+      setShowEnded(true);
+
+      setTimeout(() => {
+        if (mounted.current) {
+          setShowEnded(false);
+        }
+      }, 2500);
     };
 
     const handleError = (data) => {
@@ -1386,6 +1395,32 @@ export default function VideoCall({
     closePeer,
     stopStream,
   ]);
+
+  /*
+   * ----------------------------------------------------------
+   * VIDEO CALL ENDED
+   * ----------------------------------------------------------
+   */
+
+  if (showEnded) {
+    return (
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 p-4">
+        <div className="w-full max-w-sm rounded-3xl bg-white p-8 text-center shadow-2xl">
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 text-4xl">
+            📹
+          </div>
+
+          <h2 className="text-2xl font-bold text-gray-900">
+            Video call ended
+          </h2>
+
+          <p className="mt-2 text-sm text-gray-500">
+            The video call has ended.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   /*
    * ----------------------------------------------------------
