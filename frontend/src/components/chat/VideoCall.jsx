@@ -286,6 +286,7 @@ export default function VideoCall({
         socket.emit("endCall", {
           targetUserId: Number(target),
           conversationId: Number(conversationId),
+          callType: "video",
         });
       }
 
@@ -745,6 +746,8 @@ export default function VideoCall({
         conversationId: Number(
           conversationId
         ),
+
+        callType: "video",
       });
 
       clearTimer();
@@ -919,6 +922,8 @@ export default function VideoCall({
           conversationId: Number(
             conversationId
           ),
+
+          callType: "video",
         });
 
         setIncoming(null);
@@ -966,6 +971,8 @@ export default function VideoCall({
         conversationId: Number(
           conversationId
         ),
+
+        callType: "video",
       });
     }
 
@@ -995,6 +1002,8 @@ export default function VideoCall({
         conversationId: Number(
           conversationId
         ),
+
+        callType: "video",
       });
     }
 
@@ -1055,6 +1064,8 @@ export default function VideoCall({
           conversationId: Number(
             conversationId
           ),
+
+          callType: "video",
         });
 
         return;

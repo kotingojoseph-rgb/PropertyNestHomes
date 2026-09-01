@@ -547,6 +547,7 @@ export default function VoiceCall({
         socket.emit("endCall", {
           targetUserId: Number(data.from),
           conversationId: Number(conversationId),
+          callType: "voice",
         });
         return;
       }

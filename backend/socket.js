@@ -671,6 +671,24 @@ function initSocket(server) {
           const targetSockets =
             io.sockets.adapter.rooms.get(targetRoom);
 
+          // Fallback: find every active socket authenticated as the
+          // target user. This prevents false "offline" errors when
+          // the user's room was not registered correctly.
+          const targetUserSockets = Array.from(io.sockets.sockets.values())
+            .filter(
+              (targetSocket) =>
+                Number(targetSocket.user?.id) === Number(targetUserId)
+            );
+
+          const activeTargetSockets =
+            targetUserSockets.length > 0
+              ? targetUserSockets
+              : targetSockets
+                ? Array.from(targetSockets)
+                    .map((id) => io.sockets.sockets.get(id))
+                    .filter(Boolean)
+                : [];
+
           console.log("========== FINAL CALL ROUTING ==========");
           console.log("Caller user:", userId);
           console.log("Target user:", targetUserId);
@@ -701,7 +719,7 @@ function initSocket(server) {
            * Therefore we route calls through that room instead
            * of relying exclusively on the separate userSockets Map.
            */
-          if (!targetSockets || targetSockets.size === 0) {
+          if (activeTargetSockets.length === 0) {
             console.warn(
               `⚠️ Call target ${targetUserId} has no active Socket.IO connection`
             );
@@ -715,19 +733,21 @@ function initSocket(server) {
             return;
           }
 
-          io.to(targetRoom).emit(
-            "incomingCall",
-            {
-              from: userId,
-              callerName:
-                socket.user.full_name ||
-                socket.user.email ||
-                "PropertyNestHomes User",
-              offer,
-              conversationId: conversationNumber,
-              callType,
-            }
-          );
+          const incomingCall = {
+            from: userId,
+            callerName:
+              socket.user.full_name ||
+              socket.user.email ||
+              "PropertyNestHomes User",
+            offer,
+            conversationId: conversationNumber,
+            callType,
+          };
+
+          // Send directly to every authenticated connection of the target.
+          activeTargetSockets.forEach((targetSocket) => {
+            targetSocket.emit("incomingCall", incomingCall);
+          });
 
           console.log(
             `📞 CALL OFFER DELIVERED: ${userId} -> ${targetUserId} (${targetSockets.size} socket(s))`
@@ -835,6 +855,7 @@ function initSocket(server) {
       async ({
         targetUserId,
         conversationId,
+        callType = "video",
       }) => {
         try {
           const target =
@@ -860,6 +881,7 @@ function initSocket(server) {
               from: userId,
               conversationId:
                 Number(conversationId),
+              callType,
             });
         } catch (error) {
           console.error(
