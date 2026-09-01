@@ -1284,7 +1284,11 @@ export default function VideoCall({
         data?.callId
       );
 
-      resetCall(false);
+      clearTimer();
+      closePeer();
+      stopStream();
+      setIncoming(null);
+      setState("idle");
       setShowEnded(true);
 
       setTimeout(() => {
