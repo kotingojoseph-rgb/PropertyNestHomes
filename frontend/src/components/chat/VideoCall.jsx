@@ -1259,6 +1259,11 @@ export default function VideoCall({
     };
 
     const handleEnded = (data) => {
+      // VideoCall must ignore voice calls.
+      if (data?.callType === "voice") {
+        return;
+      }
+
       if (
         Number(
           data?.conversationId
