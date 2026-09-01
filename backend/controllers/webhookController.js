@@ -8,6 +8,10 @@ const {
   reverseWithdrawal,
 } = require("../services/walletService");
 
+const {
+  creditInvestorInvestmentAccount,
+} = require("../services/investorInvestmentAccountService");
+
 function validSignature(req) {
   const signature = req.headers["x-paystack-signature"];
 
@@ -75,6 +79,291 @@ async function handleChargeSuccess(client, data) {
 
   const paymentType =
     metadata.payment_type || "customer_payment";
+
+  /*
+   * Investment payment.
+   *
+   * Paystack sends investment payments through charge.success.
+   * Process the investment here so the webhook can complete the
+   * investment even when the frontend does not call /verify/:reference.
+   */
+  if (
+    String(paymentType).toLowerCase() === "investment" &&
+    metadata.investment_id
+  ) {
+    const investmentId = Number(metadata.investment_id);
+
+    if (!Number.isInteger(investmentId) || investmentId <= 0) {
+      throw new Error("Invalid investment ID in payment metadata");
+    }
+
+    const investmentResult = await client.query(
+      `
+      SELECT
+        i.*,
+        p.title AS property_title
+      FROM investments i
+      JOIN properties p
+        ON p.id = i.property_id
+      WHERE i.id = $1
+      FOR UPDATE OF i
+      `,
+      [investmentId]
+    );
+
+    if (investmentResult.rows.length === 0) {
+      throw new Error("Investment not found");
+    }
+
+    const investment = investmentResult.rows[0];
+
+    /*
+     * The Paystack reference MUST match the reference that was
+     * created for this exact investment during initialization.
+     *
+     * This prevents another successful Paystack transaction from
+     * being used to complete this investment.
+     */
+    if (
+      !investment.payment_reference ||
+      String(investment.payment_reference) !== String(reference)
+    ) {
+      throw new Error(
+        "Payment reference does not match the investment"
+      );
+    }
+
+    /*
+     * The Paystack metadata must point to the same investor
+     * and property stored in our database.
+     */
+    if (
+      metadata.user_id &&
+      Number(metadata.user_id) !== Number(investment.investor_id)
+    ) {
+      throw new Error(
+        "Payment investor does not match the investment owner"
+      );
+    }
+
+    if (
+      metadata.property_id &&
+      Number(metadata.property_id) !== Number(investment.property_id)
+    ) {
+      throw new Error(
+        "Payment property does not match the investment"
+      );
+    }
+
+    /*
+     * An investment can only be funded once.
+     */
+    if (investment.status === "completed") {
+      return {
+        duplicate: true,
+        investmentId: investment.id,
+        alreadyCompleted: true,
+      };
+    }
+
+    if (!["pending", "approved"].includes(investment.status)) {
+      throw new Error(
+        `Investment cannot be completed while its status is '${investment.status}'`
+      );
+    }
+
+    const originalAmount = Number(investment.amount);
+    const propertyAmount = Number(investment.property_amount);
+
+    if (
+      !Number.isFinite(originalAmount) ||
+      originalAmount <= 0
+    ) {
+      throw new Error("Invalid investment amount");
+    }
+
+    if (
+      !Number.isFinite(propertyAmount) ||
+      propertyAmount <= 0
+    ) {
+      throw new Error("Invalid investment property amount");
+    }
+
+    /*
+     * Paystack settlement for the current investment flow is NGN.
+     */
+    const paymentCurrency = String(
+      data.currency ||
+      metadata.payment_currency ||
+      "NGN"
+    ).toUpperCase();
+
+    if (paymentCurrency !== "NGN") {
+      throw new Error(
+        `Unsupported Paystack investment currency: ${paymentCurrency}`
+      );
+    }
+
+    const propertyCurrency = String(
+      investment.property_currency ||
+      "NGN"
+    ).toUpperCase();
+
+    const investorCurrency = String(
+      investment.settlement_currency ||
+      investment.currency ||
+      "NGN"
+    ).toUpperCase();
+
+    /*
+     * Calculate the exact amount that our initialization endpoint
+     * told Paystack to charge.
+     */
+    let expectedChargedAmount;
+
+    if (propertyCurrency === "NGN") {
+      expectedChargedAmount = propertyAmount;
+    } else if (investorCurrency === "NGN") {
+      expectedChargedAmount = originalAmount;
+    } else {
+      throw new Error(
+        "This investment requires an unsupported Paystack settlement conversion"
+      );
+    }
+
+    /*
+     * Never complete an investment for an unexpected Paystack amount.
+     */
+    if (
+      Math.abs(amount - expectedChargedAmount) > 0.01
+    ) {
+      throw new Error(
+        `Invalid investment payment amount: expected ${expectedChargedAmount}, received ${amount}`
+      );
+    }
+
+    /*
+     * Record the investment payment.
+     *
+     * The wallet receives the actual property/investment amount,
+     * not an additional gateway fee.
+     */
+    const paymentResult = await client.query(
+      `
+      INSERT INTO payments
+      (
+        user_id,
+        property_id,
+        investment_id,
+        amount,
+        original_amount,
+        charged_amount,
+        currency,
+        payment_currency,
+        payment_type,
+        status,
+        reference,
+        gateway,
+        exchange_rate,
+        exchange_rate_source,
+        exchange_rate_at,
+        wallet_posted
+      )
+      VALUES
+      (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8,
+        'investment',
+        'completed',
+        $9,
+        'paystack',
+        $10,
+        $11,
+        $12,
+        FALSE
+      )
+      RETURNING *
+      `,
+      [
+        investment.investor_id,
+        investment.property_id,
+        investment.id,
+        propertyAmount,
+        originalAmount,
+        amount,
+        propertyCurrency,
+        paymentCurrency,
+        reference,
+        investment.exchange_rate || null,
+        investment.exchange_rate_source || null,
+        investment.exchange_rate_at || null,
+      ]
+    );
+
+    /*
+     * Credit only the investment/property amount.
+     */
+    const investorAccountResult =
+      await creditInvestorInvestmentAccount(client, {
+        userId: investment.investor_id,
+        amount: propertyAmount,
+        currency: paymentCurrency,
+        transactionType: "investment_funding",
+        reference,
+        sourceType: "payment",
+        sourceId: String(paymentResult.rows[0].id),
+        description:
+          `Investment funding ${reference} for investment #${investment.id}`,
+      });
+
+    await client.query(
+      `
+      UPDATE payments
+      SET
+        investor_account_id = $1,
+        investor_account_posted = TRUE,
+        investor_account_transaction_id = $2
+      WHERE id = $3
+      `,
+      [
+        investorAccountResult.account.id,
+        investorAccountResult.transaction.id,
+        paymentResult.rows[0].id,
+      ]
+    );
+
+    const completedInvestment = await client.query(
+      `
+      UPDATE investments
+      SET
+        status = 'completed',
+        payment_provider = 'paystack',
+        payment_reference = $1,
+        completed_at = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $2
+      RETURNING *
+      `,
+      [
+        reference,
+        investment.id,
+      ]
+    );
+
+    return {
+      duplicate: false,
+      investmentId: investment.id,
+      paymentId: paymentResult.rows[0].id,
+      investorAccountTransactionId: investorAccountResult.transaction.id,
+      investment: completedInvestment.rows[0],
+    };
+  }
 
   const plan = metadata.plan
     ? String(metadata.plan).toLowerCase()

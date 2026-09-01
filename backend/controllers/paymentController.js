@@ -1,6 +1,9 @@
 const axios = require("axios");
 const pool = require("../config/db");
 const { creditWallet } = require("../services/walletService");
+const {
+  creditInvestorInvestmentAccount,
+} = require("../services/investorInvestmentAccountService");
 
 const PROMOTION_PLANS = {
   featured: 2000,
@@ -446,6 +449,22 @@ exports.verifyPayment = async (req, res) => {
       const investment = investmentResult.rows[0];
 
       /*
+       * The Paystack reference being verified MUST match the
+       * reference created for this investment.
+       */
+      if (
+        !investment.payment_reference ||
+        String(investment.payment_reference) !== String(reference)
+      ) {
+        await client.query("ROLLBACK");
+
+        return res.status(409).json({
+          error: "Payment reference does not match this investment.",
+          investment_id: investment.id,
+        });
+      }
+
+      /*
        * Verify the Paystack metadata belongs to the same investor.
        */
       if (
@@ -479,7 +498,12 @@ exports.verifyPayment = async (req, res) => {
        */
       const existingReference = await client.query(
         `
-        SELECT id, investment_id, status
+        SELECT
+          id,
+          investment_id,
+          status,
+          investor_account_posted,
+          investor_account_transaction_id
         FROM payments
         WHERE reference = $1
         FOR UPDATE
@@ -488,13 +512,24 @@ exports.verifyPayment = async (req, res) => {
       );
 
       if (existingReference.rows.length > 0) {
+        const existingPayment = existingReference.rows[0];
+
+        /*
+         * This Paystack reference has already been recorded.
+         * Never create another payment, account transaction,
+         * or investment completion for the same reference.
+         */
         await client.query("ROLLBACK");
 
         return res.json({
           message: "Payment already verified",
-          payment_id: existingReference.rows[0].id,
-          investment_id: existingReference.rows[0].investment_id,
-          status: existingReference.rows[0].status,
+          payment_id: existingPayment.id,
+          investment_id: existingPayment.investment_id,
+          status: existingPayment.status,
+          investor_account_posted:
+            existingPayment.investor_account_posted,
+          investor_account_transaction_id:
+            existingPayment.investor_account_transaction_id,
         });
       }
 
@@ -639,7 +674,9 @@ exports.verifyPayment = async (req, res) => {
           investmentWalletAmount,
           originalAmount,
           chargedAmount,
-          paymentCurrency,
+            String(
+              investment.property_currency || "NGN"
+            ).toUpperCase(),
           paymentCurrency,
           "investment",
           reference,
@@ -652,30 +689,36 @@ exports.verifyPayment = async (req, res) => {
       /*
        * Credit only the actual investment/property amount.
        */
-      const walletResult = await creditWallet(client, {
-        amount: investmentWalletAmount,
-        transactionType: "payment",
-        reference,
-        sourceType: "payment",
-        sourceId: String(payment.rows[0].id),
-        description:
-          `Investment payment ${reference} for investment #${investment.id}`,
-      });
+      const investorAccountResult =
+        await creditInvestorInvestmentAccount(client, {
+          userId: investment.investor_id,
+          amount: investmentWalletAmount,
+          currency: paymentCurrency,
+          transactionType: "investment_funding",
+          reference,
+          sourceType: "payment",
+          sourceId: String(payment.rows[0].id),
+          description:
+            `Investment funding ${reference} for investment #${investment.id}`,
+        });
 
       /*
-       * Mark the payment as posted to the wallet.
+       * Mark the payment as posted to the investor's
+       * investment account, NOT the platform wallet.
        */
       const updatedPayment = await client.query(
         `
         UPDATE payments
         SET
-          wallet_posted = TRUE,
-          wallet_transaction_id = $1
-        WHERE id = $2
+          investor_account_id = $1,
+          investor_account_posted = TRUE,
+          investor_account_transaction_id = $2
+        WHERE id = $3
         RETURNING *
         `,
         [
-          walletResult.transaction.id,
+          investorAccountResult.account.id,
+          investorAccountResult.transaction.id,
           payment.rows[0].id,
         ]
       );
@@ -700,10 +743,12 @@ exports.verifyPayment = async (req, res) => {
 
       return res.json({
         message:
-          "Investment payment verified, investment completed, and wallet credited.",
+          "Investment payment verified, investment completed, and investor investment account credited.",
         payment: updatedPayment.rows[0],
         investment: completedInvestment.rows[0],
-        wallet: walletResult.wallet,
+        investor_account: investorAccountResult.account,
+        investor_account_transaction:
+          investorAccountResult.transaction,
         payment_breakdown: {
           investment_amount: investmentWalletAmount,
           charged_amount: chargedAmount,
