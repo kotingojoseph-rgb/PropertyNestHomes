@@ -148,6 +148,7 @@ export default function VoiceCall({
         socket.emit("endCall", {
           targetUserId: Number(targetId),
           conversationId: Number(conversationId),
+          callType: "voice",
         });
       }
 
@@ -609,6 +610,11 @@ export default function VoiceCall({
     };
 
     const handleCallEnded = (data) => {
+      // VoiceCall must ignore video call endings.
+      if (data?.callType !== "voice") {
+        return;
+      }
+
       if (
         Number(data?.conversationId) !== Number(conversationId)
       ) {
