@@ -13,12 +13,14 @@ Disallow: /add-property
 Disallow: /edit-property
 Disallow: /favorites
 
-# Keep the API blocked by default.
+# Keep private API endpoints blocked.
 Disallow: /api/
+Disallow: /api/properties/my-properties
+Disallow: /api/properties/*/documents
 
-# Allow only public property data needed to render public listings.
+# Public property data needed to render public listings.
 Allow: /api/properties$
-Allow: /api/properties/[0-9]*$
-Allow: /api/properties/[0-9]*/images$
+Allow: /api/properties/*$
+Allow: /api/properties/*/images$
 
 Sitemap: https://propertynesthomes.com/sitemap.xml
