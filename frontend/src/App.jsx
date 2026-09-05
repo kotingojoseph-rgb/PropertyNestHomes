@@ -18,6 +18,8 @@ import ResetPassword from "./pages/ResetPassword";
 import AddProperty from "./pages/AddProperty";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Terms from "./pages/Terms";
 
 import Chat from "./pages/Chat";
 import ChatCenter from "./pages/ChatCenter";
@@ -560,6 +562,16 @@ function AppContent() {
           <Route
             path="/contact"
             element={<Contact />}
+          />
+
+          <Route
+            path="/privacy-policy"
+            element={<PrivacyPolicy />}
+          />
+
+          <Route
+            path="/terms"
+            element={<Terms />}
           />
 
           <Route

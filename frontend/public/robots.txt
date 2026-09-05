@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /
+
+# Private/account pages
 Disallow: /dashboard
 Disallow: /login
 Disallow: /register
@@ -10,6 +12,13 @@ Disallow: /calls
 Disallow: /add-property
 Disallow: /edit-property
 Disallow: /favorites
+
+# Keep the API blocked by default.
 Disallow: /api/
+
+# Allow only public property data needed to render public listings.
+Allow: /api/properties$
+Allow: /api/properties/[0-9]*$
+Allow: /api/properties/[0-9]*/images$
 
 Sitemap: https://propertynesthomes.com/sitemap.xml

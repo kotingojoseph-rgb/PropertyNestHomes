@@ -38,6 +38,14 @@ export default function Footer() {
             <Link to="/contact" className="w-fit hover:text-white">
               Contact
             </Link>
+
+            <Link to="/privacy-policy" className="w-fit hover:text-white">
+              Privacy Policy
+            </Link>
+
+            <Link to="/terms" className="w-fit hover:text-white">
+              Terms of Service
+            </Link>
           </div>
         </div>
 

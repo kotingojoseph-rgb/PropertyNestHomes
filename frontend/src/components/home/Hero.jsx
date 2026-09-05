@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import HeroSlider from "./HeroSlider";
 
@@ -83,20 +84,24 @@ export default function Hero() {
         </p>
 
         <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-          <Button
-            size="lg"
-            className="rounded-xl bg-green-600 px-8 font-bold hover:bg-green-700"
-          >
-            Explore Properties
-          </Button>
+          <Link to="/buy">
+            <Button
+              size="lg"
+              className="rounded-xl bg-green-600 px-8 font-bold hover:bg-green-700"
+            >
+              Explore Properties
+            </Button>
+          </Link>
 
-          <Button
-            size="lg"
-            variant="secondary"
-            className="rounded-xl px-8 font-semibold"
-          >
-            Contact Expert
-          </Button>
+          <Link to="/contact">
+            <Button
+              size="lg"
+              variant="secondary"
+              className="rounded-xl px-8 font-semibold"
+            >
+              Contact Expert
+            </Button>
+          </Link>
         </div>
 
         <div className="mt-8 w-full max-w-5xl">
@@ -157,14 +162,14 @@ export default function Hero() {
           "
         >
           {[
-            ["18K+", "Properties Listed"],
-            ["95+", "Countries Covered"],
-            ["4,300+", "Verified Agents"],
-            ["$38B+", "Property Value"],
-          ].map(([number, label]) => (
+            ["✓", "Verified Property Listings"],
+            ["✓", "Trusted Sellers & Agents"],
+            ["✓", "Secure Property Discovery"],
+            ["✓", "Local & International Homes"],
+          ].map(([symbol, label]) => (
             <div key={label}>
               <h2 className="text-2xl font-extrabold text-green-400 sm:text-4xl">
-                {number}
+                {symbol}
               </h2>
 
               <p className="text-xs text-gray-200 sm:text-sm">

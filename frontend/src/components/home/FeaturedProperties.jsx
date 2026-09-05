@@ -84,7 +84,7 @@ export default function FeaturedProperties() {
           </h2>
 
           <p className="mt-3 text-sm leading-6 text-gray-600 sm:mt-4 sm:text-base">
-            Explore verified homes and investment opportunities.
+            Explore verified homes and properties from trusted sellers and agents.
           </p>
         </div>
 
