@@ -16,6 +16,9 @@ const createProperty = async (req, res) => {
       bedrooms,
       bathrooms,
       property_type,
+      area,
+      garage,
+      year_built,
       property_registration_id
     } = req.body;
 
@@ -42,6 +45,9 @@ const createProperty = async (req, res) => {
         bedrooms,
         bathrooms,
         property_type,
+        area,
+        garage,
+        year_built,
         status,
         owner_id,
         verification_status,
@@ -51,11 +57,11 @@ const createProperty = async (req, res) => {
       VALUES
       (
         $1,$2,$3,$4,$5,$6,$7,$8,$9,
-        $10,$11,$12,
+        $10,$11,$12,$13,$14,$15,
         'Pending Review',
-        $13,
+        $16,
         'pending',
-        $14
+        $17
       )
 
       RETURNING *
@@ -73,6 +79,9 @@ const createProperty = async (req, res) => {
         bedrooms,
         bathrooms,
         property_type,
+        area || null,
+        garage || null,
+        year_built || null,
         owner_id,
         normalizedPropertyRegistrationId
       ]
@@ -265,7 +274,10 @@ const updateProperty = async (req, res) => {
       currency,
       bedrooms,
       bathrooms,
-      property_type
+      property_type,
+      area,
+      garage,
+      year_built
     } = req.body;
 
 
@@ -285,13 +297,16 @@ const updateProperty = async (req, res) => {
         bedrooms=$10,
         bathrooms=$11,
         property_type=$12,
+        area=$13,
+        garage=$14,
+        year_built=$15,
         status='Pending Review',
         verification_status='pending',
         verification_notes=NULL,
         verified_at=NULL,
         verified_by=NULL,
         propertynest_id=NULL
-      WHERE id=$13
+      WHERE id=$16
       RETURNING *
       `,
       [
@@ -307,6 +322,9 @@ const updateProperty = async (req, res) => {
         bedrooms,
         bathrooms,
         property_type,
+        area || null,
+        garage || null,
+        year_built || null,
         id
       ]
     );

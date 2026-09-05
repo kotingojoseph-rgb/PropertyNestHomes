@@ -468,33 +468,63 @@ export default function PropertyDetails() {
           <div className="mt-7 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-4 lg:grid-cols-4">
 
             <div className="min-w-0 rounded-xl border p-3 text-center sm:p-4">
-              <h3 className="text-xl font-bold sm:text-2xl">
-                {property.bedrooms || 0}
+              <h3 className="break-words text-xl font-bold sm:text-2xl">
+                {property.bedrooms ?? "Not specified"}
               </h3>
-              Bedrooms
+              <span className="text-sm text-gray-500">Bedrooms</span>
             </div>
 
             <div className="min-w-0 rounded-xl border p-3 text-center sm:p-4">
-              <h3 className="text-xl font-bold sm:text-2xl">
-                {property.bathrooms || 0}
+              <h3 className="break-words text-xl font-bold sm:text-2xl">
+                {property.bathrooms ?? "Not specified"}
               </h3>
-              Bathrooms
+              <span className="text-sm text-gray-500">Bathrooms</span>
             </div>
 
             <div className="min-w-0 rounded-xl border p-3 text-center sm:p-4">
               <h3 className="break-words text-base font-bold sm:text-lg">
-                {property.property_type ||
-                  "Property"}
+                {property.property_type || "Property"}
               </h3>
-              Type
+              <span className="text-sm text-gray-500">Type</span>
             </div>
 
             <div className="min-w-0 rounded-xl border p-3 text-center sm:p-4">
               <h3 className="break-words text-base font-bold sm:text-lg">
                 {property.status || "Available"}
               </h3>
-              Status
+              <span className="text-sm text-gray-500">Status</span>
             </div>
+
+            {property.area && (
+              <div className="min-w-0 rounded-xl border p-3 text-center sm:p-4">
+                <h3 className="break-words text-base font-bold sm:text-lg">
+                  {property.area}
+                </h3>
+                <span className="text-sm text-gray-500">Area</span>
+              </div>
+            )}
+
+            {property.garage && (
+              <div className="min-w-0 rounded-xl border p-3 text-center sm:p-4">
+                <h3 className="break-words text-base font-bold sm:text-lg">
+                  {property.garage}
+                </h3>
+                <span className="text-sm text-gray-500">
+                  Garage / Parking
+                </span>
+              </div>
+            )}
+
+            {property.year_built && (
+              <div className="min-w-0 rounded-xl border p-3 text-center sm:p-4">
+                <h3 className="break-words text-base font-bold sm:text-lg">
+                  {property.year_built}
+                </h3>
+                <span className="text-sm text-gray-500">
+                  Year Built
+                </span>
+              </div>
+            )}
 
           </div>
 

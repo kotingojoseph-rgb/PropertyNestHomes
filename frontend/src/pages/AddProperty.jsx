@@ -15,6 +15,9 @@ const initialForm = {
   currency: "",
   bedrooms: "",
   bathrooms: "",
+  area: "",
+  garage: "",
+  year_built: "",
   property_type: "House",
   property_registration_id: "",
 };
@@ -698,6 +701,52 @@ export default function AddProperty() {
                       }
                     />
                   </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700">
+                      Property Area <span className="font-normal text-gray-400">(optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={formData.area}
+                      onChange={(e) =>
+                        updateField("area", e.target.value)
+                      }
+                      placeholder="e.g. 920 sqm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700">
+                      Garage / Parking <span className="font-normal text-gray-400">(optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      className={inputClass}
+                      value={formData.garage}
+                      onChange={(e) =>
+                        updateField("garage", e.target.value)
+                      }
+                      placeholder="e.g. 3 Cars"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-gray-700">
+                      Year Built <span className="font-normal text-gray-400">(optional)</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      className={inputClass}
+                      value={formData.year_built}
+                      onChange={(e) =>
+                        updateField("year_built", e.target.value)
+                      }
+                      placeholder="e.g. 2024"
+                    />
+                  </div>
                 </div>
               </div>
             </section>
@@ -1010,6 +1059,39 @@ export default function AddProperty() {
                         {formData.bedrooms || "—"} / {formData.bathrooms || "—"}
                       </dd>
                     </div>
+
+                    {formData.area && (
+                      <div>
+                        <dt className="text-xs font-semibold uppercase text-gray-500">
+                          Property Area
+                        </dt>
+                        <dd className="mt-1 font-medium text-gray-900">
+                          {formData.area}
+                        </dd>
+                      </div>
+                    )}
+
+                    {formData.garage && (
+                      <div>
+                        <dt className="text-xs font-semibold uppercase text-gray-500">
+                          Garage / Parking
+                        </dt>
+                        <dd className="mt-1 font-medium text-gray-900">
+                          {formData.garage}
+                        </dd>
+                      </div>
+                    )}
+
+                    {formData.year_built && (
+                      <div>
+                        <dt className="text-xs font-semibold uppercase text-gray-500">
+                          Year Built
+                        </dt>
+                        <dd className="mt-1 font-medium text-gray-900">
+                          {formData.year_built}
+                        </dd>
+                      </div>
+                    )}
                   </dl>
 
                   <div className="mt-4">
