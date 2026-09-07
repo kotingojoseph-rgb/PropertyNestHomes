@@ -1053,7 +1053,7 @@ export default function VideoCall({
 
     const handleIncoming = (data) => {
       // Voice calls belong to VoiceCall.jsx.
-      if (data?.callType === "voice") {
+      if (data?.callType !== "video") {
         return;
       }
 
@@ -1124,7 +1124,7 @@ export default function VideoCall({
     const handleAccepted =
       async (data) => {
         // Voice calls are handled exclusively by VoiceCall.jsx.
-        if (data?.callType === "voice") {
+        if (data?.callType !== "video") {
           return;
         }
 
@@ -1190,6 +1190,11 @@ export default function VideoCall({
       };
 
     const handleIce = async (data) => {
+      // VideoCall must ONLY process video ICE candidates.
+      if (data?.callType !== "video") {
+        return;
+      }
+
       if (
         Number(
           data?.conversationId
@@ -1260,7 +1265,7 @@ export default function VideoCall({
 
     const handleEnded = (data) => {
       // VideoCall must ignore voice calls.
-      if (data?.callType === "voice") {
+      if (data?.callType !== "video") {
         return;
       }
 
@@ -1304,6 +1309,11 @@ export default function VideoCall({
     };
 
     const handleError = (data) => {
+      // VideoCall must ONLY process video call errors.
+      if (data?.callType !== "video") {
+        return;
+      }
+
       if (
         data?.conversationId &&
         Number(

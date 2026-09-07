@@ -639,18 +639,23 @@ function initSocket(server) {
         userToCall,
         offer,
         conversationId,
-        callType = "video",
+        callType,
         callId,
       }) => {
         try {
           const targetUserId = Number(userToCall);
           const conversationNumber = Number(conversationId);
 
-          if (!callId || !offer) {
+          if (
+            !callId ||
+            !offer ||
+            !["voice", "video"].includes(callType)
+          ) {
             socket.emit("callError", {
-              message: "Invalid call request.",
+              message: "Invalid call type.",
               conversationId: conversationNumber,
               callId: callId || null,
+              callType: callType || null,
             });
             return;
           }
@@ -670,6 +675,7 @@ function initSocket(server) {
                 "You are not authorized to call this user in this conversation.",
               conversationId: conversationNumber,
               callId,
+              callType,
             });
 
             return;
@@ -722,6 +728,7 @@ function initSocket(server) {
                 "The other user is currently offline.",
               conversationId: conversationNumber,
               callId,
+              callType,
             });
 
             return;
@@ -764,6 +771,7 @@ function initSocket(server) {
             conversationId:
               Number(conversationId),
             callId: callId || null,
+            callType: callType || null,
           });
         }
       }
@@ -775,7 +783,7 @@ function initSocket(server) {
         callerId,
         answer,
         conversationId,
-        callType = "video",
+        callType,
         callId,
       }) => {
         try {
@@ -794,7 +802,8 @@ function initSocket(server) {
           if (
             !allowed ||
             !answer ||
-            !callId
+            !callId ||
+            !["voice", "video"].includes(callType)
           ) {
             return;
           }
@@ -829,8 +838,13 @@ function initSocket(server) {
         candidate,
         conversationId,
         callId,
+        callType,
       }) => {
         try {
+          if (!["voice", "video"].includes(callType)) {
+            return;
+          }
+
           const target =
             Number(targetUserId);
 
@@ -859,6 +873,7 @@ function initSocket(server) {
               candidate,
               conversationId:
                 conversationNumber,
+              callType,
             });
         } catch (error) {
           console.error(
@@ -874,7 +889,7 @@ function initSocket(server) {
       async ({
         targetUserId,
         conversationId,
-        callType = "video",
+        callType,
         callId,
       }) => {
         try {
@@ -890,7 +905,10 @@ function initSocket(server) {
               target
             );
 
-          if (!allowed) {
+          if (
+            !allowed ||
+            !["voice", "video"].includes(callType)
+          ) {
             return;
           }
 

@@ -575,6 +575,11 @@ export default function VoiceCall({
     };
 
     const handleCallAccepted = async (data) => {
+      // VoiceCall must ONLY process voice call answers.
+      if (data?.callType !== "voice") {
+        return;
+      }
+
       if (
         Number(data?.conversationId) !== Number(conversationId) ||
         !data?.answer ||
@@ -616,6 +621,11 @@ export default function VoiceCall({
     };
 
     const handleIceCandidate = async (data) => {
+      // VoiceCall must ONLY process voice ICE candidates.
+      if (data?.callType !== "voice") {
+        return;
+      }
+
       if (
         Number(data?.conversationId) !== Number(conversationId) ||
         !data?.candidate
@@ -682,6 +692,11 @@ export default function VoiceCall({
     };
 
     const handleCallError = (data) => {
+      // VoiceCall must ONLY process voice call errors.
+      if (data?.callType !== "voice") {
+        return;
+      }
+
       if (
         data?.conversationId &&
         Number(data.conversationId) !== Number(conversationId)
