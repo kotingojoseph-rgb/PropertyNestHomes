@@ -5,7 +5,7 @@ import HeroSlider from "./HeroSlider";
 
 export default function Hero() {
   return (
-    <section className="relative min-h-[88vh] overflow-hidden">
+    <section className="relative min-h-[88dvh] overflow-hidden">
       <HeroSlider />
 
       {/* Professional image overlay */}
@@ -19,7 +19,8 @@ export default function Hero() {
           z-10
           mx-auto
           flex
-          min-h-[88vh]
+          min-h-[88dvh]
+          w-full
           max-w-7xl
           flex-col
           items-center
@@ -38,9 +39,13 @@ export default function Hero() {
             border
             border-white/30
             bg-black/20
-            px-5
-            py-2
-            text-xs
+            px-3
+            py-1.5
+            text-[10px]
+            leading-tight
+            sm:px-5
+            sm:py-2
+            sm:text-xs
             font-semibold
             uppercase
             tracking-widest
@@ -53,8 +58,9 @@ export default function Hero() {
 
         <h1
           className="
+            w-full
             max-w-5xl
-            text-4xl
+            text-3xl
             font-extrabold
             leading-tight
             drop-shadow-2xl
@@ -69,12 +75,14 @@ export default function Hero() {
 
         <p
           className="
-            mt-5
+            mt-4
+            w-full
             max-w-3xl
-            text-base
+            text-sm
             font-medium
             text-gray-100
             drop-shadow-lg
+            sm:mt-5
             sm:text-lg
             md:text-2xl
           "
@@ -83,11 +91,11 @@ export default function Hero() {
           properties from trusted sellers.
         </p>
 
-        <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+        <div className="mt-6 flex w-full flex-col gap-3 sm:mt-8 sm:w-auto sm:flex-row sm:gap-4">
           <Link to="/buy">
             <Button
               size="lg"
-              className="rounded-xl bg-green-600 px-8 font-bold hover:bg-green-700"
+              className="w-full rounded-xl bg-green-600 px-6 font-bold hover:bg-green-700 sm:w-auto sm:px-8"
             >
               Explore Properties
             </Button>
@@ -97,23 +105,25 @@ export default function Hero() {
             <Button
               size="lg"
               variant="secondary"
-              className="rounded-xl px-8 font-semibold"
+              className="w-full rounded-xl px-6 font-semibold sm:w-auto sm:px-8"
             >
               Contact Expert
             </Button>
           </Link>
         </div>
 
-        <div className="mt-8 w-full max-w-5xl">
+        <div className="mt-6 w-full max-w-5xl sm:mt-8">
           <SearchBar />
         </div>
 
         <div
           className="
-            mt-7
+            mt-6
             grid
             grid-cols-2
-            gap-3
+            gap-2
+            sm:mt-7
+            sm:gap-3
             sm:flex
             sm:flex-wrap
             sm:justify-center
@@ -132,9 +142,13 @@ export default function Hero() {
                 border
                 border-white/20
                 bg-black/20
-                px-4
-                py-2
-                text-xs
+                px-2.5
+                py-1.5
+                text-[10px]
+                leading-tight
+                sm:px-4
+                sm:py-2
+                sm:text-xs
                 backdrop-blur-md
                 sm:text-sm
               "
@@ -146,18 +160,22 @@ export default function Hero() {
 
         <div
           className="
-            mt-9
+            mt-7
             grid
             w-full
             grid-cols-2
-            gap-6
+            gap-3
+            sm:mt-9
+            sm:gap-6
             rounded-2xl
             border
             border-white/10
             bg-black/30
-            px-4
-            py-5
+            px-3
+            py-4
             backdrop-blur-md
+            sm:px-4
+            sm:py-5
             md:grid-cols-4
           "
         >
@@ -168,7 +186,7 @@ export default function Hero() {
             ["✓", "Local & International Homes"],
           ].map(([symbol, label]) => (
             <div key={label}>
-              <h2 className="text-2xl font-extrabold text-green-400 sm:text-4xl">
+              <h2 className="text-xl font-extrabold text-green-400 sm:text-4xl">
                 {symbol}
               </h2>
 

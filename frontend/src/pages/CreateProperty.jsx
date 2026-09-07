@@ -61,10 +61,10 @@ export default function CreateProperty() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12">
+    <div className="mx-auto w-full max-w-6xl min-w-0 px-3 py-6 sm:px-4 sm:py-8 lg:px-6 lg:py-12">
 
       <div className="mb-10">
-        <h1 className="text-4xl font-bold">
+        <h1 className="text-2xl font-bold sm:text-3xl lg:text-4xl">
           Add New Property
         </h1>
 
@@ -75,7 +75,7 @@ export default function CreateProperty() {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-2xl shadow-lg p-8 space-y-8"
+        className="min-w-0 space-y-6 rounded-2xl bg-white p-4 shadow-lg sm:space-y-8 sm:p-6 lg:p-8"
       >
 
         <div className="grid md:grid-cols-2 gap-6">
@@ -85,7 +85,7 @@ export default function CreateProperty() {
             placeholder="Property Title"
             value={formData.title}
             onChange={handleChange}
-            className="border rounded-lg p-4"
+            className="w-full min-w-0 border rounded-lg p-3.5 sm:p-4"
             required
           />
 
@@ -94,7 +94,7 @@ export default function CreateProperty() {
             placeholder="Price"
             value={formData.price}
             onChange={handleChange}
-            className="border rounded-lg p-4"
+            className="w-full min-w-0 border rounded-lg p-3.5 sm:p-4"
             required
           />
 
@@ -106,7 +106,7 @@ export default function CreateProperty() {
           rows="5"
           value={formData.description}
           onChange={handleChange}
-          className="w-full border rounded-lg p-4"
+          className="w-full min-w-0 border rounded-lg p-3.5 sm:p-4"
         />
 
         <div className="grid md:grid-cols-3 gap-6">
@@ -116,7 +116,7 @@ export default function CreateProperty() {
             placeholder="Country"
             value={formData.country}
             onChange={handleChange}
-            className="border rounded-lg p-4"
+            className="w-full min-w-0 border rounded-lg p-3.5 sm:p-4"
           />
 
           <input
@@ -124,7 +124,7 @@ export default function CreateProperty() {
             placeholder="State / Province"
             value={formData.state_province}
             onChange={handleChange}
-            className="border rounded-lg p-4"
+            className="w-full min-w-0 border rounded-lg p-3.5 sm:p-4"
           />
 
           <input
@@ -132,7 +132,7 @@ export default function CreateProperty() {
             placeholder="City"
             value={formData.city}
             onChange={handleChange}
-            className="border rounded-lg p-4"
+            className="w-full min-w-0 border rounded-lg p-3.5 sm:p-4"
           />
 
         </div>
@@ -144,7 +144,7 @@ export default function CreateProperty() {
             placeholder="Street Address"
             value={formData.address}
             onChange={handleChange}
-            className="border rounded-lg p-4"
+            className="w-full min-w-0 border rounded-lg p-3.5 sm:p-4"
           />
 
           <input
@@ -152,7 +152,7 @@ export default function CreateProperty() {
             placeholder="Postal Code"
             value={formData.postal_code}
             onChange={handleChange}
-            className="border rounded-lg p-4"
+            className="w-full min-w-0 border rounded-lg p-3.5 sm:p-4"
           />
 
         </div>
@@ -164,7 +164,7 @@ export default function CreateProperty() {
             placeholder="Currency"
             value={formData.currency}
             onChange={handleChange}
-            className="border rounded-lg p-4"
+            className="w-full min-w-0 border rounded-lg p-3.5 sm:p-4"
           />
 
           <input
@@ -172,7 +172,7 @@ export default function CreateProperty() {
             placeholder="Bedrooms"
             value={formData.bedrooms}
             onChange={handleChange}
-            className="border rounded-lg p-4"
+            className="w-full min-w-0 border rounded-lg p-3.5 sm:p-4"
           />
 
           <input
@@ -180,7 +180,7 @@ export default function CreateProperty() {
             placeholder="Bathrooms"
             value={formData.bathrooms}
             onChange={handleChange}
-            className="border rounded-lg p-4"
+            className="w-full min-w-0 border rounded-lg p-3.5 sm:p-4"
           />
 
           <input
@@ -188,7 +188,7 @@ export default function CreateProperty() {
             placeholder="Property Type"
             value={formData.property_type}
             onChange={handleChange}
-            className="border rounded-lg p-4"
+            className="w-full min-w-0 border rounded-lg p-3.5 sm:p-4"
           />
 
         </div>
@@ -200,7 +200,7 @@ export default function CreateProperty() {
             placeholder="Status"
             value={formData.status}
             onChange={handleChange}
-            className="border rounded-lg p-4"
+            className="w-full min-w-0 border rounded-lg p-3.5 sm:p-4"
           />
 
           <button

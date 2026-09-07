@@ -527,14 +527,14 @@ export default function AddProperty() {
     "w-full rounded-xl border border-gray-300 bg-white p-3.5 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100";
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8 md:px-8">
-      <div className="mx-auto max-w-5xl">
+    <div className="min-h-screen w-full min-w-0 overflow-x-hidden bg-gray-50 px-3 py-5 sm:px-4 sm:py-8 md:px-8">
+      <div className="mx-auto w-full max-w-5xl min-w-0">
         <div className="mb-8">
           <p className="mb-2 text-sm font-bold uppercase tracking-wider text-green-600">
             PropertyNestHomes
           </p>
 
-          <h1 className="text-3xl font-bold text-gray-900 md:text-4xl">
+          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl md:text-4xl">
             Add Your Property
           </h1>
 
@@ -545,7 +545,7 @@ export default function AddProperty() {
 
         {/* Progress */}
         <div className="mb-8 min-w-0 overflow-x-auto rounded-2xl bg-white p-3 shadow-sm sm:p-4">
-          <div className="flex min-w-0 items-center justify-between gap-3 sm:min-w-[600px]">
+          <div className="flex min-w-[520px] items-center justify-between gap-2 sm:min-w-[600px]">
             {steps.map((item, index) => (
               <div key={item.number} className="flex flex-1 items-center">
                 <div className="flex items-center gap-2">
@@ -560,7 +560,7 @@ export default function AddProperty() {
                   </div>
 
                   <span
-                    className={`text-sm font-semibold ${
+                    className={`text-xs font-semibold sm:text-sm ${
                       step >= item.number
                         ? "text-green-700"
                         : "text-gray-500"
@@ -594,11 +594,11 @@ export default function AddProperty() {
           </div>
         )}
 
-        <div className="rounded-2xl bg-white p-6 shadow-sm md:p-8">
+        <div className="min-w-0 rounded-2xl bg-white p-4 shadow-sm sm:p-6 md:p-8">
           {/* STEP 1 */}
           {step === 1 && (
             <section>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
                 Property Details
               </h2>
 
@@ -755,7 +755,7 @@ export default function AddProperty() {
           {/* STEP 2 */}
           {step === 2 && (
             <section>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
                 Property Location
               </h2>
 
@@ -871,7 +871,7 @@ export default function AddProperty() {
           {/* STEP 3 */}
           {step === 3 && (
             <section>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
                 Property Photos
               </h2>
 
@@ -931,7 +931,7 @@ export default function AddProperty() {
           {/* STEP 4 */}
           {step === 4 && (
             <section>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
                 Verification Document
               </h2>
 
@@ -1009,7 +1009,7 @@ export default function AddProperty() {
           {/* STEP 5 */}
           {step === 5 && (
             <section>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
                 Review Your Property
               </h2>
 
