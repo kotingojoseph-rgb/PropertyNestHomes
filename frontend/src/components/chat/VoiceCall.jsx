@@ -57,6 +57,7 @@ export default function VoiceCall({
   const timerRef = useRef(null);
   const stateRef = useRef("idle");
   const callIdRef = useRef(0);
+  const activeCallIdRef = useRef(null);
 
   const [state, setState] = useState("idle");
   const [incomingCall, setIncomingCall] = useState(null);
@@ -132,6 +133,8 @@ export default function VoiceCall({
     closePeer();
     stopMicrophone();
 
+    activeCallIdRef.current = null;
+
     setIncomingCall(null);
     setMuted(false);
     setSeconds(0);
@@ -149,6 +152,7 @@ export default function VoiceCall({
           targetUserId: Number(targetId),
           conversationId: Number(conversationId),
           callType: "voice",
+          callId: activeCallIdRef.current,
         });
       }
 
@@ -254,6 +258,7 @@ export default function VoiceCall({
           targetUserId: Number(targetUserId),
           candidate: event.candidate,
           conversationId: Number(conversationId),
+          callId: activeCallIdRef.current,
         });
       };
 
@@ -363,6 +368,7 @@ export default function VoiceCall({
     }
 
     const callId = ++callIdRef.current;
+    activeCallIdRef.current = callId;
 
     try {
       if (!socket.connected) {
@@ -397,6 +403,7 @@ export default function VoiceCall({
         offer: peer.localDescription,
         conversationId: Number(conversationId),
         callType: "voice",
+        callId,
       });
 
       clearTimeoutCall();
@@ -466,6 +473,7 @@ export default function VoiceCall({
         answer: peer.localDescription,
         conversationId: Number(conversationId),
         callType: "voice",
+        callId: incomingCall.callId,
       });
 
       setIncomingCall(null);
@@ -507,6 +515,8 @@ export default function VoiceCall({
     socket.emit("endCall", {
       targetUserId: Number(incomingCall.from),
       conversationId: Number(conversationId),
+      callType: "voice",
+      callId: incomingCall.callId || activeCallIdRef.current || null,
     });
 
     cleanup();
@@ -535,6 +545,10 @@ export default function VoiceCall({
 
   useEffect(() => {
     const handleIncomingCall = (data) => {
+      // VoiceCall must never consume a video call.
+      if (data?.callType !== "voice") {
+        return;
+      }
       if (
         Number(data?.conversationId) !== Number(conversationId) ||
         data?.callType !== "voice" ||
@@ -549,10 +563,12 @@ export default function VoiceCall({
           targetUserId: Number(data.from),
           conversationId: Number(conversationId),
           callType: "voice",
+          callId: data.callId || null,
         });
         return;
       }
 
+      activeCallIdRef.current = data.callId || null;
       setIncomingCall(data);
       setError("");
       changeState("incoming");
@@ -564,6 +580,19 @@ export default function VoiceCall({
         !data?.answer ||
         !peerRef.current
       ) {
+        return;
+      }
+
+      // Ignore an answer belonging to another/stale voice call.
+      if (
+        data?.callId &&
+        activeCallIdRef.current &&
+        String(data.callId) !== String(activeCallIdRef.current)
+      ) {
+        console.warn(
+          "⚠️ Ignoring stale voice call answer:",
+          data.callId
+        );
         return;
       }
 
@@ -594,6 +623,19 @@ export default function VoiceCall({
         return;
       }
 
+      // Ignore ICE belonging to another/stale voice call.
+      if (
+        data?.callId &&
+        activeCallIdRef.current &&
+        String(data.callId) !== String(activeCallIdRef.current)
+      ) {
+        console.warn(
+          "⚠️ Ignoring stale voice ICE candidate:",
+          data.callId
+        );
+        return;
+      }
+
       const candidate = new RTCIceCandidate(data.candidate);
       const peer = peerRef.current;
 
@@ -621,6 +663,19 @@ export default function VoiceCall({
         return;
       }
 
+      // Ignore an end event belonging to another/stale voice call.
+      if (
+        data?.callId &&
+        activeCallIdRef.current &&
+        String(data.callId) !== String(activeCallIdRef.current)
+      ) {
+        console.warn(
+          "⚠️ Ignoring stale voice callEnded:",
+          data.callId
+        );
+        return;
+      }
+
       cleanup();
       changeState("idle");
       setError("");
@@ -631,6 +686,19 @@ export default function VoiceCall({
         data?.conversationId &&
         Number(data.conversationId) !== Number(conversationId)
       ) {
+        return;
+      }
+
+      // Ignore an error belonging to another/stale voice call.
+      if (
+        data?.callId &&
+        activeCallIdRef.current &&
+        String(data.callId) !== String(activeCallIdRef.current)
+      ) {
+        console.warn(
+          "⚠️ Ignoring stale voice callError:",
+          data.callId
+        );
         return;
       }
 
