@@ -626,7 +626,7 @@ export default function MessageInput({
   return (
     <div className="w-full min-w-0 shrink-0 overflow-hidden border-t border-black/5 bg-[#f0f2f5] px-1 pb-[max(3px,env(safe-area-inset-bottom))] pt-1 sm:p-3">
       {replyingTo && (
-        <div className="mx-auto mb-1.5 flex w-full max-w-3xl items-center gap-2 rounded-xl border-l-4 border-[#128c7e] bg-white px-3 py-2 shadow-sm">
+        <div className="mx-auto mb-1.5 flex w-full min-w-0 max-w-3xl items-center gap-2 rounded-xl border-l-4 border-[#128c7e] bg-white px-3 py-2 shadow-sm">
           <div className="min-w-0 flex-1">
             <div className="text-[11px] font-bold text-[#075e54]">
               Replying to message
@@ -676,7 +676,7 @@ export default function MessageInput({
       )}
 
       {pendingImage && (
-        <div className="mx-auto mb-2 flex w-full max-w-3xl items-center gap-2 rounded-xl bg-white p-2 shadow-sm">
+        <div className="mx-auto mb-2 flex w-full min-w-0 max-w-3xl items-center gap-2 rounded-xl bg-white p-2 shadow-sm">
           <img
             src={pendingImage.previewUrl}
             alt="Selected image preview"

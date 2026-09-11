@@ -258,6 +258,7 @@ export default function VoiceCall({
           targetUserId: Number(targetUserId),
           candidate: event.candidate,
           conversationId: Number(conversationId),
+          callType: "voice",
           callId: activeCallIdRef.current,
         });
       };

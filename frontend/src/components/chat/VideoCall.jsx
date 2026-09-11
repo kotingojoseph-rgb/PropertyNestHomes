@@ -388,6 +388,8 @@ export default function VideoCall({
             conversationId
           ),
 
+          callType: "video",
+
           callId: callIdRef.current,
         });
       };

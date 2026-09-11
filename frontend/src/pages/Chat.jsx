@@ -222,6 +222,7 @@ export default function Chat() {
         name:
           data.other_user_name ||
           "PropertyNestHomes User",
+        imageUrl: data.other_user_image || "",
       });
 
       if (socket.connected && otherUserId) {
@@ -714,7 +715,7 @@ export default function Chat() {
     chatUser.name?.charAt(0)?.toUpperCase() || "P";
 
   return (
-    <div className="fixed inset-0 z-[60] flex min-h-0 w-full flex-col overflow-hidden bg-[#efeae2]">
+    <div className="fixed inset-0 z-[60] flex min-h-0 w-full max-w-full flex-col overflow-x-hidden overflow-y-hidden bg-[#efeae2]">
       <header className="z-30 flex min-h-[60px] shrink-0 items-center gap-1.5 bg-[#075e54] px-1.5 py-2 text-white shadow-md sm:gap-3 sm:px-4">
         <button
           type="button"
@@ -725,8 +726,19 @@ export default function Chat() {
           ←
         </button>
 
-        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20 text-sm font-bold sm:h-10 sm:w-10">
-          {initial}
+        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/20 text-sm font-bold sm:h-10 sm:w-10">
+          {chatUser.imageUrl ? (
+            <img
+              src={chatUser.imageUrl}
+              alt={chatUser.name || "User"}
+              className="h-full w-full object-cover"
+              onError={(event) => {
+                event.currentTarget.style.display = "none";
+              }}
+            />
+          ) : (
+            initial
+          )}
 
           {otherUserOnline && (
             <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#075e54] bg-green-400" />
@@ -849,7 +861,7 @@ export default function Chat() {
         </div>
       )}
 
-      <main className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col overflow-hidden">
+      <main className="mx-auto flex min-h-0 w-full min-w-0 max-w-4xl flex-1 flex-col overflow-hidden">
         <MessageList
           messages={messages}
           currentUserId={currentUserId}
