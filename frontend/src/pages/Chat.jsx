@@ -32,8 +32,43 @@ export default function Chat() {
   const [replyingTo, setReplyingTo] = useState(null);
 
   const typingTimeout = useRef(null);
+  const chatViewportRef = useRef(null);
 
   const token = localStorage.getItem("token");
+
+  /*
+   * Keep the chat viewport synchronized with the browser's
+   * visual viewport. This is important on Android/iOS when
+   * the on-screen keyboard opens and changes the visible height.
+   */
+  useEffect(() => {
+    const root = chatViewportRef.current;
+    const visualViewport = window.visualViewport;
+
+    if (!root || !visualViewport) {
+      return;
+    }
+
+    const updateViewportHeight = () => {
+      const height = visualViewport.height;
+
+      if (height > 0) {
+        root.style.setProperty("--chat-viewport-height", `${height}px`);
+      }
+    };
+
+    updateViewportHeight();
+
+    visualViewport.addEventListener("resize", updateViewportHeight);
+    visualViewport.addEventListener("scroll", updateViewportHeight);
+    window.addEventListener("resize", updateViewportHeight);
+
+    return () => {
+      visualViewport.removeEventListener("resize", updateViewportHeight);
+      visualViewport.removeEventListener("scroll", updateViewportHeight);
+      window.removeEventListener("resize", updateViewportHeight);
+    };
+  }, []);
 
   async function reactToMessage(message, reaction) {
     if (!message?.id || !conversationId || !token) {
@@ -715,7 +750,13 @@ export default function Chat() {
     chatUser.name?.charAt(0)?.toUpperCase() || "P";
 
   return (
-    <div className="fixed inset-0 z-[60] flex min-h-0 w-full max-w-full flex-col overflow-x-hidden overflow-y-hidden bg-[#efeae2]">
+    <div
+      ref={chatViewportRef}
+      className="fixed inset-0 z-[60] flex min-h-0 w-full max-w-full flex-col overflow-x-hidden overflow-y-hidden bg-[#efeae2]"
+      style={{
+        height: "var(--chat-viewport-height, 100dvh)",
+      }}
+    >
       <header className="z-30 flex min-h-[60px] shrink-0 items-center gap-1.5 bg-[#075e54] px-1.5 py-2 text-white shadow-md sm:gap-3 sm:px-4">
         <button
           type="button"
@@ -861,7 +902,7 @@ export default function Chat() {
         </div>
       )}
 
-      <main className="mx-auto flex min-h-0 w-full min-w-0 max-w-4xl flex-1 flex-col overflow-hidden">
+      <main className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
         <MessageList
           messages={messages}
           currentUserId={currentUserId}
