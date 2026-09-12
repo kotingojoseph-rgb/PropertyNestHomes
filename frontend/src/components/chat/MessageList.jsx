@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function formatTime(value) {
   if (!value) return "";
@@ -54,6 +54,7 @@ export default function MessageList({
 
   const swipeRefs = useRef(new Map());
   const swipeState = useRef(null);
+  const [openActionMenuId, setOpenActionMenuId] = useState(null);
 
   useEffect(() => {
     if (!bottomRef.current) return;
@@ -200,7 +201,7 @@ export default function MessageList({
   return (
     <div
       ref={containerRef}
-      className="relative min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto bg-[#efeae2] px-3 py-4 sm:px-5"
+      className="relative min-w-0 w-full max-w-full flex-1 overflow-x-hidden overflow-y-auto bg-[#efeae2] px-1.5 py-3 sm:px-5 sm:py-4"
     >
       <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-2">
         {messages.length === 0 ? (
@@ -260,11 +261,11 @@ export default function MessageList({
               <div
                 key={key}
                 id={msg.id ? `message-${msg.id}` : undefined}
-                className={`flex ${
+                className={`flex w-full min-w-0 max-w-full ${
                   mine
                     ? "justify-end"
                     : "justify-start"
-                } rounded-xl transition-all duration-300`}
+                } overflow-visible rounded-xl transition-all duration-300`}
               >
                 <div
                   ref={(element) => {
@@ -285,7 +286,7 @@ export default function MessageList({
                     endSwipe(msg)
                   }
                   onTouchCancel={cancelSwipe}
-                  className={`relative flex min-w-0 max-w-[80%] items-end gap-1.5 sm:max-w-[75%] ${
+                  className={`relative flex min-w-0 w-fit max-w-[82%] items-end gap-1 sm:max-w-[75%] ${
                     mine ? "flex-row-reverse" : ""
                   }`}
                 >
@@ -307,7 +308,7 @@ export default function MessageList({
                   )}
 
                   <div
-                    className={`group relative min-w-0 max-w-full overflow-hidden break-words rounded-2xl px-2.5 py-1.5 shadow-sm ${
+                    className={`group relative min-w-0 w-fit max-w-full overflow-hidden break-words rounded-2xl px-2 py-1.5 shadow-sm ${
                       mine
                         ? "rounded-br-md bg-[#d9fdd3] text-gray-900"
                         : "rounded-bl-md bg-white text-gray-900"
@@ -370,17 +371,44 @@ export default function MessageList({
                       </button>
                     )}
 
-                    {/* Compact mobile delete action */}
+                    {/* Professional mobile message actions */}
                     {mine && !isDeleted && (
-                      <button
-                        type="button"
-                        onClick={() => onDelete?.(msg)}
-                        className="mt-1 ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] leading-none text-gray-500 transition active:scale-90 active:text-red-600 sm:hidden"
-                        title="Delete message"
-                        aria-label="Delete message"
-                      >
-                        🗑
-                      </button>
+                      <div className="absolute right-1 top-1 z-20 sm:hidden">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setOpenActionMenuId((current) =>
+                              Number(current) === Number(msg.id)
+                                ? null
+                                : msg.id
+                            )
+                          }
+                          className="flex h-5 w-5 items-center justify-center rounded-full bg-white/90 text-[12px] font-bold leading-none text-gray-500 shadow-sm ring-1 ring-black/5 active:scale-95"
+                          title="Message actions"
+                          aria-label="Message actions"
+                          aria-expanded={
+                            Number(openActionMenuId) === Number(msg.id)
+                          }
+                        >
+                          ⋮
+                        </button>
+
+                        {Number(openActionMenuId) === Number(msg.id) && (
+                          <div className="absolute right-0 top-6 min-w-[108px] overflow-hidden rounded-lg bg-white py-1 shadow-xl ring-1 ring-black/10">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenActionMenuId(null);
+                                onDelete?.(msg);
+                              }}
+                              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] font-medium text-red-600 active:bg-red-50"
+                            >
+                              <span aria-hidden="true">🗑</span>
+                              <span>Delete</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     )}
 
                     {/* Quoted message */}
@@ -426,7 +454,9 @@ export default function MessageList({
                         className="max-h-80 max-w-full rounded-xl object-contain"
                       />
                     ) : (
-                      <div className="min-w-0 max-w-full whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[12px] leading-[16px]">
+                      <div className={`min-w-0 max-w-full whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[12px] leading-[16px] ${
+                        mine ? "pr-5" : ""
+                      }`}>
                         {isDeleted ? (
                           <span className="italic text-gray-500">
                             This message was deleted
