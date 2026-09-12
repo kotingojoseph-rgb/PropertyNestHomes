@@ -286,7 +286,7 @@ export default function MessageList({
                     endSwipe(msg)
                   }
                   onTouchCancel={cancelSwipe}
-                  className={`relative flex min-w-0 w-fit max-w-[82%] items-end gap-1 sm:max-w-[75%] ${
+                  className={`relative flex min-w-0 w-fit max-w-[72%] items-end gap-1 sm:max-w-[75%] ${
                     mine ? "flex-row-reverse" : ""
                   }`}
                 >
@@ -308,7 +308,7 @@ export default function MessageList({
                   )}
 
                   <div
-                    className={`group relative min-w-0 w-fit max-w-full overflow-hidden break-words rounded-2xl px-2 py-1.5 shadow-sm ${
+                    className={`group relative min-w-0 w-fit max-w-full overflow-hidden break-words rounded-2xl px-2 py-1 shadow-sm ${
                       mine
                         ? "rounded-br-md bg-[#d9fdd3] text-gray-900"
                         : "rounded-bl-md bg-white text-gray-900"
@@ -454,7 +454,7 @@ export default function MessageList({
                         className="max-h-80 max-w-full rounded-xl object-contain"
                       />
                     ) : (
-                      <div className={`min-w-0 max-w-full whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[12px] leading-[16px] ${
+                      <div className={`min-w-0 max-w-full whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[11px] leading-[15px] ${
                         mine ? "pr-5" : ""
                       }`}>
                         {isDeleted ? (
