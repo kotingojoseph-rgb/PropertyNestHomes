@@ -768,9 +768,9 @@ export default function MessageInput({
 
       <form
         onSubmit={sendText}
-        className="mx-auto flex w-full min-w-0 max-w-3xl items-end gap-1 sm:gap-2"
+        className="mx-auto flex w-full min-w-0 max-w-3xl items-end gap-0.5 px-0 sm:gap-2"
       >
-        <div className="flex min-w-0 flex-1 items-center overflow-hidden rounded-[18px] bg-white px-1 py-1 shadow-sm sm:rounded-[22px] sm:px-2">
+        <div className="flex min-w-0 flex-1 items-center overflow-hidden rounded-[18px] bg-white px-0.5 py-1 shadow-sm sm:rounded-[22px] sm:px-2">
           {recording ? (
             <button
               type="button"
@@ -806,7 +806,7 @@ export default function MessageInput({
                     type="button"
                     onClick={openCamera}
                     disabled={disabled || uploading}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
                     aria-label="Take photo with camera"
                     title="Take photo with camera"
                   >
@@ -817,7 +817,7 @@ export default function MessageInput({
                   type="button"
                   onClick={() => imageInputRef.current?.click()}
                   disabled={disabled || uploading}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
                   aria-label="Choose photo from device"
                   title="Choose photo from device"
                 >
@@ -828,7 +828,7 @@ export default function MessageInput({
                 type="button"
                 onClick={startRecording}
                 disabled={disabled || uploading}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
                 aria-label="Record voice note"
               >
                 🎤
@@ -854,7 +854,7 @@ export default function MessageInput({
                     ? "Sending..."
                     : "Type a message..."
                 }
-                className="min-h-8 min-w-0 flex-1 resize-none overflow-y-auto border-0 bg-transparent px-1.5 py-1.5 text-[13px] leading-5 outline-none placeholder:text-gray-400 sm:min-h-10 sm:px-2 sm:py-2.5 sm:text-sm"
+                className="min-h-8 min-w-0 flex-1 resize-none overflow-y-auto border-0 bg-transparent px-1 py-1.5 text-[13px] leading-5 outline-none placeholder:text-gray-400 sm:min-h-10 sm:px-2 sm:py-2.5 sm:text-sm"
               />
             </>
           )}
