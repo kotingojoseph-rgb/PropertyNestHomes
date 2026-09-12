@@ -285,7 +285,7 @@ export default function MessageList({
                     endSwipe(msg)
                   }
                   onTouchCancel={cancelSwipe}
-                  className={`relative flex min-w-0 max-w-[88%] items-end gap-2 sm:max-w-[75%] ${
+                  className={`relative flex min-w-0 max-w-[80%] items-end gap-1.5 sm:max-w-[75%] ${
                     mine ? "flex-row-reverse" : ""
                   }`}
                 >
@@ -307,7 +307,7 @@ export default function MessageList({
                   )}
 
                   <div
-                    className={`group relative min-w-0 max-w-full overflow-hidden rounded-2xl px-3 py-2 shadow-sm ${
+                    className={`group relative min-w-0 max-w-full overflow-hidden break-words rounded-2xl px-2.5 py-1.5 shadow-sm ${
                       mine
                         ? "rounded-br-md bg-[#d9fdd3] text-gray-900"
                         : "rounded-bl-md bg-white text-gray-900"
@@ -353,7 +353,7 @@ export default function MessageList({
                       ↩
                     </button>
 
-                    {/* Delete own message */}
+                    {/* Desktop delete action */}
                     {mine && !isDeleted && (
                       <button
                         type="button"
@@ -363,6 +363,19 @@ export default function MessageList({
                             ? "-left-18"
                             : "-right-18"
                         }`}
+                        title="Delete message"
+                        aria-label="Delete message"
+                      >
+                        🗑
+                      </button>
+                    )}
+
+                    {/* Compact mobile delete action */}
+                    {mine && !isDeleted && (
+                      <button
+                        type="button"
+                        onClick={() => onDelete?.(msg)}
+                        className="mt-1 ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] leading-none text-gray-500 transition active:scale-90 active:text-red-600 sm:hidden"
                         title="Delete message"
                         aria-label="Delete message"
                       >
@@ -413,7 +426,7 @@ export default function MessageList({
                         className="max-h-80 max-w-full rounded-xl object-contain"
                       />
                     ) : (
-                      <div className="whitespace-pre-wrap break-words text-[14px] leading-5">
+                      <div className="min-w-0 max-w-full whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[12px] leading-[16px]">
                         {isDeleted ? (
                           <span className="italic text-gray-500">
                             This message was deleted
