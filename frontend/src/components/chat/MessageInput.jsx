@@ -632,7 +632,7 @@ export default function MessageInput({
               Replying to message
             </div>
 
-            <div className="mt-0.5 truncate text-xs text-gray-600">
+            <div className="mt-0.5 min-w-0 break-words [overflow-wrap:anywhere] text-[11px] leading-4 text-gray-600">
               {replyingTo.message?.trim()
                 ? replyingTo.message
                 : replyingTo.audio_url
@@ -659,7 +659,7 @@ export default function MessageInput({
       )}
 
       {error && (
-        <div className="mx-auto mb-1.5 flex w-full min-w-0 max-w-3xl items-center gap-2 overflow-hidden rounded-lg border border-red-200 bg-red-50 px-2 py-1.5 text-xs text-red-700 sm:mb-2 sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm">
+        <div className="mx-auto mb-1.5 flex w-full min-w-0 max-w-3xl items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-2 py-1.5 text-[11px] leading-4 text-red-700 sm:mb-2 sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm">
           <span className="min-w-0 flex-1 break-words">
             {error}
           </span>
@@ -684,7 +684,7 @@ export default function MessageInput({
           />
 
           <div className="min-w-0 flex-1">
-            <div className="truncate text-xs font-semibold text-gray-700">
+            <div className="break-words [overflow-wrap:anywhere] text-[11px] leading-4 font-semibold text-gray-700">
               {pendingImage.file.name}
             </div>
             <div className="text-[11px] text-gray-400">
@@ -768,9 +768,9 @@ export default function MessageInput({
 
       <form
         onSubmit={sendText}
-        className="mx-auto flex w-full min-w-0 max-w-3xl items-end gap-0.5 px-0 sm:gap-2"
+        className="mx-auto flex w-full min-w-0 max-w-3xl items-end gap-1 overflow-visible px-0 sm:gap-2"
       >
-        <div className="flex min-w-0 flex-1 items-center overflow-hidden rounded-[18px] bg-white px-0.5 py-1 shadow-sm sm:rounded-[22px] sm:px-2">
+        <div className="flex min-w-0 max-w-full flex-1 items-center overflow-visible rounded-[16px] bg-white px-0 py-0.5 shadow-sm sm:rounded-[22px] sm:px-2 sm:py-1">
           {recording ? (
             <button
               type="button"
@@ -806,7 +806,7 @@ export default function MessageInput({
                     type="button"
                     onClick={openCamera}
                     disabled={disabled || uploading}
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
                     aria-label="Take photo with camera"
                     title="Take photo with camera"
                   >
@@ -817,7 +817,7 @@ export default function MessageInput({
                   type="button"
                   onClick={() => imageInputRef.current?.click()}
                   disabled={disabled || uploading}
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[12px] text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
                   aria-label="Choose photo from device"
                   title="Choose photo from device"
                 >
@@ -828,7 +828,7 @@ export default function MessageInput({
                 type="button"
                 onClick={startRecording}
                 disabled={disabled || uploading}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[12px] text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
                 aria-label="Record voice note"
               >
                 🎤
@@ -854,7 +854,7 @@ export default function MessageInput({
                     ? "Sending..."
                     : "Type a message..."
                 }
-                className="min-h-8 min-w-0 flex-1 resize-none overflow-y-auto border-0 bg-transparent px-1 py-1.5 text-[13px] leading-5 outline-none placeholder:text-gray-400 sm:min-h-10 sm:px-2 sm:py-2.5 sm:text-sm"
+                className="min-h-6 min-w-0 max-w-full flex-1 resize-none overflow-x-auto overflow-y-auto border-0 bg-transparent px-1 py-0.5 text-[11px] leading-[15px] outline-none placeholder:text-gray-400 sm:min-h-10 sm:px-2 sm:py-2.5 sm:text-sm sm:leading-5"
               />
             </>
           )}
@@ -865,7 +865,7 @@ export default function MessageInput({
             type="button"
             onClick={sendVoice}
             disabled={disabled || uploading}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-white shadow-md transition active:scale-90 disabled:opacity-50 sm:h-11 sm:w-11"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-[12px] text-white shadow-md transition active:scale-90 disabled:opacity-50 sm:h-11 sm:w-11"
             aria-label="Send voice message"
             title="Send voice message"
           >
@@ -880,7 +880,7 @@ export default function MessageInput({
               recording ||
               !message.trim()
             }
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-white shadow-md transition active:scale-90 disabled:opacity-40 sm:h-11 sm:w-11"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-[12px] text-white shadow-md transition active:scale-90 disabled:opacity-40 sm:h-11 sm:w-11"
             aria-label="Send message"
           >
             ➤
