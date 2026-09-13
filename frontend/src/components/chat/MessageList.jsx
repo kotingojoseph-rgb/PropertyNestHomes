@@ -383,7 +383,7 @@ export default function MessageList({
                                 : msg.id
                             )
                           }
-                          className="flex h-5 w-5 items-center justify-center rounded-full bg-white/90 text-[12px] font-bold leading-none text-gray-500 shadow-sm ring-1 ring-black/5 active:scale-95"
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-white/95 text-[13px] font-bold leading-none text-gray-600 shadow-md ring-1 ring-black/10 active:scale-95"
                           title="Message actions"
                           aria-label="Message actions"
                           aria-expanded={
@@ -394,7 +394,7 @@ export default function MessageList({
                         </button>
 
                         {Number(openActionMenuId) === Number(msg.id) && (
-                          <div className="absolute right-0 top-6 min-w-[108px] overflow-hidden rounded-lg bg-white py-1 shadow-xl ring-1 ring-black/10">
+                          <div className="absolute right-0 top-7 min-w-[112px] overflow-hidden rounded-lg bg-white py-1 shadow-xl ring-1 ring-black/10">
                             <button
                               type="button"
                               onClick={() => {
@@ -454,8 +454,8 @@ export default function MessageList({
                         className="max-h-80 max-w-full rounded-xl object-contain"
                       />
                     ) : (
-                      <div className={`min-w-0 max-w-full whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[11px] leading-[15px] ${
-                        mine ? "pr-5" : ""
+                      <div className={`min-w-0 max-w-full max-h-[220px] overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[11px] leading-[15px] ${
+                        mine ? "pr-7" : ""
                       }`}>
                         {isDeleted ? (
                           <span className="italic text-gray-500">

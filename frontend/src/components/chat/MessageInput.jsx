@@ -849,12 +849,21 @@ export default function MessageInput({
                   }
                 }}
                 rows={1}
+                onInput={(event) => {
+                  const el = event.currentTarget;
+                  el.style.height = "auto";
+                  const maxHeight = window.innerWidth < 640 ? 96 : 128;
+                  const nextHeight = Math.min(el.scrollHeight, maxHeight);
+                  el.style.height = `${nextHeight}px`;
+                  el.style.overflowY =
+                    el.scrollHeight > maxHeight ? "auto" : "hidden";
+                }}
                 placeholder={
                   uploading
                     ? "Sending..."
                     : "Type a message..."
                 }
-                className="min-h-7 max-h-24 min-w-0 max-w-full flex-1 resize-none overflow-x-hidden overflow-y-auto border-0 bg-transparent px-1 py-1 text-[12px] leading-4 outline-none placeholder:text-gray-400 sm:min-h-10 sm:max-h-32 sm:px-2 sm:py-2.5 sm:text-sm sm:leading-5"
+                className="min-h-7 max-h-24 min-w-0 max-w-full flex-1 resize-none overflow-x-hidden overflow-y-hidden border-0 bg-transparent px-1 py-1 text-[12px] leading-4 outline-none placeholder:text-gray-400 sm:min-h-10 sm:max-h-32 sm:px-2 sm:py-2.5 sm:text-sm sm:leading-5"
               />
             </>
           )}
