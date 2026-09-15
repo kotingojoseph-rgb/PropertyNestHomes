@@ -154,6 +154,8 @@ export default function VideoCall({
   const [showEnded, setShowEnded] = useState(false);
   const [incoming, setIncoming] = useState(null);
   const [error, setError] = useState("");
+  const [cameraFacing, setCameraFacing] = useState("user");
+  const [switchingCamera, setSwitchingCamera] = useState(false);
 
   useEffect(() => {
     stateRef.current = state;
@@ -196,7 +198,7 @@ export default function VideoCall({
     }
   }, []);
 
-  const getStream = useCallback(async () => {
+  const getStream = useCallback(async (facing = cameraFacing) => {
     if (localStream.current) {
       return localStream.current;
     }
@@ -216,7 +218,7 @@ export default function VideoCall({
     const stream =
       await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: "user",
+          facingMode: facing,
           width: {
             ideal: 1280,
           },
@@ -243,7 +245,122 @@ export default function VideoCall({
     }
 
     return stream;
-  }, []);
+  }, [cameraFacing]);
+
+  const switchCamera = useCallback(async () => {
+    if (
+      switchingCamera ||
+      !localStream.current ||
+      !navigator.mediaDevices?.getUserMedia
+    ) {
+      return;
+    }
+
+    const nextFacing =
+      cameraFacing === "user"
+        ? "environment"
+        : "user";
+
+    const currentStream = localStream.current;
+    const currentVideoTrack =
+      currentStream.getVideoTracks()[0];
+
+    setSwitchingCamera(true);
+    setError("");
+
+    let newStream = null;
+
+    try {
+      /*
+       * Release the current camera so mobile browsers
+       * can access the opposite camera.
+       */
+      if (currentVideoTrack) {
+        currentVideoTrack.stop();
+      }
+
+      newStream =
+        await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: nextFacing,
+            width: {
+              ideal: 1280,
+            },
+            height: {
+              ideal: 720,
+            },
+          },
+          audio: false,
+        });
+
+      const newVideoTrack =
+        newStream.getVideoTracks()[0];
+
+      if (!newVideoTrack) {
+        throw new Error("No camera was available.");
+      }
+
+      const currentAudioTracks =
+        currentStream.getAudioTracks();
+
+      const combinedStream =
+        new MediaStream([
+          newVideoTrack,
+          ...currentAudioTracks,
+        ]);
+
+      const videoSender =
+        peer.current
+          ?.getSenders()
+          .find(
+            (sender) =>
+              sender.track?.kind === "video"
+          );
+
+      if (videoSender) {
+        await videoSender.replaceTrack(
+          newVideoTrack
+        );
+      }
+
+      localStream.current = combinedStream;
+
+      if (localVideo.current) {
+        localVideo.current.srcObject =
+          combinedStream;
+
+        try {
+          await localVideo.current.play();
+        } catch {}
+      }
+
+      setCameraFacing(nextFacing);
+    } catch (err) {
+      console.error(
+        "Camera switch error:",
+        err
+      );
+
+      /*
+       * If the new camera failed, make sure the
+       * temporary stream is cleaned up.
+       */
+      if (newStream) {
+        newStream.getTracks().forEach((track) => {
+          try {
+            track.stop();
+          } catch {}
+        });
+      }
+
+      setError(
+        mediaError(err) ||
+          "Could not switch camera."
+      );
+    } finally {
+      setSwitchingCamera(false);
+    }
+  }, [cameraFacing, switchingCamera]);
 
   /*
    * ----------------------------------------------------------
@@ -1566,7 +1683,26 @@ export default function VideoCall({
         </div>
       )}
 
-      <div className="absolute bottom-8 left-1/2 z-30 -translate-x-1/2">
+      <div className="absolute bottom-8 left-1/2 z-30 flex -translate-x-1/2 items-center gap-4">
+        <button
+          type="button"
+          onClick={switchCamera}
+          disabled={switchingCamera}
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 text-xl text-gray-900 shadow-2xl backdrop-blur transition hover:bg-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+          aria-label={
+            cameraFacing === "user"
+              ? "Switch to back camera"
+              : "Switch to front camera"
+          }
+          title={
+            cameraFacing === "user"
+              ? "Switch to back camera"
+              : "Switch to front camera"
+          }
+        >
+          {switchingCamera ? "…" : "↻"}
+        </button>
+
         <button
           type="button"
           onClick={endCall}
