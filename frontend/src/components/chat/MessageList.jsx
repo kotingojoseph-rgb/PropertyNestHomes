@@ -314,6 +314,10 @@ export default function MessageList({
                         : "rounded-bl-md bg-white text-gray-900"
                     }`}
                   >
+                    <div className="mb-0.5 max-w-full truncate text-[10px] font-semibold leading-3 text-[#075e54]">
+                      {msg.full_name || (mine ? "You" : otherUserName)}
+                    </div>
+
                     {/* WhatsApp-style reaction bar */}
                     <div
                       className={`absolute bottom-full z-30 mb-1 hidden items-center gap-1 rounded-full bg-white px-2 py-1 shadow-xl ring-1 ring-black/5 group-hover:flex ${
@@ -454,7 +458,7 @@ export default function MessageList({
                         className="block h-auto max-h-[60vh] w-auto max-w-full rounded-xl object-contain"
                       />
                     ) : (
-                      <div className={`min-w-0 max-w-full overflow-x-hidden overflow-y-visible whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[13px] leading-[17px] ${
+                      <div className={`min-w-0 max-w-full overflow-x-hidden overflow-y-visible whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[12px] leading-[15px] ${
                         mine ? "pr-7" : ""
                       }`}>
                         {isDeleted ? (
