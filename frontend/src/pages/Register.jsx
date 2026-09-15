@@ -53,6 +53,7 @@ export default function Register() {
 
   const [formData, setFormData] = useState(initialForm);
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -93,6 +94,13 @@ export default function Register() {
       return;
     }
 
+    if (!acceptedTerms) {
+      setError(
+        "You must agree to the Terms and Conditions and Privacy Policy before creating an account."
+      );
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -109,6 +117,7 @@ export default function Register() {
             password: formData.password,
             phone: formData.phone,
             role: formData.role,
+            accepted_terms: acceptedTerms,
           }),
         }
       );
@@ -129,6 +138,7 @@ export default function Register() {
       );
 
       setFormData(initialForm);
+      setAcceptedTerms(false);
 
       setTimeout(() => {
         navigate("/login");
@@ -358,6 +368,34 @@ export default function Register() {
                 {success}
               </div>
             )}
+
+            {/* TERMS AND CONDITIONS */}
+            <label className="flex items-start gap-3 text-sm text-gray-600">
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-1 h-4 w-4 shrink-0 rounded border-gray-300 text-green-600 focus:ring-green-500"
+              />
+
+              <span>
+                I agree to the{" "}
+                <Link
+                  to="/terms/"
+                  className="font-semibold text-green-700 hover:underline"
+                >
+                  Terms and Conditions
+                </Link>{" "}
+                and{" "}
+                <Link
+                  to="/privacy-policy/"
+                  className="font-semibold text-green-700 hover:underline"
+                >
+                  Privacy Policy
+                </Link>
+                .
+              </span>
+            </label>
 
             {/* SUBMIT */}
             <button

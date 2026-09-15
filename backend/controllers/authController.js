@@ -12,6 +12,7 @@ const register = async (req, res) => {
       id_type,
       id_number,
       role,
+      accepted_terms,
     } = req.body;
 
     /*
@@ -45,6 +46,13 @@ const register = async (req, res) => {
     if (!full_name || !email || !password) {
       return res.status(400).json({
         error: "Full name, email and password are required.",
+      });
+    }
+
+    if (accepted_terms !== true) {
+      return res.status(400).json({
+        error:
+          "You must agree to the Terms and Conditions and Privacy Policy before creating an account.",
       });
     }
 
