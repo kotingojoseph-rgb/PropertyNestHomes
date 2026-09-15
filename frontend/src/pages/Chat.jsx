@@ -716,9 +716,9 @@ export default function Chat() {
 
   return (
     <div
-      className="fixed inset-0 z-[60] box-border flex h-[100dvh] w-[100dvw] max-w-[100dvw] min-w-0 flex-col overflow-hidden bg-[#efeae2]"
+      className="fixed inset-0 z-[60] box-border flex h-[100dvh] w-full max-w-full min-w-0 flex-col overflow-hidden overscroll-none bg-[#efeae2]"
     >
-      <header className="z-30 box-border flex h-[44px] min-h-[44px] w-full max-w-full min-w-0 shrink-0 items-center gap-0 bg-[#075e54] px-1 py-0.5 text-white shadow-md sm:h-auto sm:min-h-[60px] sm:gap-3 sm:px-4 sm:py-2">
+      <header className="z-30 box-border flex h-12 min-h-12 w-full min-w-0 shrink-0 items-center gap-1 bg-[#075e54] px-1.5 py-1 text-white shadow-md sm:h-[60px] sm:min-h-[60px] sm:gap-3 sm:px-4 sm:py-2">
         <button
           type="button"
           onClick={() => navigate("/chat")}
@@ -863,7 +863,7 @@ export default function Chat() {
         </div>
       )}
 
-      <main className="flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col overflow-hidden">
+      <main className="flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden">
         <MessageList
           messages={messages}
           currentUserId={currentUserId}
@@ -876,7 +876,7 @@ export default function Chat() {
           onDelete={deleteMessage}
         />
 
-        <div className="box-border w-full min-w-0 max-w-full shrink-0 overflow-hidden [&_form]:min-w-0 [&_form]:max-w-full [&_textarea]:min-w-0 [&_textarea]:max-w-full [&_input]:min-w-0 [&_input]:max-w-full [&_button]:shrink-0">
+        <div className="box-border w-full min-w-0 shrink-0 overflow-hidden [&_form]:min-w-0 [&_form]:max-w-full [&_textarea]:min-w-0 [&_textarea]:max-w-full [&_input]:min-w-0 [&_input]:max-w-full [&_button]:shrink-0">
           <MessageInput
           onSend={async (message, replyToMessageId) => {
             await sendMessage(message, replyToMessageId);
