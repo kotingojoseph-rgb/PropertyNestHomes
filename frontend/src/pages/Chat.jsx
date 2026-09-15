@@ -30,6 +30,7 @@ export default function Chat() {
   const [error, setError] = useState("");
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [replyingTo, setReplyingTo] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const typingTimeout = useRef(null);
 
@@ -106,10 +107,17 @@ export default function Chat() {
   }
 
 
-  async function deleteMessage(message) {
+  function deleteMessage(message) {
     if (!message?.id || !conversationId || !token) return;
 
-    if (!window.confirm("Delete this message?")) {
+    setDeleteTarget(message);
+  }
+
+  async function confirmDeleteMessage() {
+    const message = deleteTarget;
+
+    if (!message?.id || !conversationId || !token) {
+      setDeleteTarget(null);
       return;
     }
 
@@ -159,12 +167,15 @@ export default function Chat() {
       );
 
       setError("");
+      setDeleteTarget(null);
     } catch (err) {
       console.error("Delete message error:", err);
 
       setError(
         err.message || "Could not delete message."
       );
+
+      setDeleteTarget(null);
     }
   }
 
@@ -889,6 +900,66 @@ export default function Chat() {
           />
         </div>
         </main>
+
+        {deleteTarget && (
+          <div
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/45 px-4 backdrop-blur-[2px]"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                setDeleteTarget(null);
+              }
+            }}
+          >
+            <div
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="delete-message-title"
+              aria-describedby="delete-message-description"
+              className="w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/10"
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <div className="px-5 pb-4 pt-5">
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-xl">
+                  🗑️
+                </div>
+
+                <h2
+                  id="delete-message-title"
+                  className="text-lg font-semibold text-gray-900"
+                >
+                  Delete message?
+                </h2>
+
+                <p
+                  id="delete-message-description"
+                  className="mt-2 text-sm leading-6 text-gray-500"
+                >
+                  This message will be removed from the conversation.
+                  This action cannot be undone.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 border-t border-gray-100 bg-gray-50/70 px-5 py-4">
+                <button
+                  type="button"
+                  onClick={() => setDeleteTarget(null)}
+                  className="rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-white hover:text-gray-900 active:scale-[0.98]"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  onClick={confirmDeleteMessage}
+                  className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 active:scale-[0.98]"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 }
