@@ -768,9 +768,9 @@ export default function MessageInput({
 
       <form
         onSubmit={sendText}
-        className="mx-auto flex w-full min-w-0 max-w-full box-border items-end gap-0.5 overflow-hidden px-0 sm:gap-2"
+        className="box-border flex w-full min-w-0 max-w-full items-end gap-1 overflow-hidden px-1 sm:gap-2"
       >
-        <div className="flex min-w-0 w-0 flex-1 items-center overflow-hidden rounded-[18px] bg-white px-0 py-0.5 shadow-sm sm:rounded-[22px] sm:px-2 sm:py-1">
+        <div className="flex min-w-0 w-0 flex-1 items-center overflow-hidden rounded-[18px] bg-white px-0 py-0.5 shadow-sm sm:w-auto sm:flex-1 sm:rounded-[22px] sm:px-2 sm:py-1">
           {recording ? (
             <button
               type="button"
@@ -806,7 +806,7 @@ export default function MessageInput({
                     type="button"
                     onClick={openCamera}
                     disabled={disabled || uploading}
-                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
                     aria-label="Take photo with camera"
                     title="Take photo with camera"
                   >
@@ -817,7 +817,7 @@ export default function MessageInput({
                   type="button"
                   onClick={() => imageInputRef.current?.click()}
                   disabled={disabled || uploading}
-                  className="box-border flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
+                  className="box-border flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
                   aria-label="Choose photo from device"
                   title="Choose photo from device"
                 >
@@ -828,7 +828,7 @@ export default function MessageInput({
                 type="button"
                 onClick={startRecording}
                 disabled={disabled || uploading}
-                className="box-border flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
+                className="box-border flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
                 aria-label="Record voice note"
               >
                 🎤
@@ -874,7 +874,7 @@ export default function MessageInput({
             type="button"
             onClick={sendVoice}
             disabled={disabled || uploading}
-            className="box-border flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-[11px] text-white shadow-md transition active:scale-90 disabled:opacity-50 sm:h-11 sm:w-11"
+            className="box-border flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-[11px] text-white shadow-md transition active:scale-90 disabled:opacity-50 sm:h-11 sm:w-11"
             aria-label="Send voice message"
             title="Send voice message"
           >
@@ -889,7 +889,7 @@ export default function MessageInput({
               recording ||
               !message.trim()
             }
-            className="box-border flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-[11px] text-white shadow-md transition active:scale-90 disabled:opacity-40 sm:h-11 sm:w-11"
+            className="box-border flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-[11px] text-white shadow-md transition active:scale-90 disabled:opacity-40 sm:h-11 sm:w-11"
             aria-label="Send message"
           >
             ➤

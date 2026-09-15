@@ -716,7 +716,7 @@ export default function Chat() {
 
   return (
     <div
-      className="fixed inset-0 z-[60] box-border flex h-[100dvh] w-full max-w-full min-w-0 flex-col overflow-hidden bg-[#efeae2]"
+      className="fixed inset-0 z-[60] box-border flex h-[100dvh] w-[100dvw] max-w-[100dvw] min-w-0 flex-col overflow-hidden bg-[#efeae2]"
     >
       <header className="z-30 box-border flex h-[44px] min-h-[44px] w-full max-w-full min-w-0 shrink-0 items-center gap-0 bg-[#075e54] px-1 py-0.5 text-white shadow-md sm:h-auto sm:min-h-[60px] sm:gap-3 sm:px-4 sm:py-2">
         <button
