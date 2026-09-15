@@ -716,19 +716,19 @@ export default function Chat() {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex h-[100dvh] min-h-0 w-full max-w-full flex-col overflow-hidden bg-[#efeae2]"
+      className="fixed inset-0 z-[60] flex h-[100dvh] w-full max-w-[100vw] min-w-0 overflow-hidden min-h-0 w-full min-w-0 max-w-full flex-col overflow-x-hidden overflow-y-hidden bg-[#efeae2]"
     >
-      <header className="z-30 flex min-h-[60px] shrink-0 items-center gap-1.5 bg-[#075e54] px-1.5 py-2 text-white shadow-md sm:gap-3 sm:px-4">
+      <header className="z-30 flex min-h-[48px] h-[48px] shrink-0 min-w-0 items-center gap-0.5 bg-[#075e54] px-0.5 py-0.5 text-white shadow-md sm:h-auto sm:min-h-[60px] sm:gap-3 sm:px-4 sm:py-2">
         <button
           type="button"
           onClick={() => navigate("/chat")}
-          className="flex h-10 w-9 shrink-0 items-center justify-center rounded-full text-xl transition hover:bg-white/10 active:scale-95 sm:w-10"
+          className="flex h-8 w-7 shrink-0 items-center justify-center rounded-full text-base transition hover:bg-white/10 active:scale-95 sm:h-10 sm:w-10 sm:text-xl"
           aria-label="Back to chats"
         >
           ←
         </button>
 
-        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/20 text-sm font-bold sm:h-10 sm:w-10">
+        <div className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/20 text-[11px] font-bold sm:h-10 sm:w-10 sm:text-sm">
           {chatUser.imageUrl ? (
             <img
               src={chatUser.imageUrl}
@@ -792,7 +792,7 @@ export default function Chat() {
             onClick={() =>
               setShowMoreOptions((open) => !open)
             }
-            className="flex h-10 w-9 items-center justify-center rounded-full text-lg transition hover:bg-white/10 active:scale-95 sm:w-10"
+            className="flex h-8 w-7 items-center justify-center rounded-full text-sm transition hover:bg-white/10 active:scale-95 sm:h-10 sm:w-10 sm:text-lg"
             title="More options"
             aria-label="More options"
             aria-expanded={showMoreOptions}
@@ -863,7 +863,7 @@ export default function Chat() {
         </div>
       )}
 
-      <main className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
+      <main className="flex min-h-0 min-w-0 w-full max-w-full flex-1 flex-col overflow-hidden">
         <MessageList
           messages={messages}
           currentUserId={currentUserId}
@@ -876,7 +876,8 @@ export default function Chat() {
           onDelete={deleteMessage}
         />
 
-        <MessageInput
+        <div className="min-w-0 max-w-full shrink-0 overflow-x-hidden [&_form]:min-w-0 [&_form]:max-w-full [&_textarea]:min-w-0 [&_textarea]:max-w-full [&_input]:min-w-0 [&_input]:max-w-full [&_button]:shrink-0">
+          <MessageInput
           onSend={async (message, replyToMessageId) => {
             await sendMessage(message, replyToMessageId);
             setReplyingTo(null);
@@ -885,8 +886,9 @@ export default function Chat() {
           disabled={sending}
           replyingTo={replyingTo}
           onCancelReply={() => setReplyingTo(null)}
-        />
-      </main>
+          />
+        </div>
+        </main>
     </div>
   );
 }

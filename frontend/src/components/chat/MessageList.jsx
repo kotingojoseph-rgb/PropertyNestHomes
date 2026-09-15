@@ -201,9 +201,9 @@ export default function MessageList({
   return (
     <div
       ref={containerRef}
-      className="relative min-w-0 w-full max-w-full flex-1 overflow-x-hidden overflow-y-auto bg-[#efeae2] px-1.5 py-3 sm:px-5 sm:py-4"
+      className="relative box-border min-h-0 min-w-0 w-full max-w-full flex-1 overflow-x-hidden overflow-y-auto bg-[#efeae2] px-1 py-2 sm:px-5 sm:py-4"
     >
-      <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-2">
+      <div className="mx-auto flex w-full min-w-0 max-w-full box-border flex-col gap-1 px-0 sm:max-w-3xl sm:gap-2 sm:px-0">
         {messages.length === 0 ? (
           <div className="flex min-h-[55vh] items-center justify-center">
             <div className="max-w-xs rounded-2xl bg-white/90 px-6 py-5 text-center shadow-sm">
@@ -286,7 +286,7 @@ export default function MessageList({
                     endSwipe(msg)
                   }
                   onTouchCancel={cancelSwipe}
-                  className={`relative flex min-w-0 w-fit max-w-[72%] items-end gap-1 sm:max-w-[75%] ${
+                  className={`relative flex min-w-0 w-fit max-w-[78%] items-end gap-1 sm:max-w-[75%] ${
                     mine ? "flex-row-reverse" : ""
                   }`}
                 >
@@ -308,7 +308,7 @@ export default function MessageList({
                   )}
 
                   <div
-                    className={`group relative min-w-0 w-fit max-w-full overflow-hidden break-words rounded-2xl px-2 py-1 shadow-sm ${
+                    className={`group relative box-border min-w-0 w-fit max-w-full overflow-hidden break-words [overflow-wrap:anywhere] rounded-[14px] px-2 py-1 shadow-sm ${
                       mine
                         ? "rounded-br-md bg-[#d9fdd3] text-gray-900"
                         : "rounded-bl-md bg-white text-gray-900"
@@ -454,7 +454,7 @@ export default function MessageList({
                         className="max-h-80 max-w-full rounded-xl object-contain"
                       />
                     ) : (
-                      <div className={`min-w-0 max-w-full max-h-[220px] overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[11px] leading-[15px] ${
+                      <div className={`min-w-0 max-w-full max-h-[220px] overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-words [overflow-wrap:anywhere] [overflow-wrap:anywhere] text-[12px] leading-[16px] ${
                         mine ? "pr-7" : ""
                       }`}>
                         {isDeleted ? (

@@ -624,9 +624,9 @@ export default function MessageInput({
   }, [conversationId]);
 
   return (
-    <div className="w-full min-w-0 shrink-0 overflow-hidden border-t border-black/5 bg-[#f0f2f5] px-1 pb-[max(3px,env(safe-area-inset-bottom))] pt-1 sm:p-3">
+    <div className="box-border w-full max-w-[100vw] min-w-0 shrink-0 overflow-x-hidden overflow-y-visible border-t border-black/5 bg-[#f0f2f5] px-1 pb-[max(3px,env(safe-area-inset-bottom))] pt-1 sm:p-3">
       {replyingTo && (
-        <div className="mx-auto mb-1.5 flex w-full min-w-0 max-w-3xl items-center gap-2 rounded-xl border-l-4 border-[#128c7e] bg-white px-3 py-2 shadow-sm">
+        <div className="mx-auto mb-1.5 flex w-full min-w-0 max-w-full items-center gap-2 rounded-xl border-l-4 border-[#128c7e] bg-white px-3 py-2 shadow-sm">
           <div className="min-w-0 flex-1">
             <div className="text-[11px] font-bold text-[#075e54]">
               Replying to message
@@ -650,7 +650,7 @@ export default function MessageInput({
           <button
             type="button"
             onClick={onCancelReply}
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-lg text-gray-500 transition hover:bg-gray-100"
+            className="box-border flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-lg text-gray-500 transition hover:bg-gray-100"
             aria-label="Cancel reply"
           >
             ×
@@ -659,7 +659,7 @@ export default function MessageInput({
       )}
 
       {error && (
-        <div className="mx-auto mb-1.5 flex w-full min-w-0 max-w-3xl items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-2 py-1.5 text-[11px] leading-4 text-red-700 sm:mb-2 sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm">
+        <div className="mx-auto mb-1.5 flex w-full min-w-0 max-w-full items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-2 py-1.5 text-[11px] leading-4 text-red-700 sm:mb-2 sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm">
           <span className="min-w-0 flex-1 break-words">
             {error}
           </span>
@@ -676,7 +676,7 @@ export default function MessageInput({
       )}
 
       {pendingImage && (
-        <div className="mx-auto mb-2 flex w-full min-w-0 max-w-3xl items-center gap-2 rounded-xl bg-white p-2 shadow-sm">
+        <div className="mx-auto mb-2 flex w-full min-w-0 max-w-full items-center gap-2 rounded-xl bg-white p-2 shadow-sm">
           <img
             src={pendingImage.previewUrl}
             alt="Selected image preview"
@@ -723,7 +723,7 @@ export default function MessageInput({
       />
 
       {cameraOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black p-4">
+        <div className="fixed inset-0 z-[200] flex items-center min-w-0 max-w-full justify-center bg-black p-4">
           <div className="flex w-full max-w-lg flex-col overflow-hidden rounded-3xl bg-black shadow-2xl">
             <div className="relative aspect-[3/4] w-full overflow-hidden bg-black sm:aspect-video">
               <video
@@ -744,7 +744,7 @@ export default function MessageInput({
               </button>
             </div>
 
-            <div className="flex items-center justify-center gap-5 px-5 py-5">
+            <div className="flex items-center min-w-0 max-w-full justify-center gap-5 px-5 py-5">
               <button
                 type="button"
                 onClick={closeCamera}
@@ -768,9 +768,9 @@ export default function MessageInput({
 
       <form
         onSubmit={sendText}
-        className="mx-auto flex w-full min-w-0 max-w-3xl items-end gap-1 overflow-visible px-0 sm:gap-2"
+        className="mx-auto flex w-full min-w-0 max-w-full box-border items-end gap-1 overflow-hidden px-1 sm:gap-2"
       >
-        <div className="flex min-w-0 max-w-full flex-1 items-center overflow-visible rounded-[16px] bg-white px-0 py-0.5 shadow-sm sm:rounded-[22px] sm:px-2 sm:py-1">
+        <div className="flex min-w-0 w-0 max-w-full flex-1 items-center overflow-hidden rounded-[18px] bg-white px-0 py-0.5 shadow-sm sm:rounded-[22px] sm:px-2 sm:py-1">
           {recording ? (
             <button
               type="button"
@@ -817,7 +817,7 @@ export default function MessageInput({
                   type="button"
                   onClick={() => imageInputRef.current?.click()}
                   disabled={disabled || uploading}
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[12px] text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
+                  className="box-border flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12px] text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
                   aria-label="Choose photo from device"
                   title="Choose photo from device"
                 >
@@ -828,7 +828,7 @@ export default function MessageInput({
                 type="button"
                 onClick={startRecording}
                 disabled={disabled || uploading}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[12px] text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
+                className="box-border flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12px] text-gray-500 active:bg-gray-100 disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
                 aria-label="Record voice note"
               >
                 🎤
@@ -863,7 +863,7 @@ export default function MessageInput({
                     ? "Sending..."
                     : "Type a message..."
                 }
-                className="min-h-7 max-h-24 min-w-0 max-w-full flex-1 resize-none overflow-x-hidden overflow-y-hidden border-0 bg-transparent px-1 py-1 text-[12px] leading-4 outline-none placeholder:text-gray-400 sm:min-h-10 sm:max-h-32 sm:px-2 sm:py-2.5 sm:text-sm sm:leading-5"
+                className="min-h-7 max-h-20 min-w-0 max-w-full flex-1 resize-none overflow-x-hidden overflow-y-hidden border-0 bg-transparent px-1 py-1 text-[12px] leading-[15px] break-words [overflow-wrap:anywhere] outline-none placeholder:text-gray-400 sm:min-h-10 sm:max-h-32 sm:px-2 sm:py-2.5 sm:text-sm sm:leading-5"
               />
             </>
           )}
@@ -874,7 +874,7 @@ export default function MessageInput({
             type="button"
             onClick={sendVoice}
             disabled={disabled || uploading}
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-[12px] text-white shadow-md transition active:scale-90 disabled:opacity-50 sm:h-11 sm:w-11"
+            className="box-border flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-[12px] text-white shadow-md transition active:scale-90 disabled:opacity-50 sm:h-11 sm:w-11"
             aria-label="Send voice message"
             title="Send voice message"
           >
@@ -889,7 +889,7 @@ export default function MessageInput({
               recording ||
               !message.trim()
             }
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-[12px] text-white shadow-md transition active:scale-90 disabled:opacity-40 sm:h-11 sm:w-11"
+            className="box-border flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-[12px] text-white shadow-md transition active:scale-90 disabled:opacity-40 sm:h-11 sm:w-11"
             aria-label="Send message"
           >
             ➤
