@@ -624,7 +624,7 @@ export default function MessageInput({
   }, [conversationId]);
 
   return (
-    <div className="box-border w-full max-w-full min-w-0 shrink-0 overflow-hidden border-t border-black/5 bg-[#f0f2f5] px-2 pb-[max(3px,env(safe-area-inset-bottom))] pt-1 sm:p-3">
+    <div className="box-border w-full min-w-0 shrink-0 overflow-hidden border-t border-black/5 bg-[#f0f2f5] px-1 pb-[max(2px,env(safe-area-inset-bottom))] pt-0.5 sm:p-3">
       {replyingTo && (
         <div className="mx-auto mb-1.5 flex w-full min-w-0 max-w-full items-center gap-2 rounded-xl border-l-4 border-[#128c7e] bg-white px-3 py-2 shadow-sm">
           <div className="min-w-0 flex-1">
@@ -768,9 +768,9 @@ export default function MessageInput({
 
       <form
         onSubmit={sendText}
-        className="box-border flex w-full min-w-0 max-w-full items-end gap-1 overflow-hidden px-1 sm:gap-2"
+        className="box-border flex min-h-9 w-full min-w-0 max-w-full items-center gap-1 overflow-hidden px-0 sm:min-h-10 sm:items-end sm:gap-2"
       >
-        <div className="flex min-w-0 w-0 flex-1 items-center overflow-hidden rounded-[18px] bg-white px-0 py-0.5 shadow-sm sm:w-auto sm:flex-1 sm:rounded-[22px] sm:px-2 sm:py-1">
+        <div className="flex min-h-9 min-w-0 w-0 flex-1 items-center overflow-hidden rounded-[18px] bg-white px-1 py-0 shadow-sm sm:min-h-10 sm:w-auto sm:flex-1 sm:rounded-[22px] sm:px-2 sm:py-1">
           {recording ? (
             <button
               type="button"
@@ -863,7 +863,7 @@ export default function MessageInput({
                     ? "Sending..."
                     : "Type a message..."
                 }
-                className="min-h-7 max-h-20 min-w-0 w-0 flex-1 resize-none overflow-x-hidden overflow-y-auto border-0 bg-transparent px-1.5 py-0.5 text-[10px] leading-[13px] break-words [overflow-wrap:anywhere] outline-none placeholder:text-gray-400 sm:min-h-10 sm:max-h-32 sm:px-2 sm:py-2.5 sm:text-sm sm:leading-5"
+                className="min-h-8 max-h-16 min-w-0 w-0 flex-1 resize-none overflow-x-hidden overflow-y-auto border-0 bg-transparent px-1 py-0.5 text-[13px] leading-4 break-words [overflow-wrap:anywhere] outline-none placeholder:text-gray-400 sm:min-h-10 sm:max-h-32 sm:px-2 sm:py-2.5 sm:text-sm sm:leading-5"
               />
             </>
           )}
@@ -874,7 +874,7 @@ export default function MessageInput({
             type="button"
             onClick={sendVoice}
             disabled={disabled || uploading}
-            className="box-border flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-[11px] text-white shadow-md transition active:scale-90 disabled:opacity-50 sm:h-11 sm:w-11"
+            className="box-border flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-[12px] leading-none text-white shadow-md transition active:scale-90 disabled:opacity-50 sm:h-11 sm:w-11"
             aria-label="Send voice message"
             title="Send voice message"
           >
@@ -889,7 +889,7 @@ export default function MessageInput({
               recording ||
               !message.trim()
             }
-            className="box-border flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-[11px] text-white shadow-md transition active:scale-90 disabled:opacity-40 sm:h-11 sm:w-11"
+            className="box-border flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#075e54] text-[13px] leading-none text-white shadow-md transition active:scale-90 disabled:opacity-40 sm:h-11 sm:w-11"
             aria-label="Send message"
           >
             ➤
