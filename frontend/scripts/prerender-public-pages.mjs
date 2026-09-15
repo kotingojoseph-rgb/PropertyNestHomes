@@ -64,27 +64,86 @@ const PAGES = [
     route: "/buy",
     title: "Buy Properties | PropertyNestHomes",
     description:
-      "Explore homes, apartments, villas, duplexes, and investment properties available for sale on PropertyNestHomes.",
+      "Explore homes, apartments, villas, duplexes, rental properties, and other real estate listings on PropertyNestHomes.",
     content: `
       <main>
         <article>
           <header>
             <h1>Find Your Dream Property</h1>
             <p>
-              Explore premium homes, apartments, villas, duplexes,
-              and investment properties worldwide.
+              Explore homes, apartments, villas, duplexes, rental properties,
+              and other real estate listings available through PropertyNestHomes.
+              Search by location or listing status to find properties that match
+              what you are looking for.
             </p>
           </header>
 
           <section>
-            <h2>Properties for Sale</h2>
+            <h2>Explore Property Listings</h2>
             <p>
-              Browse property listings from sellers, landlords, and
-              real estate professionals on PropertyNestHomes.
+              PropertyNestHomes helps buyers, renters, and property seekers
+              compare available listings in one place. Each listing can provide
+              information such as location, price, property type, bedrooms,
+              bathrooms, area, availability, and other details supplied with
+              the property.
             </p>
             <p>
-              Property listings include residential homes, apartments,
-              villas, duplexes, condos, and other real estate opportunities.
+              Open a property listing to review its available information,
+              photographs, location details, and contact options. Where a
+              property has been marked as verified on the platform, that status
+              is displayed on the listing.
+            </p>
+          </section>
+
+          <section>
+            <h2>How to Evaluate a Property Listing</h2>
+            <p>
+              Finding a suitable property is only the first step. Before
+              making a purchase, rental commitment, or investment decision,
+              review the listing information carefully and ask the relevant
+              property contact for any details that are important to you.
+            </p>
+
+            <h3>Review the Details</h3>
+            <p>
+              Compare the property's location, price, type, bedrooms,
+              bathrooms, size, availability, photographs, and description.
+              Make sure the information meets your requirements before
+              arranging the next step.
+            </p>
+
+            <h3>Ask Questions</h3>
+            <p>
+              Contact the appropriate property contact when you need more
+              information about ownership, availability, viewing arrangements,
+              documents, pricing, fees, or other matters that are not fully
+              covered by the listing.
+            </p>
+
+            <h3>Complete Your Due Diligence</h3>
+            <p>
+              PropertyNestHomes provides a platform for property discovery
+              and connections. Users should independently verify important
+              property, ownership, legal, financial, and transaction
+              information before entering into an agreement or sending funds.
+            </p>
+          </section>
+
+          <section>
+            <h2>Buying or Renting With PropertyNestHomes</h2>
+            <p>
+              Whether you are looking for a home, rental property, investment
+              opportunity, or another type of real estate, start by defining
+              the location, property type, budget, and features that matter to
+              you. Use the available search tools to narrow the listings, then
+              review individual properties before contacting the relevant
+              property contact.
+            </p>
+            <p>
+              Property availability and listing information can change.
+              Always confirm the current price, status, availability, and
+              transaction requirements directly with the appropriate property
+              contact before making a decision.
             </p>
           </section>
 
