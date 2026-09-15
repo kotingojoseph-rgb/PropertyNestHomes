@@ -863,7 +863,7 @@ export default function MessageInput({
                     ? "Sending..."
                     : "Type a message..."
                 }
-                className="min-h-8 max-h-16 min-w-0 w-0 flex-1 resize-none overflow-x-hidden overflow-y-auto border-0 bg-transparent px-1 py-0.5 text-[13px] leading-4 break-words [overflow-wrap:anywhere] outline-none placeholder:text-gray-400 sm:min-h-10 sm:max-h-32 sm:px-2 sm:py-2.5 sm:text-sm sm:leading-5"
+                className="min-h-8 max-h-16 min-w-0 w-0 flex-1 resize-none overflow-x-hidden overflow-y-auto border-0 bg-transparent px-1 py-0.5 text-base leading-4 break-words [overflow-wrap:anywhere] outline-none placeholder:text-gray-400 sm:min-h-10 sm:max-h-32 sm:px-2 sm:py-2.5 sm:text-sm sm:leading-5"
               />
             </>
           )}
