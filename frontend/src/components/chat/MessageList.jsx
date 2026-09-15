@@ -286,7 +286,7 @@ export default function MessageList({
                     endSwipe(msg)
                   }
                   onTouchCancel={cancelSwipe}
-                  className={`relative flex min-w-0 w-fit max-w-[78%] items-end gap-1 sm:max-w-[75%] ${
+                  className={`relative flex min-w-0 w-fit max-w-[65%] items-end gap-1 sm:max-w-[75%] ${
                     mine ? "flex-row-reverse" : ""
                   }`}
                 >

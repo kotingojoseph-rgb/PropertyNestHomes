@@ -768,7 +768,7 @@ export default function MessageInput({
 
       <form
         onSubmit={sendText}
-        className="mx-auto flex w-full min-w-0 max-w-full box-border items-end gap-1 overflow-hidden px-1 sm:gap-2"
+        className="mx-auto flex w-[96%] min-w-0 max-w-[96%] box-border items-end gap-1 overflow-hidden px-0 sm:gap-2"
       >
         <div className="flex min-w-0 w-0 max-w-full flex-1 items-center overflow-hidden rounded-[18px] bg-white px-0 py-0.5 shadow-sm sm:rounded-[22px] sm:px-2 sm:py-1">
           {recording ? (
