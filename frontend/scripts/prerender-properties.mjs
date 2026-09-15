@@ -142,14 +142,32 @@ function publicPropertyHtml(property) {
           <p><strong>Type:</strong> ${type}</p>
           <p><strong>Bedrooms:</strong> ${bedrooms}</p>
           <p><strong>Bathrooms:</strong> ${bathrooms}</p>
+          <p><strong>Status:</strong> ${escapeHtml(property.status || "Available")}</p>
           ${areaHtml}
           ${garageHtml}
           ${yearBuiltHtml}
         </section>
 
         <section>
-          <h2>Description</h2>
+          <h2>About This Property</h2>
           <p>${description}</p>
+          <p>
+            This verified ${type.toLowerCase()} is located in
+            ${location}. The listing provides ${bedrooms} bedrooms
+            and ${bathrooms} bathrooms and is currently listed as
+            ${escapeHtml(property.status || "Available").toLowerCase()}.
+          </p>
+        </section>
+
+        <section>
+          <h2>Location and Listing Information</h2>
+          <p><strong>Location:</strong> ${location}</p>
+          <p><strong>Country:</strong> ${escapeHtml(property.country || "Not specified")}</p>
+          ${property.address
+            ? `<p><strong>Address:</strong> ${escapeHtml(property.address)}</p>`
+            : ""}
+          <p><strong>Price:</strong> ${price}</p>
+          <p><strong>Verification:</strong> Verified property listing</p>
         </section>
 
         <p>
