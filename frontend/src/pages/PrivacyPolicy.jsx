@@ -1,4 +1,38 @@
+import { useEffect } from "react";
+
 export default function PrivacyPolicy() {
+  useEffect(() => {
+    document.title = "Privacy Policy | PropertyNestHomes";
+
+    const description =
+      "Read the PropertyNestHomes Privacy Policy to learn how we collect, use, protect, and manage information when you use our real estate platform.";
+
+    let meta = document.head.querySelector('meta[name="description"]');
+
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.setAttribute("name", "description");
+      document.head.appendChild(meta);
+    }
+
+    meta.setAttribute("content", description);
+
+    let canonical = document.head.querySelector(
+      'link[rel="canonical"]'
+    );
+
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.setAttribute("rel", "canonical");
+      document.head.appendChild(canonical);
+    }
+
+    canonical.setAttribute(
+      "href",
+      `${window.location.origin}/privacy-policy`
+    );
+  }, []);
+
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 sm:py-16">
       <h1 className="mb-6 text-3xl font-bold leading-tight text-blue-900 sm:text-5xl">

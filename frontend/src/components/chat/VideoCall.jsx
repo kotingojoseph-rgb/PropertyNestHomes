@@ -256,14 +256,18 @@ export default function VideoCall({
       return;
     }
 
-    const nextFacing =
-      cameraFacing === "user"
-        ? "environment"
-        : "user";
-
     const currentStream = localStream.current;
     const currentVideoTrack =
       currentStream.getVideoTracks()[0];
+
+    const currentFacing =
+      currentVideoTrack?.getSettings?.()?.facingMode ||
+      cameraFacing;
+
+    const nextFacing =
+      currentFacing === "environment"
+        ? "user"
+        : "environment";
 
     setSwitchingCamera(true);
     setError("");
@@ -272,43 +276,92 @@ export default function VideoCall({
 
     try {
       /*
-       * Release the current camera so mobile browsers
-       * can access the opposite camera.
+       * First request the opposite camera while the
+       * current camera is still available.
+       *
+       * This is safer than stopping the current track
+       * before we know the new camera can be opened.
        */
-      if (currentVideoTrack) {
-        currentVideoTrack.stop();
-      }
+      try {
+        newStream =
+          await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: {
+                exact: nextFacing,
+              },
+              width: {
+                ideal: 1280,
+              },
+              height: {
+                ideal: 720,
+              },
+            },
+            audio: false,
+          });
+      } catch (facingError) {
+        console.warn(
+          "Requested facing mode failed:",
+          facingError
+        );
 
-      newStream =
-        await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: nextFacing,
-            width: {
-              ideal: 1280,
+        /*
+         * Some mobile browsers do not reliably expose
+         * facingMode. Ask for the available cameras and
+         * choose a different device from the current one.
+         */
+        const devices =
+          await navigator.mediaDevices.enumerateDevices();
+
+        const cameras =
+          devices.filter(
+            (device) =>
+              device.kind === "videoinput"
+          );
+
+        const currentDeviceId =
+          currentVideoTrack?.getSettings?.()
+            ?.deviceId;
+
+        const alternateCamera =
+          cameras.find(
+            (camera) =>
+              camera.deviceId &&
+              camera.deviceId !== currentDeviceId
+          );
+
+        if (!alternateCamera?.deviceId) {
+          throw facingError;
+        }
+
+        newStream =
+          await navigator.mediaDevices.getUserMedia({
+            video: {
+              deviceId: {
+                exact: alternateCamera.deviceId,
+              },
+              width: {
+                ideal: 1280,
+              },
+              height: {
+                ideal: 720,
+              },
             },
-            height: {
-              ideal: 720,
-            },
-          },
-          audio: false,
-        });
+            audio: false,
+          });
+      }
 
       const newVideoTrack =
         newStream.getVideoTracks()[0];
 
       if (!newVideoTrack) {
-        throw new Error("No camera was available.");
+        throw new Error(
+          "The other camera was not available."
+        );
       }
 
-      const currentAudioTracks =
-        currentStream.getAudioTracks();
-
-      const combinedStream =
-        new MediaStream([
-          newVideoTrack,
-          ...currentAudioTracks,
-        ]);
-
+      /*
+       * Replace the camera being sent over WebRTC.
+       */
       const videoSender =
         peer.current
           ?.getSenders()
@@ -317,14 +370,41 @@ export default function VideoCall({
               sender.track?.kind === "video"
           );
 
-      if (videoSender) {
-        await videoSender.replaceTrack(
-          newVideoTrack
+      if (!videoSender) {
+        throw new Error(
+          "Video connection is not ready."
         );
       }
 
-      localStream.current = combinedStream;
+      await videoSender.replaceTrack(
+        newVideoTrack
+      );
 
+      /*
+       * Now that the new camera is confirmed and
+       * attached to WebRTC, stop the old camera.
+       */
+      if (currentVideoTrack) {
+        try {
+          currentVideoTrack.stop();
+        } catch {}
+      }
+
+      /*
+       * Keep the existing microphone.
+       */
+      const combinedStream =
+        new MediaStream([
+          newVideoTrack,
+          ...currentStream.getAudioTracks(),
+        ]);
+
+      localStream.current =
+        combinedStream;
+
+      /*
+       * Update the local preview immediately.
+       */
       if (localVideo.current) {
         localVideo.current.srcObject =
           combinedStream;
@@ -334,16 +414,46 @@ export default function VideoCall({
         } catch {}
       }
 
-      setCameraFacing(nextFacing);
+      const actualFacing =
+        newVideoTrack.getSettings?.()
+          ?.facingMode;
+
+      const finalFacing =
+        actualFacing === "environment"
+          ? "environment"
+          : actualFacing === "user"
+            ? "user"
+            : nextFacing;
+
+      setCameraFacing(finalFacing);
+
+      console.log(
+        "📷 CAMERA SWITCH SUCCESS",
+        {
+          requested: nextFacing,
+          actual: actualFacing,
+          final: finalFacing,
+          deviceId:
+            newVideoTrack.getSettings?.()
+              ?.deviceId,
+        }
+      );
+
+      /*
+       * The temporary stream is now owned by
+       * localStream.current, so do not stop it here.
+       */
+      newStream = null;
     } catch (err) {
       console.error(
-        "Camera switch error:",
+        "❌ Camera switch failed:",
         err
       );
 
       /*
-       * If the new camera failed, make sure the
-       * temporary stream is cleaned up.
+       * Only clean up the temporary stream.
+       * The existing camera remains untouched if
+       * switching failed before replaceTrack().
        */
       if (newStream) {
         newStream.getTracks().forEach((track) => {
@@ -361,7 +471,6 @@ export default function VideoCall({
       setSwitchingCamera(false);
     }
   }, [cameraFacing, switchingCamera]);
-
   /*
    * ----------------------------------------------------------
    * PEER CLEANUP

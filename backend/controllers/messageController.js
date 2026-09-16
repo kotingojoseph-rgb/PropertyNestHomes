@@ -1019,6 +1019,7 @@ exports.getMessages = async (
           messages.*,
 
           users.full_name,
+          users.profile_image_url,
 
           rm.id AS reply_to_id,
           rm.message AS reply_to_message,
@@ -1196,6 +1197,12 @@ exports.getConversations = async (
             ELSE buyer.id
           END AS other_user_id,
 
+          CASE
+            WHEN conversations.buyer_id = $1
+            THEN seller.profile_image_url
+            ELSE buyer.profile_image_url
+          END AS other_user_image,
+
           messages.message AS last_message,
           messages.created_at AS last_message_time,
           messages.media_type AS last_message_type,
@@ -1300,6 +1307,12 @@ exports.getConversationDetails =
 
             CASE
               WHEN c.buyer_id = $2
+              THEN seller.profile_image_url
+              ELSE buyer.profile_image_url
+            END AS other_user_image,
+
+            CASE
+              WHEN c.buyer_id = $2
               THEN seller.email
               ELSE buyer.email
             END AS other_user_email
@@ -1375,7 +1388,8 @@ exports.getPeople = async (
           id,
           full_name,
           email,
-          phone
+          phone,
+          profile_image_url
 
         FROM users
 

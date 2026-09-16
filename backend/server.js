@@ -21,6 +21,7 @@ const http = require("http");
 
 
 const authRoutes = require("./routes/authRoutes");
+const profileRoutes = require("./routes/profileRoutes");
 const protectedRoutes = require("./routes/protectedRoutes");
 const propertyRoutes = require("./routes/propertyRoutes");
 const locationRoutes = require("./routes/locationRoutes");
@@ -113,6 +114,7 @@ app.use(
 
 // API Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/profile", profileRoutes);
 app.use("/api/protected", protectedRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/locations", locationRoutes);

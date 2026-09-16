@@ -1,4 +1,37 @@
+import { useEffect } from "react";
+
 export default function Terms() {
+  useEffect(() => {
+    document.title = "Terms of Service | PropertyNestHomes";
+
+    const description =
+      "Read the PropertyNestHomes Terms of Service governing use of our real estate marketplace, property listings, communications, payments, and platform features.";
+
+    let meta = document.head.querySelector('meta[name="description"]');
+
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.setAttribute("name", "description");
+      document.head.appendChild(meta);
+    }
+
+    meta.setAttribute("content", description);
+
+    let canonical = document.head.querySelector(
+      'link[rel="canonical"]'
+    );
+
+    if (!canonical) {
+      canonical = document.createElement("link");
+      document.head.appendChild(canonical);
+    }
+
+    canonical.setAttribute(
+      "href",
+      `${window.location.origin}/terms`
+    );
+  }, []);
+
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 sm:py-16">
       <h1 className="mb-6 text-3xl font-bold leading-tight text-blue-900 sm:text-5xl">

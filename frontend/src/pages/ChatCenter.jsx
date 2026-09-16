@@ -127,10 +127,21 @@ function RefreshIcon() {
   );
 }
 
-function PersonAvatar({ name }) {
+function PersonAvatar({ name, imageUrl }) {
   return (
-    <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600 ring-1 ring-slate-200">
-      {getInitials(name)}
+    <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-sm font-bold text-slate-600 ring-1 ring-slate-200">
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt={name || "User"}
+          className="h-full w-full object-cover"
+          onError={(event) => {
+            event.currentTarget.style.display = "none";
+          }}
+        />
+      ) : (
+        getInitials(name)
+      )}
     </div>
   );
 }
@@ -689,7 +700,10 @@ export default function ChatCenter() {
                       className="group flex w-full min-w-0 items-center gap-3 px-4 py-4 text-left transition hover:bg-slate-50 active:bg-slate-100 sm:gap-4 sm:px-5"
                     >
                       <div className="relative shrink-0">
-                        <PersonAvatar name={name} />
+                        <PersonAvatar
+                          name={name}
+                          imageUrl={chat.other_user_image}
+                        />
 
                         {unread && (
                           <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-white bg-blue-600" />
@@ -809,7 +823,10 @@ export default function ChatCenter() {
                       key={person.id}
                       className="flex min-w-0 items-center gap-3 px-4 py-3.5 sm:px-5"
                     >
-                      <PersonAvatar name={name} />
+                      <PersonAvatar
+                        name={name}
+                        imageUrl={person.profile_image_url}
+                      />
 
                       <div className="min-w-0 flex-1">
                         <h3 className="truncate text-sm font-semibold text-slate-800">

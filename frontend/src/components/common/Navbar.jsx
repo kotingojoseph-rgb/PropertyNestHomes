@@ -117,6 +117,13 @@ export default function Navbar() {
                 Dashboard
               </Link>
 
+              <Link
+                to="/profile"
+                className="min-h-11 whitespace-nowrap rounded-xl border border-green-600 px-3 py-2 text-sm font-semibold text-green-700 transition hover:bg-green-50 lg:px-4"
+              >
+                Profile
+              </Link>
+
               <button
                 type="button"
                 onClick={logout}
@@ -199,6 +206,14 @@ export default function Navbar() {
                   className="flex min-h-11 w-full items-center justify-center rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white active:bg-green-700"
                 >
                   Dashboard
+                </Link>
+
+                <Link
+                  to="/profile"
+                  onClick={closeMenu}
+                  className="flex min-h-11 w-full items-center justify-center rounded-xl border border-green-600 px-4 py-3 text-sm font-semibold text-green-700 active:bg-green-50"
+                >
+                  Profile
                 </Link>
 
                 <button

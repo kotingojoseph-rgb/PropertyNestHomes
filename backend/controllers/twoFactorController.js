@@ -196,6 +196,7 @@ const verifyLoginTwoFactor = async (req, res) => {
         full_name,
         email,
         role,
+        profile_image_url,
         two_factor_enabled,
         two_factor_secret
       FROM users
@@ -242,6 +243,7 @@ const verifyLoginTwoFactor = async (req, res) => {
         full_name: user.full_name,
         email: user.email,
         role: user.role,
+        profile_image_url: user.profile_image_url,
       },
     });
   } catch (err) {

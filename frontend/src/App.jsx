@@ -11,6 +11,7 @@ import Home from "./pages/Home";
 import Buy from "./pages/Buy";
 import PropertyDetails from "./pages/PropertyDetails";
 import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -658,6 +659,15 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           }
         />

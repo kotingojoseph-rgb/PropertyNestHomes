@@ -190,6 +190,7 @@ const login = async (req, res) => {
           full_name: user.full_name,
           email: user.email,
           role: user.role,
+          profile_image_url: user.profile_image_url,
         },
       });
     }
@@ -218,6 +219,7 @@ const login = async (req, res) => {
         full_name: user.full_name,
         email: user.email,
         role: user.role,
+        profile_image_url: user.profile_image_url,
       },
     });
   } catch (err) {
