@@ -66,29 +66,29 @@ export default function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur">
-      <div className="mx-auto flex min-h-16 w-full max-w-7xl min-w-0 items-center justify-between gap-3 px-3 sm:px-4 lg:px-6">
+      <div className="mx-auto flex min-h-16 w-full max-w-7xl min-w-0 items-center justify-between gap-2 px-3 sm:px-4 lg:px-6">
         {/* Brand */}
         <Link
           to="/"
           onClick={closeMenu}
-          className="flex min-w-0 shrink items-center text-green-700"
+          className="flex shrink-0 items-center text-green-700"
           aria-label="PropertyNestHomes home"
         >
           <span className="text-xl leading-none sm:text-2xl">
             🏡
           </span>
 
-          <span className="ml-1.5 hidden truncate font-extrabold sm:inline text-lg lg:text-xl">
+          <span className="ml-2 hidden whitespace-nowrap font-extrabold text-lg lg:inline">
             PropertyNestHomes
           </span>
 
-          <span className="ml-1.5 inline truncate font-extrabold text-lg sm:hidden">
+          <span className="ml-2 inline font-extrabold text-lg sm:hidden">
             PNH
           </span>
         </Link>
 
         {/* Desktop navigation */}
-        <div className="hidden min-w-0 flex-1 items-center justify-end gap-4 md:flex lg:gap-6">
+        <div className="hidden min-w-0 flex-1 items-center justify-end gap-3 md:flex lg:gap-4">
           {links.map((link) => (
             <Link
               key={link.path}
@@ -104,7 +104,7 @@ export default function Navbar() {
               {isAdmin && (
                 <Link
                   to="/admin/investments"
-                  className="min-h-11 whitespace-nowrap rounded-xl bg-purple-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-purple-700 lg:px-4"
+                  className="min-h-11 whitespace-nowrap rounded-xl bg-purple-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-purple-700"
                 >
                   Admin Investments
                 </Link>
@@ -112,22 +112,42 @@ export default function Navbar() {
 
               <Link
                 to="/dashboard"
-                className="min-h-11 whitespace-nowrap rounded-xl bg-green-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-green-700 lg:px-4"
+                className="min-h-11 whitespace-nowrap rounded-xl bg-green-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-green-700"
               >
                 Dashboard
               </Link>
 
               <Link
                 to="/profile"
-                className="min-h-11 whitespace-nowrap rounded-xl border border-green-600 px-3 py-2 text-sm font-semibold text-green-700 transition hover:bg-green-50 lg:px-4"
+                className="flex min-h-11 items-center gap-2 whitespace-nowrap rounded-xl border border-green-600 px-3 py-2 text-sm font-semibold text-green-700 transition hover:bg-green-50"
               >
+                {currentUser?.profile_image_url ? (
+                  <img
+                    src={currentUser.profile_image_url}
+                    alt=""
+                    className="h-7 w-7 rounded-full object-cover"
+                    onError={(event) => {
+                      event.currentTarget.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100 text-xs font-bold text-green-700">
+                    {(currentUser?.full_name || "User")
+                      .split(" ")
+                      .map((part) => part[0])
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .join("")
+                      .toUpperCase()}
+                  </span>
+                )}
                 Profile
               </Link>
 
               <button
                 type="button"
                 onClick={logout}
-                className="min-h-11 whitespace-nowrap rounded-xl bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700 lg:px-4"
+                className="min-h-11 whitespace-nowrap rounded-xl bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
               >
                 Logout
               </button>
@@ -211,8 +231,28 @@ export default function Navbar() {
                 <Link
                   to="/profile"
                   onClick={closeMenu}
-                  className="flex min-h-11 w-full items-center justify-center rounded-xl border border-green-600 px-4 py-3 text-sm font-semibold text-green-700 active:bg-green-50"
+                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-green-600 px-4 py-3 text-sm font-semibold text-green-700 active:bg-green-50"
                 >
+                  {currentUser?.profile_image_url ? (
+                    <img
+                      src={currentUser.profile_image_url}
+                      alt=""
+                      className="h-7 w-7 rounded-full object-cover"
+                      onError={(event) => {
+                        event.currentTarget.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100 text-xs font-bold text-green-700">
+                      {(currentUser?.full_name || "User")
+                        .split(" ")
+                        .map((part) => part[0])
+                        .filter(Boolean)
+                        .slice(0, 2)
+                        .join("")
+                        .toUpperCase()}
+                    </span>
+                  )}
                   Profile
                 </Link>
 
