@@ -584,7 +584,11 @@ export default function InvestorDashboard() {
                 className="min-w-0 overflow-hidden rounded-2xl bg-white shadow sm:p-0"
               >
                 <div className="flex min-w-0 flex-col gap-4 md:flex-row md:items-stretch md:justify-between">
-                  <div className="min-w-0 flex-1">
+                  <Link
+                    to={`/property/${investment.property_id}`}
+                    className="block min-w-0 flex-1 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2"
+                    aria-label={`View ${investment.property_title || "Investment Property"}`}
+                  >
                     {getPropertyImage(investment) ? (
                       <img
                         src={getPropertyImage(investment)}
@@ -609,13 +613,10 @@ export default function InvestorDashboard() {
                     )}
 
                     <div className="p-4 sm:p-5">
-                      <Link
-                        to={`/property/${investment.property_id}`}
-                        className="break-words text-base font-bold text-gray-900 hover:text-green-600 sm:text-lg"
-                      >
+                      <span className="block break-words text-base font-bold text-gray-900 sm:text-lg">
                         {investment.property_title ||
                           "Investment Property"}
-                      </Link>
+                      </span>
 
                     <p className="mt-1 text-sm text-gray-500">
                       📍{" "}
@@ -639,7 +640,7 @@ export default function InvestorDashboard() {
                         )}
                       </p>
                     </div>
-                  </div>
+                  </Link>
 
                   <div className="flex w-full flex-col items-stretch gap-3 p-4 md:w-auto md:items-end md:p-5">
                     <span
