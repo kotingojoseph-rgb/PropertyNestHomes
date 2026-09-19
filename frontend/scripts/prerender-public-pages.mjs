@@ -553,7 +553,9 @@ function escapeAttribute(value) {
 
 function buildPageHtml(template, page) {
   const canonicalUrl =
-    `https://propertynesthomes.com${page.route === "/" ? "/" : page.route}`;
+    `https://propertynesthomes.com${
+      page.route === "/" ? "/" : `${page.route}/`
+    }`;
 
   let html = template;
 
@@ -568,7 +570,7 @@ function buildPageHtml(template, page) {
   );
 
   html = html.replace(
-    /<link rel="canonical"[^>]*>/i,
+    /<link\b[^>]*\brel=["\']canonical["\'][^>]*>/is,
     `<link rel="canonical" href="${canonicalUrl}">`
   );
 
