@@ -152,22 +152,47 @@ function publicPropertyHtml(property) {
           <h2>About This Property</h2>
           <p>${description}</p>
           <p>
-            This verified ${type.toLowerCase()} is located in
-            ${location}. The listing provides ${bedrooms} bedrooms
-            and ${bathrooms} bathrooms and is currently listed as
+            This ${type.toLowerCase()} is located in ${location}.
+            The property has ${bedrooms} bedrooms and ${bathrooms}
+            bathrooms and is currently listed as
             ${escapeHtml(property.status || "Available").toLowerCase()}.
+            The listing price is ${price}.
           </p>
         </section>
 
         <section>
+          <h2>Key Property Facts</h2>
+          <ul>
+            <li><strong>Property type:</strong> ${type}</li>
+            <li><strong>Bedrooms:</strong> ${bedrooms}</li>
+            <li><strong>Bathrooms:</strong> ${bathrooms}</li>
+            <li><strong>Status:</strong> ${escapeHtml(property.status || "Available")}</li>
+            ${area ? `<li><strong>Area:</strong> ${area}</li>` : ""}
+            ${garage ? `<li><strong>Garage / Parking:</strong> ${garage}</li>` : ""}
+            ${yearBuilt ? `<li><strong>Year built:</strong> ${yearBuilt}</li>` : ""}
+          </ul>
+        </section>
+
+        <section>
           <h2>Location and Listing Information</h2>
-          <p><strong>Location:</strong> ${location}</p>
-          <p><strong>Country:</strong> ${escapeHtml(property.country || "Not specified")}</p>
+          <p>
+            <strong>Location:</strong> ${location}
+          </p>
+          <p>
+            <strong>Country:</strong>
+            ${escapeHtml(property.country || "Not specified")}
+          </p>
           ${property.address
             ? `<p><strong>Address:</strong> ${escapeHtml(property.address)}</p>`
             : ""}
-          <p><strong>Price:</strong> ${price}</p>
-          <p><strong>Verification:</strong> Verified property listing</p>
+          ${property.postal_code
+            ? `<p><strong>Postal code:</strong> ${escapeHtml(property.postal_code)}</p>`
+            : ""}
+          <p><strong>Listing price:</strong> ${price}</p>
+          <p>
+            <strong>Verification:</strong>
+            ${escapeHtml(property.verification_status || "Verified")}
+          </p>
         </section>
 
         <p>
