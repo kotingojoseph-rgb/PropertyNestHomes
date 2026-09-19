@@ -27,23 +27,23 @@ export default function Footer() {
               Home
             </Link>
 
-            <Link to="/buy" className="w-fit hover:text-white">
+            <Link to="/buy/" className="w-fit hover:text-white">
               Buy
             </Link>
 
-            <Link to="/about" className="w-fit hover:text-white">
+            <Link to="/about/" className="w-fit hover:text-white">
               About
             </Link>
 
-            <Link to="/contact" className="w-fit hover:text-white">
+            <Link to="/contact/" className="w-fit hover:text-white">
               Contact
             </Link>
 
-            <Link to="/privacy-policy" className="w-fit hover:text-white">
+            <Link to="/privacy-policy/" className="w-fit hover:text-white">
               Privacy Policy
             </Link>
 
-            <Link to="/terms" className="w-fit hover:text-white">
+            <Link to="/terms/" className="w-fit hover:text-white">
               Terms of Service
             </Link>
           </div>
