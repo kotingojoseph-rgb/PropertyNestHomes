@@ -324,19 +324,38 @@ const PAGES = [
           <section>
             <h2>5. Cookies and Similar Technologies</h2>
             <p>
-              PropertyNestHomes may use cookies and similar technologies
-              to support functionality, preferences, analytics, security,
-              and advertising.
+              PropertyNestHomes and certain service providers may use
+              cookies, web storage, pixels, or similar technologies to
+              support website functionality, understand usage, improve the
+              service, maintain security, and provide advertising where
+              applicable. These technologies may be used by PropertyNestHomes
+              and by third-party service providers operating on our behalf
+              or providing services through the platform.
             </p>
           </section>
 
           <section>
-            <h2>6. Advertising</h2>
+            <h2>6. Advertising and Google Advertising Services</h2>
             <p>
-              We may display advertising through third-party advertising
-              services, including Google AdSense. Advertising providers
-              may use cookies or similar technologies subject to their
-              own policies.
+              PropertyNestHomes may display advertisements provided by
+              third-party advertising services, including Google AdSense.
+              Third-party vendors, including Google, may use cookies or
+              similar technologies to serve advertisements based on a user's
+              prior visits to PropertyNestHomes or other websites.
+            </p>
+            <p>
+              Google's use of advertising cookies enables Google and its
+              partners to serve advertisements to users based on their visits
+              to PropertyNestHomes and/or other websites on the Internet.
+              Advertising may be personalized or non-personalized depending
+              on applicable settings, consent, and legal requirements.
+            </p>
+            <p>
+              Users may manage or opt out of personalized advertising through
+              Google's Ads Settings. Users may also learn about additional
+              choices for personalized advertising from participating
+              third-party vendors and advertising networks through
+              industry opt-out resources such as AboutAds.info.
             </p>
           </section>
 
