@@ -585,7 +585,7 @@ function buildPageHtml(template, page) {
   );
 
   html = html.replace(
-    /<meta property="og:url"[^>]*>/i,
+    /<meta\b[^>]*\bproperty=["\']og:url["\'][^>]*>/is,
     `<meta property="og:url" content="${canonicalUrl}">`
   );
 
