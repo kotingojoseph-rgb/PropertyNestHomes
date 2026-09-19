@@ -255,13 +255,17 @@ const getMyInvestments = async (req, res) => {
         p.city,
         p.state_province,
         p.country,
-        pi.image_url AS cover_image
+        (
+          SELECT pi.image_url
+          FROM property_images pi
+          WHERE pi.property_id = p.id
+            AND NULLIF(TRIM(pi.image_url), '') IS NOT NULL
+          ORDER BY pi.is_cover DESC, pi.uploaded_at ASC, pi.id ASC
+          LIMIT 1
+        ) AS cover_image
       FROM investments i
       JOIN properties p
         ON p.id = i.property_id
-      LEFT JOIN property_images pi
-        ON pi.property_id = p.id
-       AND pi.is_cover = true
       WHERE i.investor_id = $1
       ORDER BY i.created_at DESC
       `,
@@ -299,13 +303,17 @@ const getInvestmentById = async (req, res) => {
         p.city,
         p.state_province,
         p.country,
-        pi.image_url AS cover_image
+        (
+          SELECT pi.image_url
+          FROM property_images pi
+          WHERE pi.property_id = p.id
+            AND NULLIF(TRIM(pi.image_url), '') IS NOT NULL
+          ORDER BY pi.is_cover DESC, pi.uploaded_at ASC, pi.id ASC
+          LIMIT 1
+        ) AS cover_image
       FROM investments i
       JOIN properties p
         ON p.id = i.property_id
-      LEFT JOIN property_images pi
-        ON pi.property_id = p.id
-       AND pi.is_cover = true
       WHERE i.id = $1
         AND i.investor_id = $2
       `,
