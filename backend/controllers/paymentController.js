@@ -449,6 +449,24 @@ exports.verifyPayment = async (req, res) => {
       const investment = investmentResult.rows[0];
 
       /*
+       * The authenticated user must own this investment.
+       * Never allow one logged-in user to verify another
+       * investor's payment by supplying a valid reference.
+       */
+      const authenticatedUserId = Number(req.user?.id);
+
+      if (
+        !Number.isFinite(authenticatedUserId) ||
+        authenticatedUserId !== Number(investment.investor_id)
+      ) {
+        await client.query("ROLLBACK");
+
+        return res.status(403).json({
+          error: "You are not authorized to verify this investment payment.",
+        });
+      }
+
+      /*
        * The Paystack reference being verified MUST match the
        * reference created for this investment.
        */
@@ -465,10 +483,11 @@ exports.verifyPayment = async (req, res) => {
       }
 
       /*
-       * Verify the Paystack metadata belongs to the same investor.
+       * Paystack metadata must also identify the same investor.
+       * Missing investor metadata is rejected rather than trusted.
        */
       if (
-        userId !== null &&
+        !Number.isFinite(userId) ||
         Number(investment.investor_id) !== userId
       ) {
         await client.query("ROLLBACK");
@@ -605,20 +624,83 @@ exports.verifyPayment = async (req, res) => {
       ).toUpperCase();
 
       /*
-       * The amount credited to the PropertyNestHomes wallet should
-       * be the investment/property amount, NOT the gross Paystack
-       * checkout amount.
+       * Recalculate the expected Paystack charge from the
+       * server-side investment record. Never trust the amount
+       * supplied by the browser or Paystack metadata alone.
        *
-       * Example:
+       * The initialization endpoint uses NGN settlement:
+       * - NGN property -> property_amount
+       * - non-NGN property with NGN investor -> original amount
+       * - other currency combinations are rejected during
+       *   payment initialization.
+       */
+      let expectedChargedAmount;
+
+      if (paymentCurrency !== "NGN") {
+        await client.query("ROLLBACK");
+
+        return res.status(400).json({
+          error: "Investment payment was not settled in NGN.",
+          payment_currency: paymentCurrency,
+        });
+      }
+
+      if (String(investment.property_currency || "NGN").toUpperCase() === "NGN") {
+        expectedChargedAmount = propertyAmount;
+      } else if (investorCurrency === "NGN") {
+        expectedChargedAmount = originalAmount;
+      } else {
+        await client.query("ROLLBACK");
+
+        return res.status(400).json({
+          error:
+            "Investment currency combination is not supported for Paystack settlement.",
+          investor_currency: investorCurrency,
+          property_currency: String(
+            investment.property_currency || "NGN"
+          ).toUpperCase(),
+        });
+      }
+
+      expectedChargedAmount = Number(
+        Number(expectedChargedAmount).toFixed(2)
+      );
+
+      /*
+       * Paystack reports the authoritative amount actually charged.
+       * Require an exact two-decimal currency match.
+       */
+      if (
+        !Number.isFinite(expectedChargedAmount) ||
+        expectedChargedAmount <= 0 ||
+        Math.abs(chargedAmount - expectedChargedAmount) > 0.01
+      ) {
+        await client.query("ROLLBACK");
+
+        return res.status(409).json({
+          error: "Payment amount does not match the investment amount.",
+          expected_amount: expectedChargedAmount,
+          charged_amount: chargedAmount,
+          currency: paymentCurrency,
+          investment_id: investment.id,
+        });
+      }
+
+      /*
+       * Keep the investment/property amount separate from the
+       * amount actually charged by Paystack.
        *
-       * Investment:     ₦1,339,958.53
-       * Paystack gross: ₦1,341,958.53
-       * Paystack fee:   ₦2,000
-       *
-       * Wallet credit:  ₦1,339,958.53
+       * The payment record stores the investment amount in the
+       * property's currency, while the investor's currency-specific
+       * account is credited using the actual Paystack settlement
+       * amount and payment currency.
        */
       const investmentWalletAmount = Number(
         propertyAmount.toFixed(2)
+      );
+
+      const investorAccountCreditAmount = Number(
+        chargedAmount.toFixed(2)
       );
 
       /*
@@ -692,7 +774,7 @@ exports.verifyPayment = async (req, res) => {
       const investorAccountResult =
         await creditInvestorInvestmentAccount(client, {
           userId: investment.investor_id,
-          amount: investmentWalletAmount,
+          amount: investorAccountCreditAmount,
           currency: paymentCurrency,
           transactionType: "investment_funding",
           reference,

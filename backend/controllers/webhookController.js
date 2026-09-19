@@ -307,12 +307,17 @@ async function handleChargeSuccess(client, data) {
     );
 
     /*
-     * Credit only the investment/property amount.
+     * Credit the investor's currency-specific account with the
+     * amount actually charged by Paystack.
      */
+    const investorAccountCreditAmount = Number(
+      amount.toFixed(2)
+    );
+
     const investorAccountResult =
       await creditInvestorInvestmentAccount(client, {
         userId: investment.investor_id,
-        amount: propertyAmount,
+        amount: investorAccountCreditAmount,
         currency: paymentCurrency,
         transactionType: "investment_funding",
         reference,
