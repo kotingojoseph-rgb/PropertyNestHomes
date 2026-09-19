@@ -598,8 +598,13 @@ export default function InvestorDashboard() {
                         }}
                       />
                     ) : (
-                      <div className="flex h-44 w-full items-center justify-center bg-gray-100 text-sm text-gray-500 sm:h-52 md:min-h-52">
-                        Property image unavailable
+                      <div className="flex h-44 w-full flex-col items-center justify-center bg-gray-100 px-4 text-center sm:h-52 md:min-h-52">
+                        <div className="text-sm font-semibold text-gray-700">
+                          Property no longer available
+                        </div>
+                        <div className="mt-1 max-w-sm text-xs text-gray-500">
+                          This investment property is no longer listed on the marketplace.
+                        </div>
                       </div>
                     )}
 
