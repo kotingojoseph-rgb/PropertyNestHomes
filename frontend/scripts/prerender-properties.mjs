@@ -297,7 +297,7 @@ async function main() {
     );
 
     html = html.replace(
-      /<link rel="canonical"[^>]*>/i,
+      /<link\b[^>]*\brel=["\']canonical["\'][^>]*>/is,
       `<link rel="canonical" href="https://propertynesthomes.com/property/${property.id}">`
     );
 
