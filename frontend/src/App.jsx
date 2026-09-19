@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 
 import MainLayout from "./layout/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -27,6 +27,20 @@ import ChatCenter from "./pages/ChatCenter";
 import Calls from "./pages/Calls";
 import InvestorDashboard from "./pages/InvestorDashboard";
 import AdminInvestments from "./pages/AdminInvestments";
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "auto",
+    });
+  }, [pathname]);
+
+  return null;
+}
 
 function MessageNotificationPopup({
   notification,
@@ -536,6 +550,8 @@ function AppContent() {
         }
         onOpen={openNotification}
       />
+
+      <ScrollToTop />
 
       <Routes>
         {/* Public Routes */}
