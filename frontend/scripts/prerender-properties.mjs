@@ -6,7 +6,7 @@ const TEMPLATE_FILE = path.join(DIST_DIR, "index.html");
 
 const API_URL =
   process.env.VITE_API_URL ||
-  "https://propertynesthomes.onrender.com";
+  "https://api.propertynesthomes.com";
 
 const PROPERTIES_URL = `${API_URL}/api/properties`;
 
