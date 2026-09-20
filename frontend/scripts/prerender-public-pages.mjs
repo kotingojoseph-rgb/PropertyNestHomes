@@ -357,6 +357,18 @@ const PAGES = [
               third-party vendors and advertising networks through
               industry opt-out resources such as AboutAds.info.
             </p>
+  <p className="mt-3">
+    For more information about how Google uses information from sites and apps that use its
+    services, please see{" "}
+    <a
+      href="https://policies.google.com/technologies/partner-sites"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="font-medium text-blue-700 underline"
+    >
+      How Google uses information from sites or apps that use its services
+    </a>.
+  </p>
           </section>
 
           <section>
