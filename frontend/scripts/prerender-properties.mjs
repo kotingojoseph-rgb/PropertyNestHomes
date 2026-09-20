@@ -309,6 +309,35 @@ async function main() {
     const metaDescription =
       propertyDescription(property);
 
+    const propertyUrl =
+      `https://propertynesthomes.com/property/${property.id}`;
+
+    const propertyImage =
+      property.cover_image ||
+      property.image ||
+      "";
+
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "@id": `${propertyUrl}#webpage`,
+      "url": propertyUrl,
+      "name": pageTitle,
+      "description": metaDescription
+    };
+
+    if (propertyImage) {
+      structuredData.primaryImageOfPage = {
+        "@type": "ImageObject",
+        "url": propertyImage,
+        "contentUrl": propertyImage,
+        "caption": pageTitle
+      };
+    }
+
+    const structuredDataJson =
+      JSON.stringify(structuredData).replace(/</g, "\\u003c");
+
     let html = template;
 
     html = html.replace(
@@ -322,8 +351,8 @@ async function main() {
     );
 
     html = html.replace(
-      /<link\b[^>]*\brel=["\']canonical["\'][^>]*>/is,
-      `<link rel="canonical" href="https://propertynesthomes.com/property/${property.id}">`
+      /<link\b[^>]*\brel=["']canonical["'][^>]*>/is,
+      `<link rel="canonical" href="${propertyUrl}">`
     );
 
     html = html.replace(
@@ -332,15 +361,61 @@ async function main() {
     );
 
     html = html.replace(
-      "</head>",
-      `
-        <meta property="og:title" content="${escapeHtml(pageTitle)}">
-        <meta property="og:description" content="${escapeHtml(metaDescription)}">
-        <meta property="og:url" content="https://propertynesthomes.com/property/${property.id}">
-        ${property.cover_image || property.image
-          ? `<meta property="og:image" content="${escapeHtml(property.cover_image || property.image)}">`
-          : ""}
-      </head>`
+      /<meta\s+property=["']og:title["'][^>]*>/i,
+      `<meta property="og:title" content="${escapeHtml(pageTitle)}">`
+    );
+
+    html = html.replace(
+      /<meta\s+property=["']og:description["'][^>]*>/i,
+      `<meta property="og:description" content="${escapeHtml(metaDescription)}">`
+    );
+
+    html = html.replace(
+      /<meta\s+property=["']og:url["'][^>]*>/i,
+      `<meta property="og:url" content="${propertyUrl}">`
+    );
+
+    html = html.replace(
+      /<meta\s+property=["']og:image["'][^>]*>/i,
+      propertyImage
+        ? `<meta property="og:image" content="${escapeHtml(propertyImage)}">`
+        : ""
+    );
+
+    html = html.replace(
+      /<meta\s+property=["']og:image:alt["'][^>]*>/i,
+      propertyImage
+        ? `<meta property="og:image:alt" content="${escapeHtml(pageTitle)}">`
+        : ""
+    );
+
+    html = html.replace(
+      /<meta\s+name=["']twitter:title["'][^>]*>/i,
+      `<meta name="twitter:title" content="${escapeHtml(pageTitle)}">`
+    );
+
+    html = html.replace(
+      /<meta\s+name=["']twitter:description["'][^>]*>/i,
+      `<meta name="twitter:description" content="${escapeHtml(metaDescription)}">`
+    );
+
+    html = html.replace(
+      /<meta\s+name=["']twitter:image["'][^>]*>/i,
+      propertyImage
+        ? `<meta name="twitter:image" content="${escapeHtml(propertyImage)}">`
+        : ""
+    );
+
+    html = html.replace(
+      /<meta\s+name=["']twitter:image:alt["'][^>]*>/i,
+      propertyImage
+        ? `<meta name="twitter:image:alt" content="${escapeHtml(pageTitle)}">`
+        : ""
+    );
+
+    html = html.replace(
+      /<script\s+type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/i,
+      `<script type="application/ld+json">${structuredDataJson}</script>`
     );
 
     const outputFile = path.join(
