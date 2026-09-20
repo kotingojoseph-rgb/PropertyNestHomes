@@ -124,6 +124,92 @@ export default function Home() {
         </div>
       </section>
 
+
+      <section className="border-t bg-white">
+        <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
+          <div className="max-w-4xl">
+            <p className="text-sm font-bold uppercase tracking-widest text-green-600">
+              How It Works
+            </p>
+
+            <h2 className="mt-2 text-3xl font-extrabold leading-tight text-gray-900 sm:text-4xl">
+              A practical way to explore real estate online
+            </h2>
+
+            <p className="mt-5 text-base leading-8 text-gray-700 sm:text-lg">
+              PropertyNestHomes brings public property listings and real estate
+              communication into one place. Visitors can begin with a location,
+              property type, budget, or other requirement, review available
+              listings, and then open individual properties for more details.
+            </p>
+
+            <p className="mt-4 text-base leading-8 text-gray-700 sm:text-lg">
+              The information shown for a property can help you decide which
+              listings deserve a closer look. When you are ready to ask
+              questions, you can use the available contact and communication
+              features to continue the conversation with the relevant property
+              contact.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            <article className="rounded-2xl border bg-gray-50 p-6">
+              <h3 className="text-xl font-bold text-gray-900">
+                1. Search
+              </h3>
+              <p className="mt-3 text-base leading-7 text-gray-700">
+                Start with the place and type of property you need. Compare
+                available listings using information such as location, price,
+                bedrooms, bathrooms, area, and listing status.
+              </p>
+            </article>
+
+            <article className="rounded-2xl border bg-gray-50 p-6">
+              <h3 className="text-xl font-bold text-gray-900">
+                2. Review
+              </h3>
+              <p className="mt-3 text-base leading-7 text-gray-700">
+                Open a listing to review its description, available images,
+                property details, and other information supplied with the
+                listing. Look for the details that matter most to your decision.
+              </p>
+            </article>
+
+            <article className="rounded-2xl border bg-gray-50 p-6">
+              <h3 className="text-xl font-bold text-gray-900">
+                3. Connect
+              </h3>
+              <p className="mt-3 text-base leading-7 text-gray-700">
+                Contact the appropriate property representative to ask
+                questions, arrange the next step, and confirm information that
+                may have changed since the listing was published.
+              </p>
+            </article>
+          </div>
+
+          <div className="mt-10 rounded-2xl border border-green-100 bg-green-50 p-6 sm:p-8">
+            <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+              Before you make a property decision
+            </h2>
+
+            <p className="mt-4 max-w-4xl text-base leading-7 text-gray-700">
+              Online listing information is a starting point for research, not
+              a substitute for property due diligence. Before paying money or
+              signing an agreement, confirm the current price and availability,
+              inspect the property where appropriate, verify ownership and
+              relevant documents, and obtain professional legal, financial,
+              valuation, or inspection advice when needed.
+            </p>
+
+            <p className="mt-4 max-w-4xl text-base leading-7 text-gray-700">
+              Sellers, landlords, and authorized representatives should keep
+              their listing information accurate and current so visitors can
+              make better-informed decisions.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <BannerAd />
     </>
   );

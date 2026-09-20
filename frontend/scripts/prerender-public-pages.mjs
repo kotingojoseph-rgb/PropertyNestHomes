@@ -55,6 +55,67 @@ const PAGES = [
               <a href="/buy">View All Properties</a>
             </p>
           </section>
+
+          <section>
+            <p>How It Works</p>
+            <h2>A practical way to explore real estate online</h2>
+            <p>
+              PropertyNestHomes brings public property listings and real estate
+              communication into one place. Visitors can begin with a location,
+              property type, budget, or other requirement, review available
+              listings, and then open individual properties for more details.
+            </p>
+            <p>
+              The information shown for a property can help you decide which
+              listings deserve a closer look. When you are ready to ask
+              questions, you can use the available contact and communication
+              features to continue the conversation with the relevant property
+              contact.
+            </p>
+          </section>
+
+          <section>
+            <h2>How to Use PropertyNestHomes</h2>
+
+            <h3>1. Search</h3>
+            <p>
+              Start with the place and type of property you need. Compare
+              available listings using information such as location, price,
+              bedrooms, bathrooms, area, and listing status.
+            </p>
+
+            <h3>2. Review</h3>
+            <p>
+              Open a listing to review its description, available images,
+              property details, and other information supplied with the
+              listing. Look for the details that matter most to your decision.
+            </p>
+
+            <h3>3. Connect</h3>
+            <p>
+              Contact the appropriate property representative to ask
+              questions, arrange the next step, and confirm information that
+              may have changed since the listing was published.
+            </p>
+          </section>
+
+          <section>
+            <h2>Before You Make a Property Decision</h2>
+            <p>
+              Online listing information is a starting point for research, not
+              a substitute for property due diligence. Before paying money or
+              signing an agreement, confirm the current price and availability,
+              inspect the property where appropriate, verify ownership and
+              relevant documents, and obtain professional legal, financial,
+              valuation, or inspection advice when needed.
+            </p>
+            <p>
+              Sellers, landlords, and authorized representatives should keep
+              their listing information accurate and current so visitors can
+              make better-informed decisions.
+            </p>
+          </section>
+
         </article>
       </main>
     `,
