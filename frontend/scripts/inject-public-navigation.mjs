@@ -9,10 +9,12 @@ const file = path.join(frontendDir, "dist", "index.html");
 
 let html = fs.readFileSync(file, "utf8");
 
+const hasBuy = html.includes('href="/buy/"');
 const hasGuides = html.includes('href="/guides/"');
 const hasAbout = html.includes('href="/about/"');
+const hasContact = html.includes('href="/contact/"');
 
-if (hasGuides && hasAbout) {
+if (hasBuy && hasGuides && hasAbout && hasContact) {
   console.log("Public navigation already present in prerendered homepage.");
   process.exit(0);
 }
@@ -30,6 +32,7 @@ const navigation = `
   <a href="/buy/" class="underline">Browse Properties</a>
   <a href="/guides/" class="underline">Property Guides</a>
   <a href="/about/" class="underline">About PropertyNestHomes</a>
+  <a href="/contact/" class="underline">Contact PropertyNestHomes</a>
 </nav>`;
 
 html = html.replace(marker, `$1${navigation}`);
