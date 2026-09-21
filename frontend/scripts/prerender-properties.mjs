@@ -195,6 +195,36 @@ function publicPropertyHtml(property) {
           </p>
         </section>
 
+        <section>
+          <h2>How to Assess This Listing</h2>
+          <p>
+            This listing provides property information that can help visitors
+            evaluate whether the property matches their requirements. Review
+            the location, price, property type, size, availability,
+            description, images, and other available details before deciding
+            whether to make contact.
+          </p>
+
+          <p>
+            Use the information on this page as a starting point for evaluating
+            the property. Compare the location, price, property type, size,
+            availability, description, images, and other details that are
+            relevant to your requirements before deciding whether to make
+            contact.
+          </p>
+
+          <h3>Before You Proceed</h3>
+
+          <p>
+            Confirm important information directly with the appropriate
+            property representative, especially the current price, availability,
+            ownership, property condition, documents, fees, and transaction
+            requirements. Arrange an inspection and obtain independent legal,
+            financial, valuation, or other professional advice when appropriate
+            before paying money or signing an agreement.
+          </p>
+        </section>
+
         <p>
           <a href="${propertyUrl}">
             View this property on PropertyNestHomes

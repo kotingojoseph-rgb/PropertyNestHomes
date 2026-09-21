@@ -760,6 +760,85 @@ export default function PropertyDetails() {
         </div>
       </div>
 
+      <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+          <p className="text-sm font-bold uppercase tracking-widest text-green-600">
+            Property Information
+          </p>
+
+          <h2 className="mt-2 text-2xl font-bold text-gray-900 sm:text-3xl">
+            How to Assess This Listing
+          </h2>
+
+          <p className="mt-4 text-base leading-7 text-gray-700">
+            {property.title || "This property"} is a{" "}
+            {property.property_type || "property"} in{" "}
+            {[
+              property.city,
+              property.state_province,
+              property.country,
+            ]
+              .filter(Boolean)
+              .join(", ") || "the listed location"}
+            . The listing currently shows a status of{" "}
+            {property.status || "Available"}.
+            {property.bedrooms != null
+              ? ` It records ${property.bedrooms} bedroom${
+                  Number(property.bedrooms) === 1 ? "" : "s"
+                }`
+              : ""}
+            {property.bathrooms != null
+              ? ` and ${property.bathrooms} bathroom${
+                  Number(property.bathrooms) === 1 ? "" : "s"
+                }`
+              : ""}
+            {property.area
+              ? `, with a listed area of ${property.area}`
+              : ""}
+            .
+          </p>
+
+          <p className="mt-4 text-base leading-7 text-gray-700">
+            Use the information on this page as a starting point for evaluating
+            the property. Compare the location, price, property type, size,
+            availability, description, images, and other details that are
+            relevant to your requirements before deciding whether to make
+            contact.
+          </p>
+
+          <h3 className="mt-7 text-xl font-bold text-gray-900">
+            Before You Proceed
+          </h3>
+
+          <p className="mt-3 text-base leading-7 text-gray-700">
+            Confirm important information directly with the appropriate
+            property representative, especially the current price, availability,
+            ownership, property condition, documents, fees, and transaction
+            requirements. Arrange an inspection and obtain independent legal,
+            financial, valuation, or other professional advice when appropriate
+            before paying money or signing an agreement.
+          </p>
+
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={contactSeller}
+              className="min-h-11 rounded-xl bg-green-600 px-5 py-3 text-sm font-bold text-white hover:bg-green-700"
+            >
+              Contact Property Representative
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate("/buy")}
+              className="min-h-11 rounded-xl border border-gray-300 bg-white px-5 py-3 text-sm font-bold text-gray-800 hover:bg-gray-50"
+            >
+              Browse More Properties
+            </button>
+          </div>
+        </div>
+      </section>
+
       <Lightbox
         open={lightboxOpen}
         close={() => setLightboxOpen(false)}
