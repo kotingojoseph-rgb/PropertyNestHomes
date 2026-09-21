@@ -115,6 +115,36 @@ export default function Contact() {
         </p>
       </div>
 
+      <section className="mx-auto mb-8 max-w-4xl rounded-xl border border-gray-200 bg-gray-50 p-5 sm:p-8">
+        <h2 className="text-2xl font-bold text-gray-900">
+          How PropertyNestHomes Can Help
+        </h2>
+
+        <div className="mt-4 space-y-4 text-base leading-7 text-gray-700">
+          <p>
+            Use PropertyNestHomes to explore property listings and start
+            conversations with relevant property contacts. Our support team
+            can help with questions about the platform, listings, account
+            access, or how to use a site feature.
+          </p>
+
+          <p>
+            For a property enquiry, include the listing title or property ID,
+            location, and the type of information you need. For a technical
+            issue, describe the page or feature involved and what happened so
+            the issue can be understood and reviewed efficiently.
+          </p>
+
+          <p>
+            PropertyNestHomes is a property discovery and communication
+            platform. Listing details can change, so independently verify
+            ownership, documents, price, availability, inspection findings,
+            and transaction terms before sending money or entering an
+            agreement.
+          </p>
+        </div>
+      </section>
+
       <div className="grid gap-8 md:grid-cols-2">
         <div className="min-w-0 rounded-xl border bg-white p-5 shadow-sm sm:p-8">
           <h2 className="mb-6 text-2xl font-bold text-gray-900">

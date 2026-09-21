@@ -285,53 +285,77 @@ const PAGES = [
     title: "Contact PropertyNestHomes | Real Estate Support",
     description:
       "Contact PropertyNestHomes for help with buying, selling, investing, property listings, and real estate questions.",
-    content: `
-      <main>
-        <article>
-          <header>
-            <h1>Contact PropertyNestHomes</h1>
-            <p>
-              We'd love to hear from you. Whether you're buying, selling,
-              investing, or just have a question, our team is here to help.
-            </p>
-          </header>
+    content: `            <main>
+              <section>
+                <h1>Contact PropertyNestHomes</h1>
+                <p>
+                  We'd love to hear from you. Whether you're buying, selling,
+                  investing, listing a property, or need help using the
+                  platform, our team is available to help with your enquiry.
+                </p>
+              </section>
 
-          <section>
-            <h2>Get in Touch</h2>
-            <p>
-              <strong>Email:</strong>
-              <a href="mailto:Propertynesthomes.app@gmail.com">
-                Propertynesthomes.app@gmail.com
-              </a>
-            </p>
-            <p>
-              <strong>Phone:</strong>
-              +234 906 893 6306
-            </p>
-            <p>
-              <strong>Office:</strong>
-              Lagos, Nigeria
-            </p>
-          </section>
+              <section>
+                <h2>How We Can Help</h2>
+                <p>
+                  PropertyNestHomes helps visitors discover property listings
+                  and connect with relevant property contacts. We can assist
+                  with questions about the platform, account access, listings,
+                  and general use of our real estate services.
+                </p>
+                <p>
+                  For a property enquiry, include the listing title or property
+                  ID, location, and the information you need. Providing clear
+                  details helps us understand your request and respond more
+                  efficiently.
+                </p>
+                <p>
+                  For a technical problem, describe the page, feature, or
+                  action that caused the issue and explain what happened. This
+                  helps our support team investigate the problem.
+                </p>
+              </section>
 
-          <section>
-            <h2>How We Can Help</h2>
-            <ul>
-              <li>Buying and finding properties</li>
-              <li>Selling and listing properties</li>
-              <li>Real estate investment questions</li>
-              <li>PropertyNestHomes account and platform support</li>
-            </ul>
-          </section>
+              <section>
+                <h2>Contact Information</h2>
+                <p>
+                  Email:
+                  <a href="mailto:Propertynesthomes.app@gmail.com">
+                    Propertynesthomes.app@gmail.com
+                  </a>
+                </p>
+                <p>
+                  Phone:
+                  <a href="tel:+2349068936306">+234 906 893 6306</a>
+                </p>
+                <p>Office: Lagos, Nigeria</p>
+              </section>
 
-          <p>
-            <a href="/buy">Browse Properties</a>
-            |
-            <a href="/">Return Home</a>
-          </p>
-        </article>
-      </main>
-    `,
+              <section>
+                <h2>Before Making a Property Decision</h2>
+                <p>
+                  Property listings and availability can change. Before
+                  sending money or entering an agreement, independently verify
+                  the property's ownership, documents, current price,
+                  availability, inspection findings, and transaction terms
+                  with the relevant parties.
+                </p>
+                <p>
+                  PropertyNestHomes is a property discovery and communication
+                  platform. For important legal, financial, or ownership
+                  matters, use qualified professional advice appropriate to
+                  your circumstances.
+                </p>
+              </section>
+
+              <p>
+                You can also browse our
+                <a href="/guides/">property guides</a>
+                for practical information about buying, renting, selling, and
+                evaluating property listings.
+              </p>
+            </main>
+`,
   },
 
   {
