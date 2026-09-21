@@ -9,6 +9,8 @@ import socket, { connectSocket } from "./socket";
 
 import Home from "./pages/Home";
 import Buy from "./pages/Buy";
+import Guides from "./pages/Guides";
+import GuideArticle from "./pages/GuideArticle";
 import PropertyDetails from "./pages/PropertyDetails";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
@@ -565,6 +567,9 @@ function AppContent() {
             path="/buy"
             element={<Buy />}
           />
+
+      <Route path="/guides" element={<Guides />} />
+      <Route path="/guides/:slug" element={<GuideArticle />} />
 
           <Route
             path="/property/:id"

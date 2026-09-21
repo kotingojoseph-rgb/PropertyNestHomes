@@ -82,4 +82,34 @@
     <priority>0.5</priority>
   </url>
 
+  <url>
+    <loc>https://propertynesthomes.com/guides/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://propertynesthomes.com/guides/buying-property-in-nigeria/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://propertynesthomes.com/guides/property-due-diligence-before-paying/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://propertynesthomes.com/guides/how-to-evaluate-a-property-listing/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://propertynesthomes.com/guides/renting-a-home-in-nigeria/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://propertynesthomes.com/guides/selling-a-property-online/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
 </urlset>
