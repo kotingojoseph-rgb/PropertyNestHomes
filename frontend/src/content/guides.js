@@ -627,4 +627,84 @@ export const GUIDES = [
     ]
   },
 
+
+  {
+    slug: "buying-property-in-victoria-island-lagos",
+    title: "Buying Property in Victoria Island, Lagos: Areas, Prices, Documents & What Buyers Should Know",
+    description: "A practical guide to buying property in Victoria Island, Lagos, including VI neighbourhoods, property types, asking prices, due diligence, documents, inspections and buying costs.",
+    intro: "Victoria Island, commonly called VI, is one of Lagos's major residential and commercial districts. The area includes established streets, estates and newer developments, with properties ranging from apartments to large houses and mixed-use developments. If you are considering buying in VI, look beyond the headline asking price and evaluate the exact location, building, documentation, access, recurring costs and intended use.",
+    sections: [
+      {
+        heading: "Understand the different parts of Victoria Island",
+        paragraphs: [
+          "Victoria Island is not a single uniform property market. Listings can be found around areas and streets including Adeola Odeku, Adetokunbo Ademola, Akin Adesola, Ahmadu Bello Way, Kofo Abayomi, Ozumba Mbadiwe and other established residential and commercial locations. Oniru and Victoria Island Extension are also commonly grouped with the wider VI property market.",
+          "Confirm the exact street, estate and local address before comparing two properties described as being in Victoria Island. Proximity to offices, shopping, schools, entertainment, major roads and the waterfront can materially affect the experience of living in a particular location."
+        ]
+      },
+      {
+        heading: "Choose the property type that fits your plans",
+        paragraphs: [
+          "Buyers in VI can encounter apartments, terraces, semi-detached and detached houses, land and commercial or mixed-use properties. The right option depends on whether you are buying for personal residence, rental income, business use or another long-term purpose.",
+          "For apartments, compare floor area, bedroom configuration, parking, elevators, power arrangements, water, security, service charges and estate facilities. For houses, also examine land size, boundaries, drainage, access, building condition and future maintenance requirements."
+        ]
+      },
+      {
+        heading: "Use asking prices carefully",
+        paragraphs: [
+          "Current market reports can provide useful context, but an asking price is not the same as a completed transaction price. Property values can vary substantially within VI based on location, title, building quality, land size, age, amenities, views, access and development potential.",
+          "For example, current published listing data for August 2026 reported a median listing price of about ₦491.5 million for flats and about ₦705.2 million for houses in Victoria Island. These are market-wide listing statistics, not valuations of an individual property, and they can change as inventory changes. :contentReference[oaicite:2]{index=2}"
+        ]
+      },
+      {
+        heading: "Compare the full cost, not just the purchase price",
+        paragraphs: [
+          "The advertised purchase price is only one component of the transaction. Depending on the property and transaction structure, buyers may also need to budget for legal and professional fees, documentation and registration costs, applicable taxes or statutory charges, agency fees, renovations, service charges and ongoing maintenance.",
+          "Ask for a written breakdown of expected costs before making a substantial payment. This is particularly important for apartments and estates where service charges, facility fees or other recurring obligations may form a significant part of the ownership cost."
+        ]
+      },
+      {
+        heading: "Inspect the exact property",
+        paragraphs: [
+          "Always inspect the property before committing. Check the building's general condition, structural issues, plumbing, drainage, water supply, electricity arrangements, parking, security, access roads and the condition of shared facilities.",
+          "For apartments, inspect common areas and ask how the building is managed. For houses and land, check boundaries and access carefully. If possible, visit at different times of day so you can understand traffic, noise, parking pressure and the surrounding environment."
+        ]
+      },
+      {
+        heading: "Verify title and ownership before paying",
+        paragraphs: [
+          "Before making a substantial payment, have the property's ownership and title documents reviewed by a qualified property lawyer or other appropriate professional. The documents and searches required depend on the property and its particular title.",
+          "Do not treat a listing, brochure, receipt or seller's verbal assurance as sufficient proof of ownership. Investigate the relevant records and check for disputes, mortgages, restrictions, encumbrances or other interests that could affect the transaction."
+        ]
+      },
+      {
+        heading: "Think about daily access and location",
+        paragraphs: [
+          "VI's central location can be useful for people who work or conduct business around Lagos Island, Ikoyi, Lekki and other parts of the Lagos metropolitan area. However, travel time and convenience can vary considerably by street and time of day.",
+          "Before buying, test the routes you expect to use regularly. Consider access to work, schools, healthcare, shopping and other services, as well as traffic patterns, parking and road conditions around the property."
+        ]
+      },
+      {
+        heading: "If you are buying for rental income",
+        paragraphs: [
+          "Do not base a rental decision solely on an advertised rent or a broad area average. Compare similar properties, expected occupancy, service charges, maintenance, agency costs, taxes and periods when the property may be vacant.",
+          "Market-level rental or yield statistics can provide context but are not guarantees of the return from an individual property. The actual result depends on the property, tenant demand, operating costs and management."
+        ]
+      },
+      {
+        heading: "Questions to ask before buying",
+        paragraphs: [
+          "Ask who owns the property, what title documents are available, whether there are outstanding charges or disputes, what exactly is included in the sale, and whether the property has estate, residents' association or building-management obligations.",
+          "Also ask about power and water arrangements, service charges, parking, security, maintenance responsibilities, previous renovations and any planned development that could affect the property. Keep important answers and agreements in writing."
+        ]
+      },
+      {
+        heading: "Before you pay",
+        paragraphs: [
+          "Confirm the exact property and seller, inspect the property, verify the relevant documents, investigate ownership and title, understand all transaction costs and obtain appropriate professional advice before making a substantial payment.",
+          "PropertyNestHomes provides listings to help buyers research and compare properties. Buyers should independently verify listing information and complete appropriate due diligence before making financial commitments."
+        ]
+      }
+    ]
+  },
+
 ];
