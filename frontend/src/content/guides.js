@@ -1,5 +1,59 @@
 export const GUIDES = [
   {
+    slug: "cost-of-buying-a-house-in-lagos",
+    title: "Cost of Buying a House in Lagos, Nigeria: What to Budget For",
+    description:
+      "A practical guide to the costs of buying a house in Lagos, including the purchase price, professional fees, transaction costs, inspections, renovations, and ongoing expenses.",
+    intro:
+      "The advertised price of a property is not necessarily the full cost of buying it. Buyers in Lagos should consider the purchase price together with applicable transaction costs, professional services, inspections, documentation, moving, renovation, and ongoing property expenses.",
+    sections: [
+      {
+        heading: "1. Start with the property's purchase price",
+        paragraphs: [
+          "The asking price is the starting point for your budget. Compare similar properties in the same area and consider differences in location, size, condition, facilities, title documentation, and other features before deciding whether a price is reasonable for your circumstances."
+        ]
+      },
+      {
+        heading: "2. Budget for professional and transaction costs",
+        paragraphs: [
+          "A property purchase can involve professional and transaction-related expenses in addition to the agreed price. Depending on the transaction, these may include legal services, agency charges, documentation costs, inspections, and other applicable fees."
+        ]
+      },
+      {
+        heading: "3. Check documentation before making major payments",
+        paragraphs: [
+          "The cost of checking ownership and property documentation is small compared with the potential cost of an unresolved property problem. Obtain and review the relevant documents and seek appropriate professional advice before committing substantial funds."
+        ]
+      },
+      {
+        heading: "4. Consider inspection and repair costs",
+        paragraphs: [
+          "A viewing can reveal obvious issues, but a more detailed inspection may identify maintenance or structural concerns. For an existing house, budget for repairs, painting, plumbing, electrical work, appliances, security improvements, or other changes that may be needed after purchase."
+        ]
+      },
+      {
+        heading: "5. Include moving and setup expenses",
+        paragraphs: [
+          "New owners may also need to budget for moving, furniture, utilities, internet, security arrangements, service charges, and other costs associated with preparing the property for occupation."
+        ]
+      },
+      {
+        heading: "6. Keep a contingency amount",
+        paragraphs: [
+          "Unexpected expenses can arise during a property transaction or shortly after taking possession. Keeping a reasonable contingency amount can help prevent a purchase from consuming the entire available budget."
+        ]
+      },
+      {
+        heading: "7. Compare the complete cost, not just the listing price",
+        paragraphs: [
+          "When comparing properties, create a simple total-cost estimate for each option. Include the expected purchase price, transaction and professional costs, immediate repairs or improvements, and other known expenses so that different properties can be compared on a more consistent basis."
+        ]
+      }
+    ],
+  },
+
+
+  {
     slug: "best-areas-to-buy-property-in-lagos",
     title: "Best Areas to Buy Property in Lagos: A Practical Area Guide",
     description:
