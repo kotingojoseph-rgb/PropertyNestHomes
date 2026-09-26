@@ -554,4 +554,77 @@ export const GUIDES = [
     ]
   },
 
+
+  {
+    slug: "buying-property-in-ikeja-lagos",
+    title: "Buying Property in Ikeja, Lagos: Areas, Prices, Documents & What Buyers Should Know",
+    description: "A practical guide to buying property in Ikeja, Lagos, covering Ikeja GRA, Opebi, Allen, Alausa, inspections, documents, costs, and important questions for buyers.",
+    intro: "Ikeja is one of Lagos's major residential and commercial centres, with very different property markets across areas such as Ikeja GRA, Opebi, Allen, Alausa, Agidingbi, Oregun and Ogba. If you are considering buying property in Ikeja, start by identifying the exact neighbourhood and understanding how location, access, property condition, documentation and recurring costs affect the purchase.",
+    sections: [
+      {
+        heading: "Choose the right part of Ikeja",
+        paragraphs: [
+          "The name Ikeja covers several neighbourhoods with different characteristics. Ikeja GRA is known for established residential streets and premium properties, while Opebi and Allen combine residential areas with busy commercial activity. Alausa is closely associated with government offices, while Agidingbi, Oregun and Ogba provide other residential options within the wider Ikeja area.",
+          "Do not compare properties only because their listings both say Ikeja. Confirm the exact neighbourhood, street, estate and access route before comparing asking prices."
+        ]
+      },
+      {
+        heading: "Ikeja GRA and other residential areas",
+        paragraphs: [
+          "Ikeja GRA generally has a different property profile from busier commercial parts of central Ikeja, with established residential streets and higher-end homes. Opebi has a strong residential presence alongside offices, restaurants and businesses, while Allen and nearby streets offer greater proximity to commercial activity.",
+          "The right location depends on how you intend to use the property. A family looking for quieter residential surroundings may have different priorities from a professional who wants short access to offices, shopping, restaurants or transport routes."
+        ]
+      },
+      {
+        heading: "Compare the total property cost",
+        paragraphs: [
+          "An advertised asking price is only one part of the cost of buying property. Depending on the transaction, buyers may also need to account for legal and professional fees, documentation and registration costs, applicable taxes or statutory charges, agency fees, renovations, service charges and ongoing maintenance.",
+          "Ask the seller or agent for a clear breakdown of expected costs before making a financial commitment. Comparing the total cost gives you a more useful picture than comparing headline prices alone."
+        ]
+      },
+      {
+        heading: "Do not treat online prices as proof of market value",
+        paragraphs: [
+          "Property prices in Ikeja can vary significantly between streets and property types. Even within the same neighbourhood, factors such as land size, title, building condition, access, parking, security, infrastructure and finishing can change the value substantially.",
+          "Use current listings as a starting point for comparison, not as independent confirmation of value. Where a purchase involves a substantial amount of money, consider obtaining appropriate professional advice or an independent valuation."
+        ]
+      },
+      {
+        heading: "Inspect the exact property",
+        paragraphs: [
+          "Visit the property before paying a substantial amount. Check the building's structural and general condition, drainage, access roads, parking, boundaries, water supply, electricity arrangements, security and the condition of surrounding properties.",
+          "Traffic and noise can also vary considerably by street. If possible, inspect at more than one time of day and ask about peak-hour access, nearby commercial activity, flooding history and recurring estate or residents' association charges."
+        ]
+      },
+      {
+        heading: "Verify ownership and property documents",
+        paragraphs: [
+          "Before committing to a purchase, have the relevant ownership and title documents reviewed by a qualified property lawyer or other appropriate professional. The documents and searches required depend on the property and its particular title.",
+          "Do not rely solely on an online listing, brochure, receipt or seller's verbal assurances. Verify ownership and investigate any restrictions, disputes, mortgages, encumbrances or other interests that could affect the transaction."
+        ]
+      },
+      {
+        heading: "Consider access and everyday convenience",
+        paragraphs: [
+          "Ikeja's central position can be useful for buyers who regularly travel around Lagos, but the practical experience depends heavily on the property's exact location and the time of travel. Check the routes you will actually use for work, school, healthcare, shopping and other regular activities.",
+          "Also consider nearby services, parking, security arrangements, road conditions and how easy it is to reach major roads from the property. A convenient address on paper may have a very different daily experience at peak periods."
+        ]
+      },
+      {
+        heading: "Questions to ask before buying",
+        paragraphs: [
+          "Ask who owns the property, what title documents are available, whether there are outstanding disputes or charges, what exactly is included in the sale, and whether there are estate or residents' association obligations.",
+          "Also ask about previous renovations, water and power arrangements, drainage, parking, security, service charges and any planned development that could affect the property. Keep important answers and agreements in writing."
+        ]
+      },
+      {
+        heading: "Before you pay",
+        paragraphs: [
+          "Confirm the exact property and seller, inspect the property, verify the relevant documents, investigate ownership and title, understand all transaction costs and obtain appropriate professional advice before making a substantial payment.",
+          "PropertyNestHomes provides listings to help buyers research and compare properties. Buyers should independently verify listing information and complete appropriate due diligence before making financial commitments."
+        ]
+      }
+    ]
+  },
+
 ];
