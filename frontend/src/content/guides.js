@@ -487,5 +487,71 @@ export const GUIDES = [
         ]
       }
     ]
-  }
+  },
+
+  {
+    slug: "buying-property-in-ajah-lagos",
+    title: "Buying Property in Ajah, Lagos: Prices, Areas, Documents & What Buyers Should Know",
+    description: "A practical guide to buying property in Ajah, Lagos, including areas to consider, property types, due diligence, documents, inspections, and costs to budget for.",
+    intro: "Ajah is a major residential corridor in Lagos with a wide range of apartments, terraces, duplexes, and other residential properties. If you are considering buying in Ajah, the important decision is not simply finding a property you like. You also need to understand the exact location, documentation, access, infrastructure, total purchase costs, and whether the property fits your long-term plans.",
+    sections: [
+      {
+        heading: "Understand the different parts of Ajah",
+        paragraphs: [
+          "Ajah covers a broad area and properties that are described as being in Ajah can differ significantly in their surroundings, road access, infrastructure, and distance from major destinations. Before comparing prices, confirm the exact street or estate and inspect the property in person.",
+          "Consider your normal routes to work, schools, shopping areas, healthcare, and major roads. A property that looks attractive online may have a very different day-to-day experience depending on its precise location."
+        ]
+      },
+      {
+        heading: "What types of property can you find?",
+        paragraphs: [
+          "Buyers may encounter apartments, terraces, semi-detached homes, detached houses, and other residential developments in and around Ajah. Compare properties based on usable space, construction quality, estate facilities, parking, security, access roads, water supply, power arrangements, and maintenance obligations rather than price alone.",
+          "For off-plan or newly built properties, establish what is included in the advertised price and what will require additional payment after purchase."
+        ]
+      },
+      {
+        heading: "Do not rely on an advertised price alone",
+        paragraphs: [
+          "Property asking prices can vary substantially based on location, title, building condition, land size, development quality, and the specific terms of the transaction. Treat an online asking price as a starting point for investigation rather than proof of market value.",
+          "When comparing listings, record the asking price, property type, size, location, title information, condition, and any stated additional charges. This makes it easier to identify meaningful differences between properties."
+        ]
+      },
+      {
+        heading: "Check the property's documents before paying",
+        paragraphs: [
+          "Before making a substantial payment, have the property's ownership and title documents reviewed by an appropriately qualified property lawyer or other relevant professional. The documents and searches required can vary depending on the property and its title.",
+          "Do not assume that a seller's description, brochure, receipt, or online listing is sufficient evidence of ownership or a clear title. Confirm the relevant records and investigate any restrictions, disputes, mortgages, or other interests affecting the property."
+        ]
+      },
+      {
+        heading: "Inspect the property and its surroundings",
+        paragraphs: [
+          "Visit the property before committing to the purchase. Check the building's condition, drainage, access roads, parking, boundaries, water supply, electricity arrangements, security, and nearby development.",
+          "If possible, visit at different times and ask questions about flooding, traffic, noise, service charges, estate rules, and recurring maintenance costs. These practical details can materially affect the cost and convenience of owning a property."
+        ]
+      },
+      {
+        heading: "Budget for the full cost of buying",
+        paragraphs: [
+          "The purchase price is only one part of the transaction. Depending on the property and transaction structure, buyers may also need to budget for legal and professional fees, documentation and registration costs, taxes or statutory charges where applicable, agency fees, service charges, renovations, moving expenses, and ongoing maintenance.",
+          "Ask for a written breakdown of every payment expected before completing the transaction so that the total cost is clear."
+        ]
+      },
+      {
+        heading: "Compare properties carefully",
+        paragraphs: [
+          "A useful comparison should consider location, title and documentation, building condition, land or floor area, access, infrastructure, recurring costs, security, and future plans for the area. Two properties with similar asking prices can have very different overall costs and practical advantages.",
+          "PropertyNestHomes provides listings for buyers to research and compare, but buyers should independently verify property information and complete appropriate due diligence before making financial commitments."
+        ]
+      },
+      {
+        heading: "Before you pay",
+        paragraphs: [
+          "Confirm the exact property and seller, inspect the property, review the relevant documents with qualified professionals, verify ownership and title, understand all transaction costs, and keep records of agreements and payments.",
+          "If important information cannot be independently verified, pause the transaction until the issue has been properly investigated."
+        ]
+      }
+    ]
+  },
+
 ];
