@@ -4,6 +4,18 @@ export const GUIDES = [
     title: "Property Prices in Lagos: What Buyers Should Know",
     description:
       "A practical guide to understanding property prices in Lagos, including location, property type, condition, amenities, documentation, and other factors that can affect the total cost.",
+    relatedListings: [
+      {
+        title: "Luxury Apartment",
+        href: "/property/4",
+        description: "Lekki Phase 1, Lagos",
+      },
+      {
+        title: "Luxury Duplex",
+        href: "/property/36",
+        description: "Lekki, Lagos",
+      },
+    ],
     intro:
       "Property prices in Lagos can vary significantly between locations and property types. The asking price is only one part of the decision, so buyers should compare properties using location, condition, amenities, documentation, and the full cost of completing the purchase.",
     sections: [
@@ -57,6 +69,18 @@ export const GUIDES = [
     title: "Cost of Buying a House in Lagos, Nigeria: What to Budget For",
     description:
       "A practical guide to the costs of buying a house in Lagos, including the purchase price, professional fees, transaction costs, inspections, renovations, and ongoing expenses.",
+    relatedListings: [
+      {
+        title: "Luxury Apartment",
+        href: "/property/4",
+        description: "Lekki Phase 1, Lagos",
+      },
+      {
+        title: "Luxury Duplex",
+        href: "/property/36",
+        description: "Lekki, Lagos",
+      },
+    ],
     intro:
       "The advertised price of a property is not necessarily the full cost of buying it. Buyers in Lagos should consider the purchase price together with applicable transaction costs, professional services, inspections, documentation, moving, renovation, and ongoing property expenses.",
     sections: [
@@ -111,6 +135,18 @@ export const GUIDES = [
     title: "Best Areas to Buy Property in Lagos: A Practical Area Guide",
     description:
       "A practical guide to researching areas for buying property in Lagos, including location, transport, property types, costs, amenities, and due diligence.",
+    relatedListings: [
+      {
+        title: "Luxury Apartment",
+        href: "/property/4",
+        description: "Lekki Phase 1, Lagos",
+      },
+      {
+        title: "Luxury Duplex",
+        href: "/property/36",
+        description: "Lekki, Lagos",
+      },
+    ],
     intro:
       "Lagos has a wide range of residential property markets. The right area depends on your budget, daily routine, preferred property type, and reason for buying. Compare specific neighborhoods and individual properties rather than relying only on general area descriptions.",
     sections: [
@@ -224,6 +260,18 @@ export const GUIDES = [
     title: "Buying Property in Nigeria: A Practical Guide",
     description:
       "Practical steps for researching property, comparing listings, budgeting for the transaction, inspecting a property, and carrying out due diligence in Nigeria.",
+    relatedListings: [
+      {
+        title: "Luxury Apartment",
+        href: "/property/4",
+        description: "Lekki Phase 1, Lagos",
+      },
+      {
+        title: "Luxury Duplex",
+        href: "/property/36",
+        description: "Lekki, Lagos",
+      },
+    ],
     intro:
       "Buying a home, land, apartment, or investment property is a major decision. An online listing is only the beginning of the research process. Buyers should compare properties carefully, confirm important information, inspect the property where appropriate, and understand the transaction before making a major payment.",
     sections: [
@@ -269,6 +317,18 @@ export const GUIDES = [
     title: "Property Due Diligence Before Paying",
     description:
       "A practical checklist covering seller verification, ownership documents, inspection, transaction costs, and safer property payment decisions.",
+    relatedListings: [
+      {
+        title: "Luxury Apartment",
+        href: "/property/4",
+        description: "Lekki Phase 1, Lagos",
+      },
+      {
+        title: "Luxury Duplex",
+        href: "/property/36",
+        description: "Lekki, Lagos",
+      },
+    ],
     intro:
       "A property can look excellent online and still require substantial investigation. Due diligence means checking the property, the person offering it, the documents, the physical condition, and the proposed transaction.",
     sections: [
@@ -307,6 +367,18 @@ export const GUIDES = [
     title: "How to Evaluate a Property Listing",
     description:
       "Learn how to assess property listings using location, price, photographs, specifications, descriptions, availability, and practical questions.",
+    relatedListings: [
+      {
+        title: "Luxury Apartment",
+        href: "/property/4",
+        description: "Lekki Phase 1, Lagos",
+      },
+      {
+        title: "Luxury Duplex",
+        href: "/property/36",
+        description: "Lekki, Lagos",
+      },
+    ],
     intro:
       "A good property search begins before the first phone call. Listings help create a shortlist, but effective research comes from separating specific facts from marketing language and identifying the questions that still need answers.",
     sections: [
