@@ -1,4 +1,52 @@
 export const GUIDES = [
+  {
+    slug: "best-areas-to-buy-property-in-lagos",
+    title: "Best Areas to Buy Property in Lagos: A Practical Area Guide",
+    description:
+      "A practical guide to researching areas for buying property in Lagos, including location, transport, property types, costs, amenities, and due diligence.",
+    intro:
+      "Lagos has a wide range of residential property markets. The right area depends on your budget, daily routine, preferred property type, and reason for buying. Compare specific neighborhoods and individual properties rather than relying only on general area descriptions.",
+    sections: [
+      {
+        heading: "1. Start with your reason for buying",
+        paragraphs: [
+          "The right area can differ depending on whether you are buying a home to live in, a rental property, or an investment. Define your main goal before comparing locations so that price, commute, rental demand, and property type can be evaluated consistently."
+        ]
+      },
+      {
+        heading: "2. Compare locations by daily convenience",
+        paragraphs: [
+          "Consider commuting routes, access to major roads, schools, healthcare, shopping, work locations, and other services you regularly use. A property that looks attractive on paper may be less suitable if everyday travel is difficult."
+        ]
+      },
+      {
+        heading: "3. Compare different parts of Lagos",
+        paragraphs: [
+          "Areas such as Lekki, Ikoyi, Victoria Island, Yaba, Ikeja, and Surulere can have very different property markets. Compare actual listings in the specific neighborhood rather than relying only on a general reputation."
+        ]
+      },
+      {
+        heading: "4. Compare the total cost",
+        paragraphs: [
+          "The purchase price is only one part of the cost of acquiring property. Investigate applicable fees, taxes, legal costs, agency charges, service charges, renovation requirements, and other expenses before making a decision."
+        ]
+      },
+      {
+        heading: "5. Research the individual property",
+        paragraphs: [
+          "An attractive neighborhood does not guarantee that every property is suitable. Review the property's condition, exact location, ownership information, available documentation, asking price, and any restrictions or obligations that may apply."
+        ]
+      },
+      {
+        heading: "6. Do your due diligence before paying",
+        paragraphs: [
+          "Before making a substantial payment, verify the relevant property documents and ownership information through appropriate professional and official channels. Independent legal and property advice can help identify issues that are not obvious from an online listing."
+        ]
+      }
+    ],
+  },
+
+
 
   {
     slug: "buying-property-in-lekki-lagos",
