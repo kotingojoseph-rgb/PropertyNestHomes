@@ -1,4 +1,69 @@
 export const GUIDES = [
+
+  {
+    slug: "buying-property-in-lekki-lagos",
+    title: "Buying Property in Lekki, Lagos: A Practical Buyer’s Guide",
+    description:
+      "A practical guide to researching property in Lekki, Lagos, including location, property type, total costs, inspections, documents, and comparing listings.",
+    relatedListings: [
+      {
+        title: "Luxury Apartment",
+        href: "/property/4",
+        description: "Lekki Phase 1, Lagos",
+      },
+      {
+        title: "Luxury Duplex",
+        href: "/property/36",
+        description: "Lekki, Lagos",
+      },
+    ],
+    intro:
+      "Lekki has a wide range of homes and property types, so a useful search starts with the details that matter to your own needs. Before committing to a property, compare location, size, condition, access, costs, documentation, and availability rather than relying on photographs or marketing descriptions alone.",
+    sections: [
+      {
+        heading: "1. Start with the part of Lekki that fits your routine",
+        paragraphs: [
+          "Consider where you regularly need to travel for work, school, family responsibilities, shopping, healthcare, and other daily activities. The most suitable location depends on your routine, not simply on the name of the area.",
+          "When comparing properties, record the specific location provided in each listing and consider the practical access routes you would normally use."
+        ]
+      },
+      {
+        heading: "2. Compare property type, size, and layout",
+        paragraphs: [
+          "Lekki listings can differ significantly in property type, bedroom and bathroom count, floor area, parking, outdoor space, condition, and included features.",
+          "Compare these details side by side before focusing on the advertised price. A property that looks similar in photographs may have important differences in size, layout, condition, or facilities."
+        ]
+      },
+      {
+        heading: "3. Calculate the full cost before making a decision",
+        paragraphs: [
+          "The advertised property price may not represent the complete cost of a transaction. Depending on the property and transaction, there may be professional, documentation, inspection, moving, maintenance, service, utility, or other expenses.",
+          "Ask the relevant seller or agent for a written breakdown of applicable costs and confirm which items are included or excluded before making a major payment."
+        ]
+      },
+      {
+        heading: "4. Inspect the property and its surroundings",
+        paragraphs: [
+          "When practical, inspect the property in person or arrange an inspection by someone you trust. Look at the visible condition, drainage, access, water and electricity arrangements, fittings, parking, shared areas, and surrounding environment.",
+          "Ask questions about anything that is unclear from the listing. Photographs are useful for creating a shortlist but should not replace an appropriate physical inspection."
+        ]
+      },
+      {
+        heading: "5. Verify the seller, documents, and transaction",
+        paragraphs: [
+          "Confirm the identity and role of the person offering the property and ask what authority they have to market or negotiate the transaction.",
+          "Request the documents relevant to the particular property and have qualified professionals review important ownership, legal, and transaction documents when appropriate. Do not treat a listing, photograph, scan, or verbal statement as a substitute for independent verification."
+        ]
+      },
+      {
+        heading: "6. Compare current Lekki listings carefully",
+        paragraphs: [
+          "PropertyNestHomes currently has public Lekki listings that can be used as examples when comparing property details. The Luxury Apartment listing in Lekki Phase 1 and the Luxury Duplex listing in Lekki provide different property information that can be reviewed before contacting the relevant property contact.",
+          "Use the details on each listing to build your own comparison based on the features, location, condition, price, and other requirements that matter to you. Confirm current availability and information directly before taking action."
+        ]
+      }
+    ]
+  },
   {
     slug: "buying-property-in-nigeria",
     title: "Buying Property in Nigeria: A Practical Guide",

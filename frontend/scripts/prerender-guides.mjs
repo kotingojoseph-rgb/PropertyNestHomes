@@ -36,6 +36,21 @@ function content(guide) {
           </section>
         `).join("")}
 
+        ${guide.relatedListings?.length ? `
+          <section>
+            <h2>Explore related properties</h2>
+            <div>
+              ${guide.relatedListings.map((listing) => `
+                <a href="${esc(listing.href)}">
+                  <h3>${esc(listing.title)}</h3>
+                  <p>${esc(listing.description)}</p>
+                  <span>View property →</span>
+                </a>
+              `).join("")}
+            </div>
+          </section>
+        ` : ""}
+
         <section>
           <h2>Before you commit</h2>
           <p>

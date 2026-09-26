@@ -157,6 +157,34 @@ export default function GuideArticle() {
           ))}
         </div>
 
+        {guide.relatedListings?.length ? (
+          <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Explore related properties
+            </h2>
+
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {guide.relatedListings.map((listing) => (
+                <Link
+                  key={listing.href}
+                  to={listing.href}
+                  className="rounded-xl border border-gray-200 p-5 transition hover:border-green-300 hover:bg-green-50"
+                >
+                  <h3 className="text-lg font-bold text-gray-900">
+                    {listing.title}
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-600">
+                    {listing.description}
+                  </p>
+                  <span className="mt-3 inline-block text-sm font-semibold text-green-700">
+                    View property →
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         <section className="mt-6 rounded-2xl border border-green-100 bg-green-50 p-6 sm:p-8">
           <h2 className="text-2xl font-bold text-gray-900">
             Before you commit
