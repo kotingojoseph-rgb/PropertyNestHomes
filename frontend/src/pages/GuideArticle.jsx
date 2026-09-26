@@ -20,6 +20,75 @@ export default function GuideArticle() {
     }
 
     meta.setAttribute("content", guide.description);
+
+    const canonicalUrl = `${window.location.origin}/guides/${guide.slug}`;
+
+    let canonical = document.querySelector('link[rel="canonical"]');
+
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.setAttribute("rel", "canonical");
+      document.head.appendChild(canonical);
+    }
+
+    canonical.setAttribute("href", canonicalUrl);
+
+    const existingSchema = document.getElementById("guide-structured-data");
+
+    if (existingSchema) {
+      existingSchema.remove();
+    }
+
+    const schema = {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Article",
+          "@id": `${canonicalUrl}#article`,
+          "headline": guide.title,
+          "description": guide.description,
+          "url": canonicalUrl,
+          "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": canonicalUrl
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "PropertyNestHomes",
+            "url": window.location.origin
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": window.location.origin
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Property Guides",
+              "item": `${window.location.origin}/guides`
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": guide.title,
+              "item": canonicalUrl
+            }
+          ]
+        }
+      ]
+    };
+
+    const script = document.createElement("script");
+    script.id = "guide-structured-data";
+    script.type = "application/ld+json";
+    script.textContent = JSON.stringify(schema);
+    document.head.appendChild(script);
   }, [guide]);
 
   if (!guide) {
