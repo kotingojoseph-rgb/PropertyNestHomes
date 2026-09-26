@@ -1,5 +1,58 @@
 export const GUIDES = [
   {
+    slug: "property-prices-in-lagos",
+    title: "Property Prices in Lagos: What Buyers Should Know",
+    description:
+      "A practical guide to understanding property prices in Lagos, including location, property type, condition, amenities, documentation, and other factors that can affect the total cost.",
+    intro:
+      "Property prices in Lagos can vary significantly between locations and property types. The asking price is only one part of the decision, so buyers should compare properties using location, condition, amenities, documentation, and the full cost of completing the purchase.",
+    sections: [
+      {
+        heading: "Location has a major effect on price",
+        paragraphs: [
+          "Property values can differ substantially between neighborhoods because of access to roads, transport, employment centers, schools, shopping, recreation, and other amenities.",
+          "When comparing listings, consider how the location fits your daily needs rather than comparing prices alone."
+        ]
+      },
+      {
+        heading: "Property type and size matter",
+        paragraphs: [
+          "Apartments, detached houses, semi-detached homes, terraces, and larger developments can have very different price ranges.",
+          "Compare properties with similar sizes, layouts, bedroom counts, land arrangements, and intended uses before deciding whether one listing is relatively expensive or inexpensive."
+        ]
+      },
+      {
+        heading: "Condition can change the real cost",
+        paragraphs: [
+          "A property that appears cheaper may require repairs, renovation, replacement of fittings, or other work after purchase.",
+          "Ask what condition the property is in and consider inspection and improvement costs when comparing alternatives."
+        ]
+      },
+      {
+        heading: "Amenities and services can affect value",
+        paragraphs: [
+          "Features such as security arrangements, power solutions, water supply, parking, estate facilities, road access, and shared services can affect both the price and ongoing cost of a property.",
+          "Look beyond the headline price and identify which facilities are included and which may require additional payments."
+        ]
+      },
+      {
+        heading: "Check documentation before paying",
+        paragraphs: [
+          "Before making a major payment, buyers should establish what documents are available for the property and have appropriate professionals review them.",
+          "Documentation, ownership history, planning considerations, and other legal matters should be checked as part of the buyer's due diligence."
+        ]
+      },
+      {
+        heading: "Compare total purchase cost",
+        paragraphs: [
+          "The listing price is not necessarily the final amount a buyer will spend. Professional fees, transaction costs, inspections, moving, renovations, and other expenses may also need to be considered.",
+          "A useful comparison is the estimated total cost of acquiring and preparing each property for its intended use."
+        ]
+      }
+    ]
+  },
+
+  {
     slug: "cost-of-buying-a-house-in-lagos",
     title: "Cost of Buying a House in Lagos, Nigeria: What to Budget For",
     description:
