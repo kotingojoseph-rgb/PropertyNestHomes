@@ -652,6 +652,68 @@ const PAGES = [
       </main>
     `,
   },
+  {
+    route: "/biography",
+    title: "Kotingo Joseph (LearnMore) | Biography and PropertyNestHomes Founder",
+    description:
+      "Read the biography of Kotingo Joseph, also known as LearnMore, founder of PropertyNestHomes, and learn about his technology work and cybersecurity interests.",
+    content: `
+      <main>
+        <article>
+          <header>
+            <p>Personal Biography</p>
+            <h1>Kotingo Joseph (LearnMore)</h1>
+            <p>Founder of PropertyNestHomes | Technology Entrepreneur</p>
+          </header>
+
+          <section>
+            <h2>About Kotingo Joseph</h2>
+            <p>
+              Kotingo Joseph, also known as LearnMore, is a technology
+              entrepreneur and the founder of PropertyNestHomes, a real estate
+              platform designed to help people discover properties and connect
+              with property owners, sellers, and agents.
+            </p>
+            <p>
+              His work on PropertyNestHomes involves developing digital
+              products and online services, with features for property
+              listings, communication, verification, and payment-related
+              workflows.
+            </p>
+          </section>
+
+          <section>
+            <h2>Cybersecurity and Intelligence Interests</h2>
+            <p>
+              Kotingo is interested in cybersecurity, digital security, and
+              security intelligence. These fields focus on understanding
+              digital threats, protecting information and systems, and
+              analyzing information responsibly. Specific professional
+              credentials, employment, or official affiliations should be
+              confirmed against verifiable records.
+            </p>
+          </section>
+
+          <section>
+            <h2>PropertyNestHomes</h2>
+            <p>
+              PropertyNestHomes is his real estate technology project for
+              discovering, buying, selling, and renting properties online.
+            </p>
+            <p><a href="https://propertynesthomes.com/">Visit PropertyNestHomes</a></p>
+          </section>
+
+          <section>
+            <h2>Contact</h2>
+            <p>
+              For platform enquiries, visit the
+              <a href="/contact"> PropertyNestHomes contact page</a>.
+            </p>
+          </section>
+        </article>
+      </main>
+    `,
+  },
 ];
 
 function escapeHtml(value) {

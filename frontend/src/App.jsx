@@ -20,6 +20,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import AddProperty from "./pages/AddProperty";
 import About from "./pages/About";
+import Biography from "./pages/Biography";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Terms from "./pages/Terms";
@@ -580,6 +581,8 @@ function AppContent() {
             path="/about"
             element={<About />}
           />
+
+          <Route path="/biography" element={<Biography />} />
 
           <Route
             path="/contact"
