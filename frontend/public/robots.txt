@@ -7,7 +7,8 @@ Disallow: /login
 Disallow: /register
 Disallow: /forgot-password
 Disallow: /reset-password
-Disallow: /chat
+Disallow: /chat$
+Disallow: /chat/
 Disallow: /calls
 Disallow: /add-property
 Disallow: /edit-property
