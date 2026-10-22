@@ -137,6 +137,11 @@
     <loc>https://propertynesthomes.com/guides/buying-property-in-victoria-island-lagos/</loc>
   </url>
   <url>
+    <loc>https://propertynesthomes.com/chat-feature/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://propertynesthomes.com/biography/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>

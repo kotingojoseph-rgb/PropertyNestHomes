@@ -653,6 +653,61 @@ const PAGES = [
     `,
   },
   {
+    route: "/chat-feature",
+    title: "Messaging, Voice & Video Calls | PropertyNestHomes",
+    description:
+      "Learn how PropertyNestHomes helps property buyers, sellers, landlords, and agents connect through online messaging, voice calls, and video calls.",
+    content: `
+      <main>
+        <article>
+          <header>
+            <p>PropertyNestHomes Communication Features</p>
+            <h1>Connect with Property Owners and Agents</h1>
+            <p>
+              PropertyNestHomes helps people exploring real estate connect
+              with relevant property owners, sellers, landlords, and agents.
+            </p>
+          </header>
+
+          <section>
+            <h2>Messaging for Property Enquiries</h2>
+            <p>
+              Use the platform's chat feature to ask questions about property
+              listings, request additional details, and continue conversations
+              with relevant property contacts. Keep personal and financial
+              information private and verify property details before making
+              a transaction.
+            </p>
+          </section>
+
+          <section>
+            <h2>Voice and Video Communication</h2>
+            <p>
+              Where available, voice and video calling features can help users
+              discuss property enquiries remotely. Confirm important details
+              independently and arrange property inspections when appropriate.
+            </p>
+          </section>
+
+          <section>
+            <h2>How to Get Started</h2>
+            <ol>
+              <li>Browse available properties.</li>
+              <li>Open a listing and review its details.</li>
+              <li>Sign in or create an account to use available account features.</li>
+              <li>Contact the relevant property representative.</li>
+            </ol>
+            <p><a href="/buy">Browse properties</a></p>
+            <p><a href="/login">Sign in to PropertyNestHomes</a></p>
+            <p><a href="/register">Create an account</a></p>
+          </section>
+
+          <p><a href="/">Return to PropertyNestHomes</a></p>
+        </article>
+      </main>
+    `,
+  },
+  {
     route: "/biography",
     title: "Kotingo Joseph (LearnMore) | Biography and PropertyNestHomes Founder",
     description:
