@@ -798,7 +798,7 @@ function buildPageHtml(template, page) {
   );
 
   html = html.replace(
-    /<meta name="description"[^>]*>/i,
+    /<meta\b(?=[^>]*\bname=["\']description["\'])[^>]*>/i,
     `<meta name="description" content="${escapeAttribute(page.description)}">`
   );
 
@@ -813,7 +813,7 @@ function buildPageHtml(template, page) {
   );
 
   html = html.replace(
-    /<meta property="og:description"[^>]*>/i,
+    /<meta\b(?=[^>]*\bproperty=["\']og:description["\'])[^>]*>/i,
     `<meta property="og:description" content="${escapeAttribute(page.description)}">`
   );
 
@@ -828,7 +828,7 @@ function buildPageHtml(template, page) {
   );
 
   html = html.replace(
-    /<meta name="twitter:description"[^>]*>/i,
+    /<meta\b(?=[^>]*\bname=["\']twitter:description["\'])[^>]*>/i,
     `<meta name="twitter:description" content="${escapeAttribute(page.description)}">`
   );
 
