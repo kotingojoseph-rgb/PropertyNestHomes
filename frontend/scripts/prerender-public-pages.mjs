@@ -709,61 +709,291 @@ const PAGES = [
   },
   {
     route: "/biography",
-    title: "Kotingo Joseph (LearnMore) | Biography and PropertyNestHomes Founder",
+    title: "Kotingo Joseph (LearnMore) | Cybersecurity and PropertyNestHomes Founder",
     description:
-      "Read the biography of Kotingo Joseph, also known as LearnMore, founder of PropertyNestHomes, and learn about his technology work and cybersecurity interests.",
+      "Professional biography of Kotingo Joseph (LearnMore), founder and builder of PropertyNestHomes, covering cybersecurity interests, database protection, and international country and currency selection.",
     content: `
       <main>
         <article>
           <header>
-            <p>Personal Biography</p>
+            <p>Professional Biography</p>
             <h1>Kotingo Joseph (LearnMore)</h1>
-            <p>Founder of PropertyNestHomes | Technology Entrepreneur</p>
+            <p>Founder and Builder of PropertyNestHomes | Cybersecurity and Technology</p>
           </header>
-
           <section>
-            <h2>About Kotingo Joseph</h2>
-            <p>
-              Kotingo Joseph, also known as LearnMore, is a technology
-              entrepreneur and the founder of PropertyNestHomes, a real estate
-              platform designed to help people discover properties and connect
-              with property owners, sellers, and agents.
-            </p>
-            <p>
-              His work on PropertyNestHomes involves developing digital
-              products and online services, with features for property
-              listings, communication, verification, and payment-related
-              workflows.
-            </p>
+            <h2>Professional Profile</h2>
+            <p>Kotingo Joseph, known as LearnMore, is a technology professional and the founder and builder of PropertyNestHomes, a real estate technology platform for discovering properties and connecting buyers, sellers, landlords, tenants, and agents.</p>
+            <p>His technology interests include cybersecurity, application security, database protection, access control, data integrity, information confidentiality, and responsible data handling.</p>
           </section>
-
           <section>
-            <h2>Cybersecurity and Intelligence Interests</h2>
-            <p>
-              Kotingo is interested in cybersecurity, digital security, and
-              security intelligence. These fields focus on understanding
-              digital threats, protecting information and systems, and
-              analyzing information responsibly. Specific professional
-              credentials, employment, or official affiliations should be
-              confirmed against verifiable records.
-            </p>
+            <h2>Cybersecurity and Database Protection</h2>
+            <p>Database security involves protecting stored information from unauthorized access, alteration, disclosure, or loss. Relevant practices include access control, secure application design, careful handling of sensitive information, and measures that support data integrity and system reliability.</p>
           </section>
-
           <section>
             <h2>PropertyNestHomes</h2>
-            <p>
-              PropertyNestHomes is his real estate technology project for
-              discovering, buying, selling, and renting properties online.
-            </p>
+            <p>PropertyNestHomes is a real estate technology platform with property discovery, listing, communication, verification, and payment-related features. Its country and currency selector currently lists 250 countries and territories. This describes the available selector entries and does not confirm active property listings or customers in every location.</p>
             <p><a href="https://propertynesthomes.com/">Visit PropertyNestHomes</a></p>
           </section>
-
+          <section>
+            <h2>Country and Currency Coverage</h2>
+            <p>The following country and territory names are returned by the platform's country selection API. Inclusion does not confirm property inventory in every location.</p>
+            <ul>
+              <li>Afghanistan</li>
+              <li>Aland Islands</li>
+              <li>Albania</li>
+              <li>Algeria</li>
+              <li>American Samoa</li>
+              <li>Andorra</li>
+              <li>Angola</li>
+              <li>Anguilla</li>
+              <li>Antarctica</li>
+              <li>Antigua And Barbuda</li>
+              <li>Argentina</li>
+              <li>Armenia</li>
+              <li>Aruba</li>
+              <li>Australia</li>
+              <li>Austria</li>
+              <li>Azerbaijan</li>
+              <li>The Bahamas</li>
+              <li>Bahrain</li>
+              <li>Bangladesh</li>
+              <li>Barbados</li>
+              <li>Belarus</li>
+              <li>Belgium</li>
+              <li>Belize</li>
+              <li>Benin</li>
+              <li>Bermuda</li>
+              <li>Bhutan</li>
+              <li>Bolivia</li>
+              <li>Bosnia and Herzegovina</li>
+              <li>Botswana</li>
+              <li>Bouvet Island</li>
+              <li>Brazil</li>
+              <li>British Indian Ocean Territory</li>
+              <li>Brunei</li>
+              <li>Bulgaria</li>
+              <li>Burkina Faso</li>
+              <li>Burundi</li>
+              <li>Cambodia</li>
+              <li>Cameroon</li>
+              <li>Canada</li>
+              <li>Cape Verde</li>
+              <li>Cayman Islands</li>
+              <li>Central African Republic</li>
+              <li>Chad</li>
+              <li>Chile</li>
+              <li>China</li>
+              <li>Christmas Island</li>
+              <li>Cocos (Keeling) Islands</li>
+              <li>Colombia</li>
+              <li>Comoros</li>
+              <li>Congo</li>
+              <li>Democratic Republic of the Congo</li>
+              <li>Cook Islands</li>
+              <li>Costa Rica</li>
+              <li>Cote D&#x27;Ivoire (Ivory Coast)</li>
+              <li>Croatia</li>
+              <li>Cuba</li>
+              <li>Cyprus</li>
+              <li>Czech Republic</li>
+              <li>Denmark</li>
+              <li>Djibouti</li>
+              <li>Dominica</li>
+              <li>Dominican Republic</li>
+              <li>East Timor</li>
+              <li>Ecuador</li>
+              <li>Egypt</li>
+              <li>El Salvador</li>
+              <li>Equatorial Guinea</li>
+              <li>Eritrea</li>
+              <li>Estonia</li>
+              <li>Ethiopia</li>
+              <li>Falkland Islands</li>
+              <li>Faroe Islands</li>
+              <li>Fiji Islands</li>
+              <li>Finland</li>
+              <li>France</li>
+              <li>French Guiana</li>
+              <li>French Polynesia</li>
+              <li>French Southern Territories</li>
+              <li>Gabon</li>
+              <li>The Gambia</li>
+              <li>Georgia</li>
+              <li>Germany</li>
+              <li>Ghana</li>
+              <li>Gibraltar</li>
+              <li>Greece</li>
+              <li>Greenland</li>
+              <li>Grenada</li>
+              <li>Guadeloupe</li>
+              <li>Guam</li>
+              <li>Guatemala</li>
+              <li>Guernsey and Alderney</li>
+              <li>Guinea</li>
+              <li>Guinea-Bissau</li>
+              <li>Guyana</li>
+              <li>Haiti</li>
+              <li>Heard Island and McDonald Islands</li>
+              <li>Honduras</li>
+              <li>Hong Kong S.A.R.</li>
+              <li>Hungary</li>
+              <li>Iceland</li>
+              <li>India</li>
+              <li>Indonesia</li>
+              <li>Iran</li>
+              <li>Iraq</li>
+              <li>Ireland</li>
+              <li>Israel</li>
+              <li>Italy</li>
+              <li>Jamaica</li>
+              <li>Japan</li>
+              <li>Jersey</li>
+              <li>Jordan</li>
+              <li>Kazakhstan</li>
+              <li>Kenya</li>
+              <li>Kiribati</li>
+              <li>North Korea</li>
+              <li>South Korea</li>
+              <li>Kuwait</li>
+              <li>Kyrgyzstan</li>
+              <li>Laos</li>
+              <li>Latvia</li>
+              <li>Lebanon</li>
+              <li>Lesotho</li>
+              <li>Liberia</li>
+              <li>Libya</li>
+              <li>Liechtenstein</li>
+              <li>Lithuania</li>
+              <li>Luxembourg</li>
+              <li>Macau S.A.R.</li>
+              <li>Macedonia</li>
+              <li>Madagascar</li>
+              <li>Malawi</li>
+              <li>Malaysia</li>
+              <li>Maldives</li>
+              <li>Mali</li>
+              <li>Malta</li>
+              <li>Man (Isle of)</li>
+              <li>Marshall Islands</li>
+              <li>Martinique</li>
+              <li>Mauritania</li>
+              <li>Mauritius</li>
+              <li>Mayotte</li>
+              <li>Mexico</li>
+              <li>Micronesia</li>
+              <li>Moldova</li>
+              <li>Monaco</li>
+              <li>Mongolia</li>
+              <li>Montenegro</li>
+              <li>Montserrat</li>
+              <li>Morocco</li>
+              <li>Mozambique</li>
+              <li>Myanmar</li>
+              <li>Namibia</li>
+              <li>Nauru</li>
+              <li>Nepal</li>
+              <li>Bonaire, Sint Eustatius and Saba</li>
+              <li>Netherlands</li>
+              <li>New Caledonia</li>
+              <li>New Zealand</li>
+              <li>Nicaragua</li>
+              <li>Niger</li>
+              <li>Nigeria</li>
+              <li>Niue</li>
+              <li>Norfolk Island</li>
+              <li>Northern Mariana Islands</li>
+              <li>Norway</li>
+              <li>Oman</li>
+              <li>Pakistan</li>
+              <li>Palau</li>
+              <li>Palestinian Territory Occupied</li>
+              <li>Panama</li>
+              <li>Papua new Guinea</li>
+              <li>Paraguay</li>
+              <li>Peru</li>
+              <li>Philippines</li>
+              <li>Pitcairn Island</li>
+              <li>Poland</li>
+              <li>Portugal</li>
+              <li>Puerto Rico</li>
+              <li>Qatar</li>
+              <li>Reunion</li>
+              <li>Romania</li>
+              <li>Russia</li>
+              <li>Rwanda</li>
+              <li>Saint Helena</li>
+              <li>Saint Kitts And Nevis</li>
+              <li>Saint Lucia</li>
+              <li>Saint Pierre and Miquelon</li>
+              <li>Saint Vincent And The Grenadines</li>
+              <li>Saint-Barthelemy</li>
+              <li>Saint-Martin (French part)</li>
+              <li>Samoa</li>
+              <li>San Marino</li>
+              <li>Sao Tome and Principe</li>
+              <li>Saudi Arabia</li>
+              <li>Senegal</li>
+              <li>Serbia</li>
+              <li>Seychelles</li>
+              <li>Sierra Leone</li>
+              <li>Singapore</li>
+              <li>Slovakia</li>
+              <li>Slovenia</li>
+              <li>Solomon Islands</li>
+              <li>Somalia</li>
+              <li>South Africa</li>
+              <li>South Georgia</li>
+              <li>South Sudan</li>
+              <li>Spain</li>
+              <li>Sri Lanka</li>
+              <li>Sudan</li>
+              <li>Suriname</li>
+              <li>Svalbard And Jan Mayen Islands</li>
+              <li>Swaziland</li>
+              <li>Sweden</li>
+              <li>Switzerland</li>
+              <li>Syria</li>
+              <li>Taiwan</li>
+              <li>Tajikistan</li>
+              <li>Tanzania</li>
+              <li>Thailand</li>
+              <li>Togo</li>
+              <li>Tokelau</li>
+              <li>Tonga</li>
+              <li>Trinidad And Tobago</li>
+              <li>Tunisia</li>
+              <li>Turkey</li>
+              <li>Turkmenistan</li>
+              <li>Turks And Caicos Islands</li>
+              <li>Tuvalu</li>
+              <li>Uganda</li>
+              <li>Ukraine</li>
+              <li>United Arab Emirates</li>
+              <li>United Kingdom</li>
+              <li>United States</li>
+              <li>United States Minor Outlying Islands</li>
+              <li>Uruguay</li>
+              <li>Uzbekistan</li>
+              <li>Vanuatu</li>
+              <li>Vatican City State (Holy See)</li>
+              <li>Venezuela</li>
+              <li>Vietnam</li>
+              <li>Virgin Islands (British)</li>
+              <li>Virgin Islands (US)</li>
+              <li>Wallis And Futuna Islands</li>
+              <li>Western Sahara</li>
+              <li>Yemen</li>
+              <li>Zambia</li>
+              <li>Zimbabwe</li>
+              <li>Kosovo</li>
+              <li>Curaçao</li>
+              <li>Sint Maarten (Dutch part)</li>
+            </ul>
+            <p><a href="https://propertynesthomes.onrender.com/api/locations/countries">View country and currency data</a></p>
+          </section>
           <section>
             <h2>Contact</h2>
-            <p>
-              For platform enquiries, visit the
-              <a href="/contact"> PropertyNestHomes contact page</a>.
-            </p>
+            <p>For platform enquiries, visit the <a href="/contact">PropertyNestHomes contact page</a>.</p>
           </section>
         </article>
       </main>
