@@ -1,37 +1,92 @@
 const websites = [
   {
     name: "PropertyPro Nigeria",
-    description: "Explore houses, apartments, land, rentals and property opportunities across Nigeria.",
+    country: "Nigeria",
+    description: "Explore houses, apartments, land and rentals across Nigeria.",
     url: "https://propertypro.ng/",
-    category: "Nigeria",
   },
   {
     name: "Nigeria Property Centre",
-    description: "Browse residential, commercial and land listings across Nigerian cities.",
+    country: "Nigeria",
+    description: "Browse residential, commercial and land listings across Nigeria.",
     url: "https://nigeriapropertycentre.com/",
-    category: "Nigeria",
   },
   {
     name: "Private Property Nigeria",
-    description: "Discover houses, flats, apartments and properties for sale or rent.",
+    country: "Nigeria",
+    description: "Discover properties for sale and rent in Nigeria.",
     url: "https://privateproperty.ng/",
-    category: "Nigeria",
+  },
+  {
+    name: "Meqasa",
+    country: "Ghana",
+    description: "Explore houses, apartments and property opportunities in Ghana.",
+    url: "https://meqasa.com/",
+  },
+  {
+    name: "BuyRentKenya",
+    country: "Kenya",
+    description: "Discover property listings and rentals across Kenya.",
+    url: "https://www.buyrentkenya.com/",
+  },
+  {
+    name: "Property24 South Africa",
+    country: "South Africa",
+    description: "Explore homes, apartments and commercial properties.",
+    url: "https://www.property24.com/",
+  },
+  {
+    name: "Private Property South Africa",
+    country: "South Africa",
+    description: "Browse properties for sale and rent in South Africa.",
+    url: "https://www.privateproperty.co.za/",
+  },
+  {
+    name: "Rightmove",
+    country: "United Kingdom",
+    description: "Explore homes and property listings across the UK.",
+    url: "https://www.rightmove.co.uk/",
+  },
+  {
+    name: "Zoopla",
+    country: "United Kingdom",
+    description: "Discover UK homes, property prices and rental listings.",
+    url: "https://www.zoopla.co.uk/",
+  },
+  {
+    name: "Zillow",
+    country: "United States",
+    description: "Explore homes, rentals and property information in the USA.",
+    url: "https://www.zillow.com/",
+  },
+  {
+    name: "Realtor.com",
+    country: "United States",
+    description: "Browse homes for sale and rent across the United States.",
+    url: "https://www.realtor.com/",
+  },
+  {
+    name: "Bayut",
+    country: "United Arab Emirates",
+    description: "Explore properties for sale and rent in the UAE.",
+    url: "https://www.bayut.com/",
+  },
+  {
+    name: "Property Finder",
+    country: "United Arab Emirates",
+    description: "Discover homes and property opportunities in the UAE.",
+    url: "https://www.propertyfinder.ae/",
   },
 ];
 
-const discoverySearches = [
-  {
-    label: "African real estate websites",
-    query: "real estate property websites across Africa",
-  },
-  {
-    label: "International property websites",
-    query: "international property websites buy rent real estate",
-  },
-  {
-    label: "Property investment websites",
-    query: "real estate investment property websites",
-  },
+const countries = [
+  "Nigeria",
+  "Ghana",
+  "Kenya",
+  "South Africa",
+  "United Kingdom",
+  "United States",
+  "United Arab Emirates",
 ];
 
 export default function RealEstateDiscovery() {
@@ -44,24 +99,24 @@ export default function RealEstateDiscovery() {
           </p>
 
           <h2 className="mt-2 text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Discover Real Estate Websites
+            Discover Real Estate Websites Worldwide
           </h2>
 
           <p className="mt-4 text-base leading-7 text-gray-600">
-            Explore other property platforms, compare real estate opportunities
-            and discover useful property resources from Nigeria and around
-            the world.
+            Explore independent real estate marketplaces from different
+            countries. Compare property opportunities and visit other
+            property websites directly.
           </p>
         </div>
 
-        <div className="mt-8 grid gap-5 md:grid-cols-3">
+        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {websites.map((site) => (
             <article
               key={site.url}
               className="flex flex-col rounded-2xl border border-gray-200 bg-gray-50 p-6 transition hover:border-green-300 hover:shadow-md"
             >
               <span className="text-xs font-bold uppercase tracking-wider text-green-700">
-                {site.category} Property Portal
+                {site.country} Property Portal
               </span>
 
               <h3 className="mt-3 text-xl font-bold text-gray-900">
@@ -86,33 +141,35 @@ export default function RealEstateDiscovery() {
 
         <div className="mt-10 rounded-2xl border border-green-100 bg-green-50 p-6 sm:p-8">
           <h3 className="text-xl font-bold text-gray-900">
-            Discover More Property Websites
+            Find More Property Websites
           </h3>
 
           <p className="mt-2 text-sm leading-6 text-gray-600">
-            Find additional property marketplaces and real estate resources
-            through these discovery searches.
+            Search for additional real estate marketplaces and property
+            resources in these countries.
           </p>
 
           <div className="mt-5 flex flex-wrap gap-3">
-            {discoverySearches.map((item) => (
+            {countries.map((country) => (
               <a
-                key={item.label}
-                href={`https://www.google.com/search?q=${encodeURIComponent(item.query)}`}
+                key={country}
+                href={`https://www.google.com/search?q=${encodeURIComponent(
+                  `real estate websites property portals ${country}`
+                )}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-xl border border-green-200 bg-white px-4 py-3 text-sm font-semibold text-green-800 transition hover:bg-green-100"
               >
-                {item.label} ↗
+                Explore {country} ↗
               </a>
             ))}
           </div>
         </div>
 
         <p className="mt-6 text-xs leading-5 text-gray-500">
-          External websites are independently operated. PropertyNestHomes
-          does not own or guarantee their listings, services or information.
-          Always verify property details independently.
+          External websites are independently operated and are not owned
+          or endorsed by PropertyNestHomes. Their availability, listings
+          and services may change. Always verify property details independently.
         </p>
       </div>
     </section>
