@@ -387,6 +387,14 @@ async function handleChargeSuccess(client, data) {
    * - the exact server-defined price
    */
   if (paymentType === "promotion") {
+    const promotionCurrency = String(data.currency || "").toUpperCase();
+
+    if (promotionCurrency !== "NGN") {
+      throw new Error(
+        `Unsupported promotion payment currency: ${promotionCurrency || "missing"}`
+      );
+    }
+
     if (!userId || !propertyId || !plan) {
       throw new Error(
         "Invalid promotion payment metadata"

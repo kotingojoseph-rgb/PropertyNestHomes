@@ -18,6 +18,9 @@ const fallbackImages = [
 
 export default function PropertyItem({
   property,
+  promotions = [],
+  promotingPropertyId,
+  onPromote,
   onDelete,
   onEdit,
   onView,
@@ -38,6 +41,20 @@ export default function PropertyItem({
     String(property?.verification_status || "pending").toLowerCase();
 
   const isVerified = verificationStatus === "verified";
+
+  const activePromotion = promotions.find(
+    (promotion) =>
+      Number(promotion.property_id) === Number(property?.id)
+  );
+
+  const isPromoting =
+    Number(promotingPropertyId) === Number(property?.id);
+
+  const promotionPlans = [
+    { key: "featured", label: "Featured", price: 2000 },
+    { key: "premium", label: "Premium", price: 5000 },
+    { key: "business", label: "Business", price: 10000 },
+  ];
 
   return (
     <div className="min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
@@ -80,6 +97,37 @@ export default function PropertyItem({
           {property?.currency || "NGN"}{" "}
           {Number(property?.price || 0).toLocaleString()}
         </p>
+
+        {isVerified && (
+          <div className="mt-4 rounded-xl border border-gray-200 p-3">
+            <p className="text-sm font-bold text-gray-900">
+              Promote this property
+            </p>
+
+            {activePromotion ? (
+              <p className="mt-2 text-sm font-semibold text-green-700">
+                Active promotion: {activePromotion.plan}
+              </p>
+            ) : (
+              <div className="mt-3 grid grid-cols-1 gap-2">
+                {promotionPlans.map((plan) => (
+                  <button
+                    key={plan.key}
+                    type="button"
+                    disabled={isPromoting}
+                    onClick={() => onPromote?.(property, plan.key)}
+                    className="flex min-h-10 items-center justify-between rounded-lg bg-green-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <span>
+                      {isPromoting ? "Opening checkout..." : plan.label}
+                    </span>
+                    <span>₦{plan.price.toLocaleString()}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mt-4 grid min-w-0 grid-cols-3 gap-2 sm:mt-5 sm:flex sm:flex-wrap">
           <button

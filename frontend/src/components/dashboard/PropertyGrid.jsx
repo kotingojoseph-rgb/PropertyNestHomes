@@ -2,6 +2,9 @@ import PropertyItem from "./PropertyItem";
 
 export default function PropertyGrid({
   properties,
+  promotions,
+  promotingPropertyId,
+  onPromote,
   onDelete,
   onEdit,
   onView,
@@ -12,6 +15,9 @@ export default function PropertyGrid({
         <PropertyItem
           key={property.id}
           property={property}
+          promotions={promotions}
+          promotingPropertyId={promotingPropertyId}
+          onPromote={onPromote}
           onDelete={onDelete}
           onEdit={onEdit}
           onView={onView}

@@ -21,13 +21,26 @@ function paystackHeaders() {
 // Initialize Paystack payment
 exports.initializePayment = async (req, res) => {
   try {
-    const { email, property_id, plan } = req.body;
+    const { property_id, plan } = req.body;
 
     const userId = req.user.id;
 
-    if (!email || !property_id || !plan) {
+    if (!property_id || !plan) {
       return res.status(400).json({
-        error: "Email, property and plan are required",
+        error: "Property and plan are required",
+      });
+    }
+
+    const userResult = await pool.query(
+      "SELECT email FROM users WHERE id = $1 LIMIT 1",
+      [userId]
+    );
+
+    const email = String(userResult.rows[0]?.email || "").trim();
+
+    if (!email) {
+      return res.status(400).json({
+        error: "Your account does not have a valid email address.",
       });
     }
 
@@ -75,6 +88,10 @@ exports.initializePayment = async (req, res) => {
       {
         email,
         amount: amount * 100,
+        callback_url: `${(
+          process.env.FRONTEND_URL ||
+          "https://propertynesthomes.com"
+        ).replace(/\/+$/, "")}/dashboard?promotion=return`,
 
         metadata: {
           user_id: userId,
@@ -397,6 +414,18 @@ exports.verifyPayment = async (req, res) => {
     const paymentType = String(
       metadata.payment_type || "customer_payment"
     ).toLowerCase();
+
+    /*
+     * Promotion payments are recorded and activated exclusively
+     * by the verified Paystack webhook. Do not let the generic
+     * verification path consume the reference or credit the wallet.
+     */
+    if (paymentType === "promotion") {
+      return res.status(409).json({
+        error: "Promotion payments are confirmed through the Paystack webhook.",
+        payment_type: "promotion",
+      });
+    }
 
     const investmentId = metadata.investment_id
       ? Number(metadata.investment_id)
