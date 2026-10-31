@@ -148,7 +148,7 @@ export const GUIDES = [
       },
     ],
     intro:
-      "Lagos has a wide range of residential property markets. The right area depends on your budget, daily routine, preferred property type, and reason for buying. Compare specific neighborhoods and individual properties rather than relying only on general area descriptions.",
+      "Lagos has a wide range of residential property markets, from established residential neighborhoods to developing areas. The right location depends on your budget, daily routine, preferred property type, and reason for buying. Consider travel time, infrastructure, access roads, drainage, utilities, neighborhood development, and the property's documentation. Compare specific neighborhoods and individual properties rather than relying only on general area descriptions or reputation.",
     sections: [
       {
         heading: "1. Start with your reason for buying",
@@ -159,13 +159,13 @@ export const GUIDES = [
       {
         heading: "2. Compare locations by daily convenience",
         paragraphs: [
-          "Consider commuting routes, access to major roads, schools, healthcare, shopping, work locations, and other services you regularly use. A property that looks attractive on paper may be less suitable if everyday travel is difficult."
+          "Consider commuting routes, access to major roads, schools, healthcare, shopping, work locations, and other services you regularly use. Check common journeys at the times you normally travel, and investigate alternative routes. Also consider flooding and drainage history, road condition, power and water arrangements, and public transport. A property that looks attractive on paper may be less suitable if everyday travel or basic services are difficult."
         ]
       },
       {
         heading: "3. Compare different parts of Lagos",
         paragraphs: [
-          "Areas such as Lekki, Ikoyi, Victoria Island, Yaba, Ikeja, and Surulere can have very different property markets. Compare actual listings in the specific neighborhood rather than relying only on a general reputation."
+          "Lekki and Ajah contain a range of residential developments, but conditions and access differ between neighborhoods. Ikoyi and Victoria Island have distinct residential and commercial environments. Ikeja is an important business and transport hub, while Yaba and Surulere have their own mix of residential, educational, commercial, and transport advantages. These are broad descriptions, not guarantees about every street or property. Compare actual listings and inspect the immediate surroundings before deciding."
         ]
       },
       {
@@ -330,33 +330,33 @@ export const GUIDES = [
       },
     ],
     intro:
-      "A property can look excellent online and still require substantial investigation. Due diligence means checking the property, the person offering it, the documents, the physical condition, and the proposed transaction.",
+      "A property can look excellent online and still require substantial investigation. Before paying a deposit or purchase price, check the property, the person offering it, the documents, the physical condition, and the proposed transaction. Treat listing photographs, verbal assurances, and copies of documents as information to investigate, not final proof. The checks required depend on the property's location, ownership history, and transaction structure.",
     sections: [
       {
         heading: "Confirm the seller or representative",
         paragraphs: [
-          "Know the full name and role of the person you are dealing with. When an agent or representative is involved, ask what authority they have to market and negotiate the property.",
+          "Know the full name and role of the person you are dealing with. Ask whether you are speaking with the owner, an appointed agent, a developer, or another representative. Request evidence of an agent's authority to market and negotiate the property. Where a company, family, estate, or multiple owners are involved, ask who has authority to approve and complete the transaction. Verify these details independently.",
           "Keep written communications and contact details connected with the transaction."
         ]
       },
       {
         heading: "Review relevant documents",
         paragraphs: [
-          "Ask for documents relevant to the particular property and transaction. Do not assume that a photograph, scan, or verbal explanation proves ownership or a legal right to sell.",
+          "Ask for documents relevant to the particular property and transaction. Depending on the circumstances, these may include title documents, survey information, allocation or assignment records, and transaction or consent documents. A photograph, scan, receipt, or verbal explanation does not by itself prove ownership or a legal right to sell. Ask an independent property lawyer to identify the appropriate records and carry out relevant searches with the responsible authorities.",
           "For an important transaction, qualified professional review can help identify what has been confirmed and what still needs to be checked."
         ]
       },
       {
         heading: "Inspect the property",
         paragraphs: [
-          "Visit the property when practical. Check access, drainage, visible defects, utilities, shared areas, surrounding development, and anything that could affect how you will use the property.",
+          "Visit the property when practical and confirm that its location matches the listing and documents. Check access roads, drainage, visible structural or water damage, utilities, boundaries, shared areas, surrounding development, and anything that could affect your intended use. Consider an independent building inspection or survey. Record observations and request clarification about defects, alterations, outstanding work, or disputes.",
           "Ask focused questions about anything that is unclear in the listing."
         ]
       },
       {
         heading: "Confirm the financial terms",
         paragraphs: [
-          "Confirm the current price, deposit, additional charges, timing, what is included, and any important payment conditions.",
+          "Confirm the agreed price, deposit, payment schedule, additional charges, deadlines, items included in the sale, refund conditions, and what happens if either party does not complete their obligations. Obtain the agreed terms in writing and have the transaction documents reviewed before transferring funds. Independently confirm the identity and payment details of the recipient. Keep receipts and transaction records.",
           "An urgent request for money should not replace normal verification."
         ]
       }
@@ -380,7 +380,7 @@ export const GUIDES = [
       },
     ],
     intro:
-      "A good property search begins before the first phone call. Listings help create a shortlist, but effective research comes from separating specific facts from marketing language and identifying the questions that still need answers.",
+      "A good property search begins before the first phone call. Online listings help create a shortlist, but photographs and promotional descriptions rarely answer every important question. Separate confirmed facts from marketing language, record missing information, and compare properties against the same requirements. Treat an advertised property as an opportunity to investigate, not as a substitute for inspection and verification.",
     sections: [
       {
         heading: "Check the basic facts",
@@ -392,22 +392,22 @@ export const GUIDES = [
       {
         heading: "Read for specific information",
         paragraphs: [
-          "Look for details about layout, condition, access, amenities, parking, utilities, and availability.",
+          "Look for details about layout, condition, access, amenities, parking, utilities, service charges, listing representation, and availability. Check whether the stated size and features are clearly explained. Note missing information and ask whether the property is occupied, whether photographs show the exact unit, and whether the facilities shown are included.",
           "Note what the listing does not explain so that you can ask focused questions later."
         ]
       },
       {
         heading: "Use photographs carefully",
         paragraphs: [
-          "Photographs can help you understand layout and condition, but they may be selective or outdated.",
-          "Ask whether the photographs are current and whether the features shown are included in the transaction."
+          "Photographs can help you understand layout and condition, but they may be selective, edited, or outdated. Ask whether they are recent and whether they show the exact property.",
+          "Ask whether the photographs are recent, whether they show the exact property, and whether the features shown are included in the transaction. Request additional views of areas that are missing or unclear. Be cautious of reused images or descriptions that do not match the property. Arrange an in-person inspection before making a financial commitment."
         ]
       },
       {
         heading: "Compare similar properties",
         paragraphs: [
-          "Compare several properties in the same area or with similar characteristics.",
-          "Consider differences in size, condition, access, amenities, age, and other factors rather than looking only at the lowest advertised price."
+          "Compare several properties in the same area or with similar characteristics. Record each property's asking price, location, size, condition, facilities, access, extra charges, and information that remains unverified.",
+          "Consider differences in size, condition, access, amenities, building age, maintenance, utilities, and documentation rather than looking only at the lowest advertised price. Asking prices are not necessarily completed sale prices, so one listing should not be treated as proof of another property's market value."
         ]
       }
     ]
@@ -418,7 +418,7 @@ export const GUIDES = [
     description:
       "A practical renting guide covering location, affordability, inspection, fees, landlord or agent checks, property condition, and tenancy terms.",
     intro:
-      "Choosing a rental home involves more than agreeing on a rent figure. Tenants should understand the total move-in cost, inspect the property, confirm who is authorized to let it, and read the tenancy terms carefully.",
+      "Choosing a rental home involves more than agreeing on a rent figure. Tenants should understand the total move-in cost, inspect the property, confirm who is authorized to let it, and read the tenancy terms carefully. Verify the landlord or representative, check the condition of the accommodation, and make sure important promises are documented before paying. Rental practices and applicable requirements can vary by location and agreement.",
     sections: [
       {
         heading: "Choose the location around daily life",
@@ -430,22 +430,22 @@ export const GUIDES = [
       {
         heading: "Calculate the total move-in cost",
         paragraphs: [
-          "Ask for a complete breakdown of rent and other charges before agreeing to move in.",
+          "Ask for a complete written breakdown of rent and other charges before agreeing to move in. Clarify agency, legal, agreement, caution, service, maintenance, and other fees being requested. Confirm who receives each payment, what it covers, the payment period, renewal arrangements, and whether deposits are refundable and under what conditions.",
           "Keep the breakdown in writing so you can compare properties accurately."
         ]
       },
       {
         heading: "Inspect before paying",
         paragraphs: [
-          "Check water supply, electrical fittings, ventilation, doors, windows, plumbing, drainage, kitchen and bathroom fixtures, visible damp, parking, and shared areas.",
-          "Record defects rather than assuming they will automatically be repaired later."
+          "Check water supply, electrical fittings, ventilation, doors, windows, plumbing, drainage, kitchen and bathroom fixtures, visible damp, parking, and shared areas. Test facilities where practical and ask how utilities and shared services are managed. Take dated photographs or videos of existing defects and make a written inventory where appropriate.",
+          "Record defects and agree in writing on repairs that must be completed before occupation rather than assuming they will automatically be handled later."
         ]
       },
       {
         heading: "Read the tenancy agreement",
         paragraphs: [
-          "Pay attention to duration, renewal, notice, maintenance responsibilities, utilities, deposits, repairs, restrictions, and conditions for ending the tenancy.",
-          "Ask for clarification before signing rather than relying on a verbal promise that is not reflected in the agreement."
+          "Pay attention to tenancy duration, renewal, notice periods, rent review, maintenance responsibilities, utilities, deposits, repairs, permitted use, restrictions, and conditions for ending the tenancy. Check that names, property address, payment terms, and agreed repairs are accurately recorded.",
+          "Ask a qualified local professional about unclear or disputed terms before signing. Keep a signed copy and payment evidence rather than relying on a verbal promise that is not reflected in the agreement."
         ]
       }
     ]
@@ -456,7 +456,7 @@ export const GUIDES = [
     description:
       "Practical guidance for sellers and agents on property descriptions, photographs, pricing information, availability, and buyer communication.",
     intro:
-      "A strong property listing helps serious buyers understand an opportunity before contacting the seller or agent. The goal is accurate information that makes the next research step easier.",
+      "A strong property listing helps serious buyers understand an opportunity before contacting the seller or agent. Provide accurate, useful information that allows people to assess whether the property matches their requirements. Clear descriptions, current photographs, realistic pricing information, and prompt communication can reduce confusion. Sellers and agents should make sure they are authorized to advertise the property and that published information can be supported.",
     sections: [
       {
         heading: "Write a factual title",
@@ -468,7 +468,7 @@ export const GUIDES = [
       {
         heading: "Provide useful property details",
         paragraphs: [
-          "Include location, property type, bedroom and bathroom count, approximate area where available, condition, notable features, access, parking, utilities, and availability.",
+          "Include the location at an appropriate level of detail, property type, bedroom and bathroom count, approximate area where available, condition, notable features, access, parking, utilities, and availability. Explain whether the property is completed, under construction, occupied, or available for inspection. State which facilities or fittings are included and disclose material limitations buyers should know.",
           "Clear information reduces repetitive questions and helps the right audience find the listing."
         ]
       },
@@ -476,13 +476,13 @@ export const GUIDES = [
         heading: "Use accurate photographs",
         paragraphs: [
           "Show the exterior, main living spaces, bedrooms, bathrooms, kitchen, outdoor areas, parking, and other relevant features.",
-          "Keep images current and do not use photographs of another property."
+          "Keep images current and do not use photographs of another property. Use clear images that represent the actual condition of the property, and obtain permission before publishing photographs where necessary. Avoid exposing occupants, private documents, security arrangements, or personal belongings without consent. Captions can identify rooms and features without exaggerated claims."
         ]
       },
       {
         heading: "Keep price and availability current",
         paragraphs: [
-          "Update the listing when material information changes and respond clearly when buyers ask whether the property is still available.",
+          "Research comparable active listings in the same area and explain the basis for the asking price without presenting an estimate as a guaranteed market valuation. Update the listing when price, condition, or availability changes. Respond clearly to buyer questions and arrange viewings through sensible, safe procedures. Keep a record of enquiries and agreed next steps, and avoid publishing private ownership documents or sensitive personal information in a public listing.",
           "Accurate information improves trust and makes buyer conversations more productive."
         ]
       }
