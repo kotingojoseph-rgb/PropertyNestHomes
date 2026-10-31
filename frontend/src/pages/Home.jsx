@@ -1,6 +1,7 @@
 import Hero from "@/components/home/Hero";
 import FeaturedProperties from "@/components/home/FeaturedProperties";
 import BannerAd from "@/components/ads/BannerAd";
+import RealEstateDiscovery from "@/components/discovery/RealEstateDiscovery";
 
 export default function Home() {
   return (
@@ -209,6 +210,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <RealEstateDiscovery />
 
       <BannerAd />
     </>
